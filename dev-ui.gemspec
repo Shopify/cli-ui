@@ -6,8 +6,8 @@ require "dev/ui/version"
 Gem::Specification.new do |spec|
   spec.name          = "dev-ui"
   spec.version       = Dev::UI::VERSION
-  spec.authors       = ["Burke Libbey"]
-  spec.email         = ["burke@libbey.me"]
+  spec.authors       = ["Burke Libbey", "Julian Nadeau"]
+  spec.email         = ["burke.libbey@shopify.com", "julian.nadeau@shopify.com"]
 
   spec.summary       = %q{Terminal UI framework}
   spec.description   = %q{Terminal UI framework}
