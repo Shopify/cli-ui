@@ -185,5 +185,3 @@ module Dev
     end
   end
 end
-
-Dev::UI::StdoutRouter.enable
