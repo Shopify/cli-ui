@@ -1,0 +1,8 @@
+up:
+  - homebrew:
+  - ruby: 2.3.3
+  - bundler
+
+commands:
+  test: bin/testunit
+  style: "bundle exec rubocop -D"
