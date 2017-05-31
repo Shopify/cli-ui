@@ -151,11 +151,11 @@ module Dev
                 end
 
                 Dev::UI::Frame.divider('STDOUT')
-                out = "(empty)" if out.strip.empty?
+                out = "(empty)" if out.nil? || out.strip.empty?
                 puts out
 
                 Dev::UI::Frame.divider('STDERR')
-                err = "(empty)" if err.strip.empty?
+                err = "(empty)" if err.nil? || err.strip.empty?
                 puts err
               end
             end
