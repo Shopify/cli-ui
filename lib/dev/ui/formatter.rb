@@ -8,14 +8,16 @@ module Dev
     class Formatter
       SGR_MAP = {
         # presentational
-        'red'     => '31',
-        'green'   => '32',
-        'yellow'  => '33',
-        'blue'    => '34',
-        'magenta' => '35',
-        'cyan'    => '36',
-        'bold'    => '1',
-        'reset'   => '0',
+        'red'       => '31',
+        'green'     => '32',
+        'yellow'    => '33',
+        'blue'      => '34',
+        'magenta'   => '35',
+        'cyan'      => '36',
+        'bold'      => '1',
+        'italic'    => '3',
+        'underline' => '4',
+        'reset'     => '0',
 
         # semantic
         'error'   => '31', # red
