@@ -25,7 +25,7 @@ module Dev
         out, err = capture_io do
           Dev::UI::StdoutRouter.ensure_activated
           Dev::UI::Spinner.spin('broken') do
-            STDERR.puts 'not empty'
+            $stderr.puts 'not empty'
             raise 'some error'
           end
         end
