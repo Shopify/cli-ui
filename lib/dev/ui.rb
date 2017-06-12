@@ -67,9 +67,10 @@ module Dev
       Dev::UI::StdoutRouter.duplicate_output_to = File.open(path, 'w')
       yield
     ensure
-      f = Dev::UI::StdoutRouter.duplicate_output_to
-      f.close
-      Dev::UI::StdoutRouter.duplicate_output_to = nil
+      if file_descriptor = Dev::UI::StdoutRouter.duplicate_output_to
+        file_descriptor.close 
+        Dev::UI::StdoutRouter.duplicate_output_to = nil
+      end
     end
 
     def self.raw
