@@ -31,7 +31,7 @@ module Dev
           def initialize(title, &block)
             @title = title
             @thread = Thread.new do
-              cap = Dev::UI::StdoutRouter::Capture.new(with_frame_inset: false, &block)
+              cap = Dev::UI::StdoutRouter::Capture.new(self, with_frame_inset: false, &block)
               begin
                 cap.run
               ensure
@@ -40,6 +40,7 @@ module Dev
               end
             end
 
+            @force_full_render = false
             @done      = false
             @exception = nil
             @success   = false
@@ -62,14 +63,21 @@ module Dev
           end
 
           def render(index, force = true)
-            return full_render(index) if force
+            return full_render(index) if force || @force_full_render
             partial_render(index)
+          ensure
+            @force_full_render = false
+          end
+
+          def update_title(new_title)
+            @title = new_title
+            @force_full_render = true
           end
 
           private
 
           def full_render(index)
-            inset + glyph(index) + Dev::UI::Color::RESET.code + ' ' + Dev::UI.resolve_text(title)
+            inset + glyph(index) + Dev::UI::Color::RESET.code + ' ' + Dev::UI.resolve_text(title) + "\e[K"
           end
 
           def partial_render(index)
