@@ -85,17 +85,10 @@ module Dev
       end
 
       def raw_tty!
-        begin
-          $stdin.raw! unless ENV['TEST']
-        rescue Errno::ENOTTY
-          ''
-        end
-        yield
-      ensure
-        begin
-          $stdin.cooked!
-        rescue Errno::ENOTTY
-          ''
+        if ENV['TEST'] || !$stdin.tty?
+          yield
+        else
+          $stdin.raw { yield }
         end
       end
 
