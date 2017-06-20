@@ -62,6 +62,10 @@ module Dev
         control(n.to_s, 'D')
       end
 
+      def self.cursor_horizontal_absolute(n = 1)
+        control(n.to_s, 'G')
+      end
+
       # Cursor Visibility
 
       def self.show_cursor
