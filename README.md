@@ -1,6 +1,8 @@
 ```ruby
 require 'dev/ui'
 
+Dev::UI::StdoutRouter.enable
+
 Dev::UI::Frame.open('{{*}} {{bold:a}}', color: :green) do
   Dev::UI::Frame.open('{{i}} b', color: :magenta) do
     Dev::UI::Frame.open('{{?}} c', color: :cyan) do
