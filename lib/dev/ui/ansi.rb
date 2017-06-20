@@ -7,8 +7,24 @@ module Dev
 
       # ANSI escape sequences (like \x1b[31m) have zero width.
       # when calculating the padding width, we must exclude them.
+      # This also implements a *reaaaallly* shitty version of utf8 character
+      # width calculation like we could get for real from something like
+      # utf8proc.
       def self.printing_width(str)
-        strip_codes(str).size
+        zwj = false
+        strip_codes(str).codepoints.reduce(0) do |acc, cp|
+          if zwj
+            zwj = false
+            next acc
+          end
+          case cp
+          when 0x200d # zero-width joiner
+            zwj = true
+            acc
+          else
+            acc + 1
+          end
+        end
       end
 
       def self.strip_codes(str)
