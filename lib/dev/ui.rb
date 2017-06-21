@@ -11,7 +11,7 @@ module Dev
     autoload :Terminal,           'dev/ui/terminal'
     autoload :Formatter,          'dev/ui/formatter'
     autoload :Spinner,            'dev/ui/spinner'
-
+    autoload :System,             'dev/ui/system'
 
     # TODO: this, better
     SpinGroup = Spinner::SpinGroup
