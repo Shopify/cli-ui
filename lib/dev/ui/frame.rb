@@ -130,24 +130,40 @@ module Dev
             prefix << ' ' << text << ' '
           end
 
+          termwidth = Dev::UI::Terminal.width
+
           suffix = String.new
           if right_text
-            suffix << ' ' << right_text << ' ' << color.code << (Dev::UI::Box::Heavy::HORZ * 2)
+            suffix << ' ' << right_text << ' '
           end
 
-          textwidth = Dev::UI::ANSI.printing_width(prefix + suffix)
-          termwidth = Dev::UI::Terminal.width
-          termwidth = 30 if termwidth < 30
+          suffix_width = Dev::UI::ANSI.printing_width(suffix)
+          suffix_end   = termwidth - 2
+          suffix_start = suffix_end - suffix_width
 
-          if textwidth > termwidth
+          prefix_width = Dev::UI::ANSI.printing_width(prefix)
+          prefix_start = 0
+          prefix_end   = prefix_start + prefix_width
+
+          if prefix_end > suffix_start
             suffix = ''
-            prefix = prefix[0...termwidth]
-            textwidth = termwidth
+            # if prefix_end > termwidth
+            # we *could* truncate it, but let's just let it overflow to the
+            # next line and call it poor usage of this API.
           end
-          padwidth = termwidth - textwidth
-          pad = Dev::UI::Box::Heavy::HORZ * padwidth
 
-          prefix + color.code + pad + suffix + Dev::UI::Color::RESET.code + "\n"
+          o = String.new
+
+          o << color.code
+          o << Dev::UI::Box::Heavy::HORZ * termwidth # draw a full line
+          o << Dev::UI::ANSI.cursor_horizontal_absolute(1 + prefix_start)
+          o << prefix
+          o << Dev::UI::ANSI.cursor_horizontal_absolute(1 + suffix_start)
+          o << suffix
+          o << Dev::UI::Color::RESET.code
+          o << "\n"
+
+          o
         end
 
         module FrameStack

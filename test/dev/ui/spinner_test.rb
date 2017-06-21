@@ -46,7 +46,7 @@ module Dev
           /┃ \(empty\)/,
           /┣━━ STDERR/,
           /┃ not empty/,
-          /┗━━━━━/
+          /┗━━/
         )
       end
 
@@ -63,7 +63,7 @@ module Dev
         # Assert all lines are matched
         lines.each do |l|
           # strip ANSI colour code stuff
-          line = l.dup.gsub(/\x1b\[[\d;]+m/, '')
+          line = Dev::UI::ANSI.strip_codes(l)
           assert patterns.any? { |p| line.match(p) }, "Nothing matched the line #{line}"
         end
 
