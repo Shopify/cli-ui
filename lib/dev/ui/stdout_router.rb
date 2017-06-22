@@ -83,8 +83,9 @@ module Dev
           end
         end
 
-        def initialize(with_frame_inset: true, &block)
+        def initialize(*block_args, with_frame_inset: true, &block)
           @with_frame_inset = with_frame_inset
+          @block_args = block_args
           @block = block
         end
 
@@ -113,7 +114,7 @@ module Dev
             end
 
             begin
-              @block.call
+              @block.call(*@block_args)
             ensure
               @stdout = out.string
               @stderr = err.string

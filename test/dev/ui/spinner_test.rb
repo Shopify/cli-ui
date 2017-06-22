@@ -21,6 +21,35 @@ module Dev
         )
       end
 
+      def test_updating_title
+        out, err = capture_io do
+          Dev::UI::StdoutRouter.ensure_activated
+          Dev::UI::Spinner.spin('私') do |task|
+            assert task
+            assert_respond_to task, :update_title
+            sleep Dev::UI::Spinner::PERIOD * 2.5
+            task.update_title '今日'
+            sleep Dev::UI::Spinner::PERIOD * 2.5
+            task.update_title '疲れたんだ'
+            sleep Dev::UI::Spinner::PERIOD * 2.5
+          end
+        end
+
+        assert_empty err
+        match_lines(
+          out,
+          /⠋ 私/,
+          /⠙/,
+          /⠹/,
+          /⠸ 今日/,
+          /⠼/,
+          /⠴ 疲れたんだ/,
+          /⠦/,
+          /⠧/,
+          /✓/,
+        )
+      end
+
       def test_spinner_error
         out, err = capture_io do
           Dev::UI::StdoutRouter.ensure_activated
@@ -60,19 +89,11 @@ module Dev
         # newline, or cursor-down
         lines = out.split(/\n|\x1b\[\d*B/)
 
-        # Assert all lines are matched
-        lines.each do |l|
-          # strip ANSI colour code stuff
-          line = Dev::UI::ANSI.strip_codes(l)
-          assert patterns.any? { |p| line.match(p) }, "Nothing matched the line #{line}"
-        end
-
         # Assert all patterns are matched
-        patterns.each.with_index do |pattern, index|
-          line = lines[index]
-          # strip ANSI colour code stuff
-          line.gsub!(/\x1b\[[\d;]+m/, '')
-          assert_match(pattern, line)
+        assert_equal patterns.size, lines.size
+        patterns.each_with_index do |pattern, index|
+          line = Dev::UI::ANSI.strip_codes(lines[index])
+          assert_match(pattern, line, "pattern number #{index} doesn't match line number #{index} in the output")
         end
       end
     end
