@@ -154,6 +154,7 @@ module Dev
 
           o = String.new
 
+          o << "\r" # reset to start of line in case there's trailing input (e.g. "^C")
           o << color.code
           o << Dev::UI::Box::Heavy::HORZ * termwidth # draw a full line
           o << Dev::UI::ANSI.cursor_horizontal_absolute(1 + prefix_start)
