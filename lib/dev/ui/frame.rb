@@ -160,7 +160,7 @@ module Dev
           o << Dev::UI::ANSI.cursor_horizontal_absolute(1 + prefix_start)
           o << prefix
           o << Dev::UI::ANSI.cursor_horizontal_absolute(1 + suffix_start)
-          o << suffix
+          o << color.code << suffix
           o << Dev::UI::Color::RESET.code
           o << "\n"
 
