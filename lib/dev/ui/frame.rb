@@ -78,8 +78,10 @@ module Dev
         end
 
         def divider(text, color: nil)
+          fs_item = FrameStack.pop
+          raise "no frame nesting to unnest" unless fs_item
           color = Dev::UI.resolve_color(color)
-          item  = Dev::UI.resolve_color(FrameStack.pop)
+          item  = Dev::UI.resolve_color(fs_item)
 
           Dev::UI.raw do
             puts edge(text, color: (color || item), first: Dev::UI::Box::Heavy::DIV)
