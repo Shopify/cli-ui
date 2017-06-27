@@ -76,6 +76,17 @@ module Dev
         control('', "?25l")
       end
 
+      # Cursor save/restore
+
+      def self.cursor_save
+        control('', 's')
+      end
+
+      def self.cursor_restore
+        control('', 'u')
+      end
+
+
       # Line Handling
 
       def self.next_line

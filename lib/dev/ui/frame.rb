@@ -156,17 +156,39 @@ module Dev
 
           o = String.new
 
-          o << "\r" # reset to start of line in case there's trailing input (e.g. "^C")
+          is_ci = ![0, '', nil].include?(ENV['CI'])
+
+          # Jumping around the line can cause some unwanted flashes
+          o << Dev::UI::ANSI.hide_cursor
+
+          if is_ci
+            # In CI, we can't use absolute horizontal positions because of timestamps.
+            # So we move around the line by offset from this cursor position.
+            o << Dev::UI::ANSI.cursor_save
+          else
+            # Outside of CI, we reset to column 1 so that things like ^C don't
+            # cause output misformatting.
+            o << "\r"
+          end
+
           o << color.code
           o << Dev::UI::Box::Heavy::HORZ * termwidth # draw a full line
-          o << Dev::UI::ANSI.cursor_horizontal_absolute(1 + prefix_start)
-          o << prefix
-          o << Dev::UI::ANSI.cursor_horizontal_absolute(1 + suffix_start)
-          o << color.code << suffix
+          o << print_at_x(prefix_start, prefix, is_ci)
+          o << color.code
+          o << print_at_x(suffix_start, suffix, is_ci)
           o << Dev::UI::Color::RESET.code
+          o << Dev::UI::ANSI.show_cursor
           o << "\n"
 
           o
+        end
+
+        def print_at_x(x, str, is_ci)
+          if is_ci
+            Dev::UI::ANSI.cursor_restore + Dev::UI::ANSI.cursor_forward(x) + str
+          else
+            Dev::UI::ANSI.cursor_horizontal_absolute(1 + x) + str
+          end
         end
 
         module FrameStack
