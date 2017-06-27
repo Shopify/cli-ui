@@ -76,7 +76,8 @@ module Dev
           prompt = prefix + Dev::UI.fmt('{{blue:> }}{{yellow:')
 
           begin
-            Readline.readline(prompt, true).chomp
+            line = Readline.readline(prompt, true)
+            line && line.chomp
           rescue Interrupt
             Dev::UI.raw { STDERR.puts('^C' + Dev::UI::Color::RESET.code) }
             raise
