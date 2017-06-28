@@ -4,6 +4,7 @@ module Dev
   module UI
     module Spinner
       PERIOD = 0.1 # seconds
+      TASK_FAILED = :task_failed
 
       begin
         runes = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
@@ -54,6 +55,7 @@ module Dev
             begin
               status = @thread.join.status
               @success = (status == false)
+              @success = false if @thread.value == :task_failed
             rescue => exc
               @exception = exc
               @success = false
