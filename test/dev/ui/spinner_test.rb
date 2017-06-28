@@ -50,7 +50,7 @@ module Dev
         )
       end
 
-      def test_spinner_error
+      def test_spinner_task_error_through_raising_exception
         out, err = capture_io do
           Dev::UI::StdoutRouter.ensure_activated
           Dev::UI::Spinner.spin('broken') do
@@ -76,6 +76,27 @@ module Dev
           /┣━━ STDERR/,
           /┃ not empty/,
           /┗━━/
+        )
+      end
+
+      def test_spinner_task_error_through_returning_error
+        out, err = capture_io do
+          Dev::UI::StdoutRouter.ensure_activated
+          Dev::UI::Spinner.spin('broken') do
+            $stderr.puts 'not empty'
+            Dev::UI::Spinner::TASK_FAILED
+          end
+        end
+        match_lines(
+          out,
+          /⠋ broken/,
+          /✗/,
+          /┏━━ Task Failed: broken/,
+          /┣━━ STDOUT/,
+          /┃ \(empty\)/,
+          /┣━━ STDERR/,
+          /┃ not empty/,
+          /┗━━/,
         )
       end
 
