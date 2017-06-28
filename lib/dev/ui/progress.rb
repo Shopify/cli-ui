@@ -3,8 +3,8 @@ require 'dev/ui'
 module Dev
   module UI
     class Progress
-      FILLED_BAR = Dev::UI::Glyph.new("◾", 0x2588, Color::CYAN)
-      UNFILLED_BAR = Dev::UI::Glyph.new("◽", 0x2588, Color::WHITE)
+      FILLED_BAR = "\e[46m" # cyan bg
+      UNFILLED_BAR = "\e[1;47m" # bright white bg
 
       # Set the percent to X
       # Dev::UI::Progress.progress do |bar|
@@ -55,9 +55,9 @@ module Dev
         unfilled = workable_width - filled
 
         Dev::UI.resolve_text [
-          (FILLED_BAR.to_s * filled),
-          (UNFILLED_BAR.to_s * unfilled),
-          suffix
+          FILLED_BAR + ' ' * filled,
+          UNFILLED_BAR + ' ' * unfilled,
+          Dev::UI::Color::RESET.code + suffix
         ].join
       end
     end
