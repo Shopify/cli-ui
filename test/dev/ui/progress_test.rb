@@ -27,10 +27,7 @@ module Dev
       end
 
       def assert_bar(percent: nil, set_percent: nil, expected_filled: 0, expected_unfilled: 0, suffix: '')
-        expected_bar = "\e[0m" +
-          (Progress::FILLED_BAR.to_s * expected_filled) +
-          (Progress::UNFILLED_BAR.to_s * expected_unfilled) +
-          suffix
+        expected_bar = "\e[0m\e[46m#{' ' * expected_filled}\e[1;47m#{' ' * expected_unfilled}\e[0m#{suffix}"
 
         params = {}
         params[:percent] = percent if percent
