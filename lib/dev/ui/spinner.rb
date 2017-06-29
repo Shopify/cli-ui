@@ -55,7 +55,7 @@ module Dev
             begin
               status = @thread.join.status
               @success = (status == false)
-              @success = false if @thread.value == :task_failed
+              @success = false if @thread.value == TASK_FAILED
             rescue => exc
               @exception = exc
               @success = false
