@@ -77,7 +77,7 @@ module Dev
 
           begin
             line = Readline.readline(prompt, true)
-            line && line.chomp
+            line.to_s.chomp
           rescue Interrupt
             Dev::UI.raw { STDERR.puts('^C' + Dev::UI::Color::RESET.code) }
             raise
