@@ -21,6 +21,24 @@ module Dev
         )
       end
 
+      def test_async
+        out, err = capture_io do
+          Dev::UI::StdoutRouter.ensure_activated
+          spinner = Dev::UI::Spinner::Async.start('sleeping')
+          sleep Dev::UI::Spinner::PERIOD * 2.5
+          spinner.stop
+        end
+
+        assert_equal('', err)
+        match_lines(
+          out,
+          /⠋ sleeping/,
+          /⠙/,
+          /⠹/,
+          /✓/
+        )
+      end
+
       def test_updating_title
         out, err = capture_io do
           Dev::UI::StdoutRouter.ensure_activated

@@ -19,6 +19,26 @@ module Dev
         sg.wait
       end
 
+      class Async
+        def self.start(title)
+          new(title)
+        end
+
+        def initialize(title)
+          require 'thread'
+          sg = Dev::UI::Spinner::SpinGroup.new
+          @m = Mutex.new
+          @cv = ConditionVariable.new
+          sg.add(title) { @m.synchronize { @cv.wait(@m) } }
+          @t = Thread.new { sg.wait }
+        end
+
+        def stop
+          @m.synchronize { @cv.signal }
+          @t.value
+        end
+      end
+
       class SpinGroup
         def initialize
           @m = Mutex.new
