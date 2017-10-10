@@ -24,7 +24,7 @@ module Dev
           # This will put us back at the beginning of the options
           # When we redraw the options, they will be overwritten
           Dev::UI.raw do
-            @options.size.times { print(ANSI.previous_line) }
+            @options.join.split("\n").size.times { print(ANSI.previous_line) }
             print(ANSI.previous_line + ANSI.end_of_line + "\n")
           end
         end
