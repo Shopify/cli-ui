@@ -24,7 +24,8 @@ module Dev
           # This will put us back at the beginning of the options
           # When we redraw the options, they will be overwritten
           Dev::UI.raw do
-            @options.join("\n").split("\n").size.times { print(ANSI.previous_line) }
+            num_lines = @options.join("\n").split("\n").reject(&:empty?).size
+            num_lines.times { print(ANSI.previous_line) }
             print(ANSI.previous_line + ANSI.end_of_line + "\n")
           end
         end
@@ -95,8 +96,15 @@ module Dev
       def render_options
         @options.each_with_index do |choice, index|
           num = index + 1
-          message = "  #{num}. {{bold:#{choice}}}"
-          message = "{{blue:> #{message.strip}}}" if num == @active
+          message = "  #{num}."
+          message += choice.split("\n").map { |l| " {{bold:#{l}}}" }.join("\n")
+
+          if num == @active
+            message = message.split("\n").map.with_index do |l, idx|
+              idx == 0 ? "{{blue:> #{l.strip}}}" : "{{blue:>#{l.strip}}}"
+            end.join("\n")
+          end
+
           Dev::UI.with_frame_color(:blue) do
             puts Dev::UI.fmt(message)
           end
