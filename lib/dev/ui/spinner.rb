@@ -13,8 +13,8 @@ module Dev
         GLYPHS = colors.zip(runes).map(&:join)
       end
 
-      def self.spin(title, &block)
-        sg = SpinGroup.new
+      def self.spin(title, auto_debrief: true, &block)
+        sg = SpinGroup.new(auto_debrief: auto_debrief)
         sg.add(title, &block)
         sg.wait
       end
@@ -40,10 +40,11 @@ module Dev
       end
 
       class SpinGroup
-        def initialize
+        def initialize(auto_debrief: true)
           @m = Mutex.new
           @consumed_lines = 0
           @tasks = []
+          @auto_debrief = auto_debrief
         end
 
         class Task
@@ -162,7 +163,7 @@ module Dev
             sleep(PERIOD)
           end
 
-          debrief
+          debrief if @auto_debrief
         end
 
         def debrief
