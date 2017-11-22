@@ -36,6 +36,7 @@ module Dev
           print(ANSI.show_cursor)
           puts(ANSI.previous_line + ANSI.end_of_line)
         end
+        $stdin.reopen('/dev/tty')
       end
 
       private
