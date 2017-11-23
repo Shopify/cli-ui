@@ -13,6 +13,7 @@ module Dev
         @active = 1
         @marker = '>'
         @answer = nil
+        @state = :root
       end
 
       def call
@@ -40,47 +41,60 @@ module Dev
 
       private
 
-      def wait_for_user_input
-        char = read_char
-        char = char.chomp unless char.chomp.empty?
-        case char
-        when "\e[A", 'k'    # up
-          @active = @active - 1 >= 1 ? @active - 1 : @options.length
-        when "\e[B", 'j'    # down
-          @active = @active + 1 <= @options.length ? @active + 1 : 1
-        when " ", "\r"      # enter/select
-          @answer = @active
-        when ('1'..@options.size.to_s)
-          @active = char.to_i
-          @answer = char.to_i
-        when 'y', 'n'
-          return unless (@options - %w(yes no)).empty?
-          opt = @options.detect { |o| o.start_with?(char) }
-          @active = @options.index(opt) + 1
-          @answer = @options.index(opt) + 1
-        when "\u0003", "\e" # Control-C or escape
-          raise Interrupt
-        end
+      ESC = "\e"
+
+      def up
+        @active = @active - 1 >= 1 ? @active - 1 : @options.length
       end
 
-      # Will handle 2-3 character sequences like arrow keys and control-c
-      def read_char
-        raw_tty! do
-          input = $stdin.getc.chr
-          return input unless input == "\e"
+      def down
+        @active = @active + 1 <= @options.length ? @active + 1 : 1
+      end
 
-          input << begin
-              $stdin.read_nonblock(3)
-            rescue
-              ''
-            end
-          input << begin
-              $stdin.read_nonblock(2)
-            rescue
-              ''
-            end
-          input
+      def select_n(n)
+        @active = n
+        @answer = n
+      end
+
+      def select_bool(char)
+        return unless (@options - %w(yes no)).empty?
+        opt = @options.detect { |o| o.start_with?(char) }
+        @active = @options.index(opt) + 1
+        @answer = @options.index(opt) + 1
+      end
+
+      # rubocop:disable Style/WhenThen,Layout/SpaceBeforeSemicolon
+      def wait_for_user_input
+        char = read_char
+        case @state
+        when :root
+          case char
+          when ESC                       ; @state = :esc
+          when 'k'                       ; up
+          when 'j'                       ; down
+          when ('1'..@options.size.to_s) ; select_n(char.to_i)
+          when 'y', 'n'                  ; select_bool(char)
+          when " ", "\r", "\n"           ; @answer = @active # <enter>
+          when "\u0003"                  ; raise Interrupt   # Ctrl-c
+          end
+        when :esc
+          case char
+          when '[' ; @state = :esc_bracket
+          else     ; raise Interrupt # unhandled escape sequence.
+          end
+        when :esc_bracket
+          @state = :root
+          case char
+          when 'A' ; up
+          when 'B' ; down
+          else     ; raise Interrupt # unhandled escape sequence.
+          end
         end
+      end
+      # rubocop:enable Style/WhenThen,Layout/SpaceBeforeSemicolon
+
+      def read_char
+        raw_tty! { $stdin.getc.chr }
       rescue IOError
         "\e"
       end
