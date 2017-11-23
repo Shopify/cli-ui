@@ -39,6 +39,9 @@ module Dev
           ? q (choose with ↑ ↓ ⏎)
           \e[?25l> 1. yes
             2. no
+          \e[\e[C
+          > 1. yes
+            2. no
           \e[?25h\e[\e[C
         EOF
         assert_result(expected_out, "", :SIGINT)
@@ -76,6 +79,9 @@ module Dev
           ? q (choose with ↑ ↓ ⏎)
           \e[?25l> 1. a
             2. b
+          \e[\e[C
+          > 1. a
+            2. b
           \e[?25h\e[\e[C
         EOF
         assert_result(expected_out, "", :SIGINT)
@@ -107,9 +113,6 @@ module Dev
           \e[\e[C
           > 1. yes
             2. no
-          \e[\e[C
-          > 1. yes
-            2. no
           \e[?25h\e[\e[C
         EOF
         assert_result(expected_out, "", true)
@@ -120,9 +123,6 @@ module Dev
         expected_out = strip_heredoc(<<-EOF) + ' '
           ? q (choose with ↑ ↓ ⏎)
           \e[?25l> 1. yes
-            2. no
-          \e[\e[C
-          > 1. yes
             2. no
           \e[\e[C
           > 1. yes
@@ -141,12 +141,12 @@ module Dev
       end
 
       def test_ask_empty_answer_rejected
-        _run('') { Prompt.ask('q') } # allow_empty: true
+        _run("\n") { Prompt.ask('q') } # allow_empty: true
         assert_result("? q\n> \n", "", "")
       end
 
       def test_ask_empty_answer_allowed
-        _run('', 'asdf') { Prompt.ask('q', allow_empty: false) }
+        _run("\n", 'asdf') { Prompt.ask('q', allow_empty: false) }
         assert_result("? q\n> \n> asdf\n", "", "asdf")
       end
 
@@ -157,7 +157,7 @@ module Dev
       end
 
       def test_ask_filename_completion
-        _run("/de\tnul\t") { Prompt.ask('q', is_file: true) }
+        _run("/dev\tnul\t") { Prompt.ask('q', is_file: true) }
         # \a = terminal bell, because completion failed
         assert_result("? q\n> /dev/null\n", "", "/dev/null")
       end
@@ -210,9 +210,6 @@ module Dev
         \e[\e[C
           1. a
         > 2. b
-        \e[\e[C
-          1. a
-        > 2. b
         \e[?25h\e[\e[C
         EOF
         assert_result(expected_out, "", "b")
@@ -245,6 +242,9 @@ module Dev
         ? q (choose with ↑ ↓ ⏎)
         \e[?25l> 1. a
           2. b
+        \e[\e[C
+        > 1. a
+          2. b
         \e[?25h\e[\e[C
         EOF
         assert_result(expected_out, nil, :SIGINT)
@@ -255,12 +255,6 @@ module Dev
         expected_out = strip_heredoc(<<-EOF)
         ? q (choose with ↑ ↓ ⏎)
         \e[?25l> 1. a
-          2. b
-        \e[\e[C
-        > 1. a
-          2. b
-        \e[\e[C
-        > 1. a
           2. b
         \e[\e[C
         > 1. a
@@ -287,7 +281,7 @@ module Dev
       def _run(*lines)
         $stdin = @in_r
         start_process { @ret.write(Marshal.dump(yield)) }
-        @in_w.puts(*Array(lines).flatten)
+        @in_w.puts(lines.join(''))
       end
 
       def start_process
