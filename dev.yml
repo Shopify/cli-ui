@@ -1,5 +1,4 @@
 up:
-  - homebrew:
   - ruby: 2.3.3
   - bundler
 
