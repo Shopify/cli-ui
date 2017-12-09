@@ -3,15 +3,48 @@ require 'dev/ui'
 module Dev
   module UI
     module Frame
+      class UnnestedFrameException < StandardError; end
       class << self
         DEFAULT_FRAME_COLOR = Dev::UI.resolve_color(:cyan)
 
+        # Opens a new frame. Can be nested
         # Can be invoked in two ways: block and blockless
-        # In block form, the frame is closed automatically when the block returns
-        # In blockless form, caller MUST call Frame.close when the frame is
-        #   logically done.
-        # blockless form is strongly discouraged in cases where block form can be
-        #   made to work.
+        # * In block form, the frame is closed automatically when the block returns
+        # * In blockless form, caller MUST call +Frame.close+ when the frame is logically done
+        # * Blockless form is strongly discouraged in cases where block form can be made to work
+        #
+        # The return value of the block determines if the block is a "success" or a "failure"
+        #
+        # ==== Attributes
+        #
+        # * +text+ - (required) the text/title to output in the frame
+        #
+        # ==== Options
+        #
+        # * +:color+ - The color of the frame. Defaults to +DEFAULT_FRAME_COLOR+
+        # * +:failure_text+ - If the block failed, what do we output? Defaults to nil
+        # * +:success_text+ - If the block succeeds, what do we output? Defaults to nil
+        # * +:timing+ - How long did the frame content take? Invalid for blockless. Defaults to true for the block form
+        #
+        # ==== Example
+        # 
+        # ===== Block Form (Assumes +Dev::UI::StdoutRouter.enable+ has been called)
+        #
+        #   Dev::UI::Frame.open('Open') { puts 'hi' }
+        #
+        # Output:
+        #   ┏━━ Open ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        #   ┃ hi
+        #   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ (0.0s) ━━
+        # 
+        # ===== Blockless Form
+        #
+        #   Dev::UI::Frame.open('Open')
+        #
+        # Output:
+        #   ┏━━ Open ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        #
+        # 
         def open(
           text,
           color: DEFAULT_FRAME_COLOR,
@@ -64,6 +97,26 @@ module Dev
           end
         end
 
+        # Closes a frame
+        # Automatically called for a block-form +open+
+        #
+        # ==== Attributes
+        #
+        # * +text+ - (required) the text/title to output in the frame
+        #
+        # ==== Options
+        #
+        # * +:color+ - The color of the frame. Defaults to +DEFAULT_FRAME_COLOR+
+        # * +:elapsed+ - How long did the frame take? Defaults to nil
+        #
+        # ==== Example
+        #
+        #   Dev::UI::Frame.close('Close')
+        #
+        # Output:
+        #   ┗━━ Close ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        #
+        # 
         def close(text, color: DEFAULT_FRAME_COLOR, elapsed: nil)
           color = Dev::UI.resolve_color(color)
 
@@ -77,9 +130,33 @@ module Dev
           end
         end
 
+        # Adds a divider in a frame
+        # Used to separate information within a single frame
+        #
+        # ==== Attributes
+        #
+        # * +text+ - (required) the text/title to output in the frame
+        #
+        # ==== Options
+        #
+        # * +:color+ - The color of the frame. Defaults to +DEFAULT_FRAME_COLOR+
+        #
+        # ==== Example
+        #
+        #   Dev::UI::Frame.open('Open') { Dev::UI::Frame.divider('Divider') }
+        #
+        # Output:
+        #   ┏━━ Open ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        #   ┣━━ Divider ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        #   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        #
+        # ==== Raises
+        #
+        # MUST be inside an open frame or it raises a +UnnestedFrameException+
+        #
         def divider(text, color: nil)
           fs_item = FrameStack.pop
-          raise "no frame nesting to unnest" unless fs_item
+          raise UnnestedFrameException, "no frame nesting to unnest" unless fs_item
           color = Dev::UI.resolve_color(color)
           item  = Dev::UI.resolve_color(fs_item)
 
@@ -89,6 +166,12 @@ module Dev
           FrameStack.push(item)
         end
 
+        # Determines the prefix of a frame entry taking multi-nested frames into account
+        #
+        # ==== Options
+        #
+        # * +:color+ - The color of the prefix. Defaults to +Thread.current[:devui_frame_color_override]+ or nil
+        #
         def prefix(color: nil)
           pfx = String.new
           items = FrameStack.items
@@ -103,6 +186,12 @@ module Dev
           pfx
         end
 
+        # Override a color for a given thread. 
+        #
+        # ==== Attributes
+        #
+        # * +color+ - The color to override to
+        #
         def with_frame_color_override(color)
           prev = Thread.current[:devui_frame_color_override]
           Thread.current[:devui_frame_color_override] = color
@@ -111,6 +200,8 @@ module Dev
           Thread.current[:devui_frame_color_override] = prev
         end
 
+        # The width of a prefix given the number of Frames in the stack 
+        #
         def prefix_width
           w = FrameStack.items.size
           w.zero? ? 0 : w + 1
