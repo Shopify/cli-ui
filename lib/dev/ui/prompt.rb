@@ -5,6 +5,48 @@ module Dev
   module UI
     module Prompt
       class << self
+        # Ask a user a question with either free form answer or a set of answers
+        # Do not use this method for yes/no questions. Use +confirm+
+        # Can use arrows, y/n, numbers, and vim bindings to control
+        #
+        # * Handles free form answers (options are nil)
+        # * Handles default answers for free form text
+        # * Handles file auto completion for file input
+        # * Handles interactively choosing answers using +InteractivePrompt+
+        #
+        # ==== Attributes
+        #
+        # * +question+ - (required) The question to ask the user
+        #
+        # ==== Options
+        #
+        # * +:options+ - Options to ask the user. Will use +InteractivePrompt+ to do so
+        # * +:default+ - The default answer to the question (e.g. they just press enter and don't input anything)
+        # * +:is_file+ - Tells the input to use file auto-completion (tab completion)
+        # * +:allow_empty+ - Allows the answer to be empty
+        #
+        # Note:
+        # * +:options+ conflicts with +:default+ and +:is_file+, you cannot set options with either of these keywords
+        # * +:default+ conflicts with +:allow_empty:, you cannot set these together
+        #
+        # ==== Example Usage:
+        #
+        # Free form question
+        #   Dev::UI::Prompt.ask('What color is the sky?')
+        #
+        # Free form question with a file answer
+        #   Dev::UI::Prompt.ask('Where is your Gemfile located?', is_file: true)
+        #
+        # Free form question with a default answer
+        #   Dev::UI::Prompt.ask('What color is the sky?', default: 'blue')
+        #
+        # Free form question when the answer can be empty
+        #   Dev::UI::Prompt.ask('What is your opinion on this question?', allow_empty: true)
+        #
+        # Question with answers
+        #   Dev::UI::Prompt.ask('What kind of project is this?', options: %w(rails go ruby python))
+        #
+        #
         def ask(question, options: nil, default: nil, is_file: nil, allow_empty: true)
           if (default && !allow_empty) || (options && (default || is_file))
             raise(ArgumentError, 'conflicting arguments')
@@ -34,6 +76,14 @@ module Dev
           end
         end
 
+        # Asks the user a yes/no question.
+        # Can use arrows, y/n, numbers (1/2), and vim bindings to control
+        #
+        # ==== Example Usage:
+        #
+        # Free form question
+        #   Dev::UI::Prompt.confirm('Is the sky blue?')
+        #
         def confirm(question)
           puts_question("#{question} {{yellow:(choose with ↑ ↓ ⏎)}}")
           InteractivePrompt.call(%w(yes no)) == 'yes'
