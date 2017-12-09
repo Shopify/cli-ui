@@ -14,6 +14,8 @@ module Dev
         # * Handles file auto completion for file input
         # * Handles interactively choosing answers using +InteractivePrompt+
         #
+        # https://user-images.githubusercontent.com/3074765/33799822-47f23302-dd01-11e7-82f3-9072a5a5f611.png
+        #
         # ==== Attributes
         #
         # * +question+ - (required) The question to ask the user

@@ -78,6 +78,9 @@ module Dev
     # Conviencence Method to format text using +Dev::UI::Formatter.format+
     # Check +Dev::UI::Formatter::SGR_MAP+ for available formatting options
     #
+    # https://user-images.githubusercontent.com/3074765/33799827-6d0721a2-dd01-11e7-9ab5-c3d455264afe.png
+    # https://user-images.githubusercontent.com/3074765/33799847-9ec03fd0-dd01-11e7-93f7-5f5cc540e61e.png
+    #
     # ==== Attributes
     #
     # * +input+ - input to format

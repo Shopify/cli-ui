@@ -10,6 +10,8 @@ module Dev
 
       # Add a progress bar to the terminal output
       #
+      # https://user-images.githubusercontent.com/3074765/33799794-cc4c940e-dd00-11e7-9bdc-90f77ec9167c.gif
+      #
       # ==== Example Usage:
       #
       # Set the percent to X

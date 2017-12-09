@@ -13,6 +13,8 @@ module Dev
         # * In blockless form, caller MUST call +Frame.close+ when the frame is logically done
         # * Blockless form is strongly discouraged in cases where block form can be made to work
         #
+        # https://user-images.githubusercontent.com/3074765/33799861-cb5dcb5c-dd01-11e7-977e-6fad38cee08c.png
+        #
         # The return value of the block determines if the block is a "success" or a "failure"
         #
         # ==== Attributes

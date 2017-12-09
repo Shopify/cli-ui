@@ -13,11 +13,17 @@ This may not be an exhaustive list. Please check our [documentation](http://www.
 
 - Nested framing to handle content flow (see example below)
 - Interactive Prompts (prompt user with options, using arrow keys, numbers, or vim bindings, choose)
+  ![Interactive Prompt](https://user-images.githubusercontent.com/3074765/33797984-0ebb5e64-dcdf-11e7-9e7e-7204f279cece.gif)
 - Free form text prompts
+  ![Free form text prompt](https://user-images.githubusercontent.com/3074765/33799822-47f23302-dd01-11e7-82f3-9072a5a5f611.png)
 - Spinner groups to handle many multi-threaded processes (see example below)
+  ![Spinner Group](https://user-images.githubusercontent.com/3074765/33798295-d94fd822-dce3-11e7-819b-43e5502d490e.gif)
 - Text Color formatting (e.g. `{{red:Red}} {{green:Green}}`)
+  ![Text Format](https://user-images.githubusercontent.com/3074765/33799827-6d0721a2-dd01-11e7-9ab5-c3d455264afe.png)
 - Symbol Formatting (e.g. `{{*}}` => a yellow ⭑) 
 - Progress Bar
+  ![Progress Bar](https://user-images.githubusercontent.com/3074765/33799794-cc4c940e-dd00-11e7-9bdc-90f77ec9167c.gif)
+
 
 ## Installation
 
