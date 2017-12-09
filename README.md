@@ -18,6 +18,20 @@ This may not be an exhaustive list. Please check our [documentation](http://www.
 - Symbol Formatting (e.g. `{{*}}` => a yellow ⭑) 
 - Progress Bar
 
+## Installation
+
+```bash
+gem install dev-ui
+```
+
+or add the following to your Gemfile:
+
+```ruby
+gem 'dev-ui'
+```
+
+In your code, simply add a `require 'dev/ui'`.
+
 ## Example Usage
 
 The following code makes use of nested-framing, multi-threaded spinners, formatted text, and more.
