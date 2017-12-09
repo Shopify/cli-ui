@@ -7,9 +7,25 @@ Dev UI is a small framework who's only responsibility is to print pretty to the 
 - [Documentation of the Rubygems version](http://www.rubydoc.info/gems/dev-ui/)
 - [Rubygems](https://rubygems.org/gems/dev-ui)
 
+## Installation
+
+```bash
+gem install dev-ui
+```
+
+or add the following to your Gemfile:
+
+```ruby
+gem 'dev-ui'
+```
+
+In your code, simply add a `require 'dev/ui'`. Most options assume `Dev::UI::StdoutRouter.enable` has been called.
+
 ## Features
 
 This may not be an exhaustive list. Please check our [documentation](http://www.rubydoc.info/github/Shopify/dev-ui/master/Dev/UI) for more information.
+
+---
 
 ### Nested framing
 To handle content flow (see example below)
@@ -24,6 +40,8 @@ end
 
 ![Nested Framing](https://user-images.githubusercontent.com/3074765/33799861-cb5dcb5c-dd01-11e7-977e-6fad38cee08c.png)
 
+---
+
 ### Interactive Prompts
 Prompt user with options and ask them to choose. Can answer using arrow keys, numbers, or vim bindings (or y/n for yes/no questions)
 
@@ -34,6 +52,8 @@ Dev::UI::InteractivePrompt.call(%w(rails go ruby python))
 
 ![Interactive Prompt](https://user-images.githubusercontent.com/3074765/33797984-0ebb5e64-dcdf-11e7-9e7e-7204f279cece.gif)
 
+---
+
 ### Free form text prompts
 
 ```ruby
@@ -42,9 +62,10 @@ Dev::UI.ask('Is Dev UI Awesome?', default: 'It is great!')
 
   ![Free form text prompt](https://user-images.githubusercontent.com/3074765/33799822-47f23302-dd01-11e7-82f3-9072a5a5f611.png)
 
+---
+
 ### Spinner groups
 Handle many multi-threaded processes while suppressing output unless there is an issue. Can update title to show state.
-
 
 ```ruby
 spin_group = Dev::UI::SpinGroup.new
@@ -55,6 +76,8 @@ spin_group.wait
 
 ![Spinner Group](https://user-images.githubusercontent.com/3074765/33798295-d94fd822-dce3-11e7-819b-43e5502d490e.gif)
 
+---
+
 ### Text Color formatting
 e.g. `{{red:Red}} {{green:Green}}`
 
@@ -62,7 +85,9 @@ e.g. `{{red:Red}} {{green:Green}}`
 puts Dev::UI.fmt "{{red:Red}} {{green:Green}}"
 ```
 
-  ![Text Format](https://user-images.githubusercontent.com/3074765/33799827-6d0721a2-dd01-11e7-9ab5-c3d455264afe.png)
+![Text Format](https://user-images.githubusercontent.com/3074765/33799827-6d0721a2-dd01-11e7-9ab5-c3d455264afe.png)
+
+---
 
 ### Symbol/Glyph Formatting
 e.g. `{{*}}` => a yellow ⭑
@@ -72,6 +97,8 @@ puts Dev::UI.fmt "{{*}} {{x}} {{?}} {{v}}"
 ```
 
 ![Symbol Formatting](https://user-images.githubusercontent.com/3074765/33799847-9ec03fd0-dd01-11e7-93f7-5f5cc540e61e.png)
+
+---
 
 ### Progress Bar
 
@@ -87,19 +114,7 @@ end
 
 ![Progress Bar](https://user-images.githubusercontent.com/3074765/33799794-cc4c940e-dd00-11e7-9bdc-90f77ec9167c.gif)
 
-## Installation
-
-```bash
-gem install dev-ui
-```
-
-or add the following to your Gemfile:
-
-```ruby
-gem 'dev-ui'
-```
-
-In your code, simply add a `require 'dev/ui'`. Most options assume `Dev::UI::StdoutRouter.enable` has been called.
+---
 
 ## Example Usage
 
