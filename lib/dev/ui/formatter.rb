@@ -6,6 +6,11 @@ require 'strscan'
 module Dev
   module UI
     class Formatter
+      # Available mappings of formattings
+      # To use any of them, you can use {{<key>:<string>}}
+      # There are presentational (colours and formatters)
+      # and semantic (error, info, command) formatters available
+      #
       SGR_MAP = {
         # presentational
         'red'       => '31',
@@ -32,14 +37,14 @@ module Dev
 
       SCAN_FUNCNAME = /\w+:/
       SCAN_GLYPH    = /.}}/
-      SCAN_BODY     = /
+      SCAN_BODY     = %r{
         .*?
         (
           #{BEGIN_EXPR} |
           #{END_EXPR}   |
           \z
         )
-      /mx
+      }mx
 
       DISCARD_BRACES = 0..-3
 
@@ -55,10 +60,26 @@ module Dev
         end
       end
 
+      # Initialize a formatter with text.
+      #
+      # ===== Attributes
+      #
+      # * +text+ - the text to format
+      #
       def initialize(text)
         @text = text
       end
 
+      # Format the text using a map.
+      #
+      # ===== Attributes
+      #
+      # * +sgr_map+ - the mapping of the formattings. Defaults to +SGR_MAP+
+      #
+      # ===== Options
+      #
+      # * +:enable_color+ - enable color output? Default is true
+      #
       def format(sgr_map = SGR_MAP, enable_color: true)
         @nodes = []
         stack = parse_body(StringScanner.new(@text))
