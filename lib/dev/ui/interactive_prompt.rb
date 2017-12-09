@@ -3,11 +3,29 @@ require 'io/console'
 module Dev
   module UI
     class InteractivePrompt
+      # Prompts the user with options
+      # Uses an interactive session to allow the user to pick an answer
+      # Can use arrows, y/n, numbers (1/2), and vim bindings to control
+      #
+      # https://user-images.githubusercontent.com/3074765/33797984-0ebb5e64-dcdf-11e7-9e7e-7204f279cece.gif
+      #
+      # ==== Example Usage:
+      #
+      # Ask an interactive question
+      #   Dev::UI::InteractivePrompt.call(%w(rails go python))
+      #
       def self.call(options)
         list = new(options)
         options[list.call - 1]
       end
 
+      # Initializes a new +InteractivePrompt+
+      # Usually called from +self.call+
+      #
+      # ==== Example Usage:
+      #
+      #   Dev::UI::InteractivePrompt.new(%w(rails go python))
+      #
       def initialize(options)
         @options = options
         @active = 1
@@ -16,6 +34,9 @@ module Dev
         @state = :root
       end
 
+      # Calls the +InteractivePrompt+ and asks the question
+      # Usually used from +self.call+
+      #
       def call
         Dev::UI.raw { print(ANSI.hide_cursor) }
         while @answer.nil?
