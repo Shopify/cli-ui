@@ -3,25 +3,31 @@ require 'dev/ui'
 module Dev
   module UI
     class Progress
-      FILLED_BAR = "\e[46m" # cyan bg
-      UNFILLED_BAR = "\e[1;47m" # bright white bg
+      # A Cyan filled block
+      FILLED_BAR = "\e[46m"
+      # A bright white block
+      UNFILLED_BAR = "\e[1;47m"
 
-      # Set the percent to X
-      # Dev::UI::Progress.progress do |bar|
-      #   bar.tick(set_percent: percent)
-      # end
+      # Add a progress bar to the terminal output
       #
-      # Increase the percent by 1
-      # Dev::UI::Progress.progress do |bar|
-      #   bar.tick
-      # end
+      # ==== Example Usage:
+      #
+      # Set the percent to X
+      #   Dev::UI::Progress.progress do |bar|
+      #     bar.tick(set_percent: percent)
+      #   end
+      #
+      # Increase the percent by 1 percent
+      #   Dev::UI::Progress.progress do |bar|
+      #     bar.tick
+      #   end
       #
       # Increase the percent by X
-      # Dev::UI::Progress.progress do |bar|
-      #   bar.tick(percent: 5)
-      # end
-      def self.progress
-        bar = Progress.new
+      #   Dev::UI::Progress.progress do |bar|
+      #     bar.tick(percent: 5)
+      #   end
+      def self.progress(width: Terminal.width)
+        bar = Progress.new(width: width)
         print Dev::UI::ANSI.hide_cursor
         yield(bar)
       ensure
@@ -32,11 +38,26 @@ module Dev
         end
       end
 
+      # Initialize a progress bar. Typically used in a +Progress.progress+ block
+      #
+      # ==== Options
+      # One of the follow can be used, but not both together
+      #
+      # * +:width+ - The width of the terminal
+      #
       def initialize(width: Terminal.width)
         @percent_done = 0
         @max_width = width
       end
 
+      # Set the progress of the bar. Typically used in a +Progress.progress+ block
+      #
+      # ==== Options
+      # One of the follow can be used, but not both together
+      #
+      # * +:percent+ - Increment progress by a specific percent amount
+      # * +:set_percent+ - Set progress to a specific percent
+      #
       def tick(percent: 0.01, set_percent: nil)
         raise ArgumentError, 'percent and set_percent cannot both be specified' if percent != 0.01 && set_percent
         @percent_done += percent
@@ -48,6 +69,8 @@ module Dev
         print Dev::UI::ANSI.end_of_line + "\n"
       end
 
+      # Format the progress bar to be printed to terminal
+      #
       def to_s
         suffix = " #{(@percent_done * 100).round(2)}%"
         workable_width = @max_width - Frame.prefix_width - suffix.size
