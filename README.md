@@ -12,6 +12,7 @@ Dev UI is a small framework who's only responsibility is to print pretty to the 
 This may not be an exhaustive list. Please check our [documentation](http://www.rubydoc.info/github/Shopify/dev-ui/master/Dev/UI) for more information.
 
 - Nested framing to handle content flow (see example below)
+  ![Nested Framing](https://user-images.githubusercontent.com/3074765/33799861-cb5dcb5c-dd01-11e7-977e-6fad38cee08c.png)
 - Interactive Prompts (prompt user with options, using arrow keys, numbers, or vim bindings, choose)
   ![Interactive Prompt](https://user-images.githubusercontent.com/3074765/33797984-0ebb5e64-dcdf-11e7-9e7e-7204f279cece.gif)
 - Free form text prompts
@@ -20,10 +21,10 @@ This may not be an exhaustive list. Please check our [documentation](http://www.
   ![Spinner Group](https://user-images.githubusercontent.com/3074765/33798295-d94fd822-dce3-11e7-819b-43e5502d490e.gif)
 - Text Color formatting (e.g. `{{red:Red}} {{green:Green}}`)
   ![Text Format](https://user-images.githubusercontent.com/3074765/33799827-6d0721a2-dd01-11e7-9ab5-c3d455264afe.png)
-- Symbol Formatting (e.g. `{{*}}` => a yellow ⭑) 
+- Symbol/Glyph Formatting (e.g. `{{*}}` => a yellow ⭑) 
+  ![Symbol Formatting](https://user-images.githubusercontent.com/3074765/33799847-9ec03fd0-dd01-11e7-93f7-5f5cc540e61e.png)
 - Progress Bar
   ![Progress Bar](https://user-images.githubusercontent.com/3074765/33799794-cc4c940e-dd00-11e7-9bdc-90f77ec9167c.gif)
-
 
 ## Installation
 
