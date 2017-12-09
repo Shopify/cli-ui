@@ -64,7 +64,7 @@ module Dev
     end
 
     # Conviencence Method to resolve text using +Dev::UI::Formatter.format+
-    # Check +Dev::UI::Formatter::SGR_MAP+ for avaiable formatting options
+    # Check +Dev::UI::Formatter::SGR_MAP+ for available formatting options
     #
     # ==== Attributes
     #
@@ -76,7 +76,7 @@ module Dev
     end
 
     # Conviencence Method to format text using +Dev::UI::Formatter.format+
-    # Check +Dev::UI::Formatter::SGR_MAP+ for avaiable formatting options
+    # Check +Dev::UI::Formatter::SGR_MAP+ for available formatting options
     #
     # ==== Attributes
     #
