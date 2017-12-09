@@ -12,16 +12,27 @@ module Dev
     autoload :Formatter,          'dev/ui/formatter'
     autoload :Spinner,            'dev/ui/spinner'
 
-
-    # TODO: this, better
+    # Convenience accessor to +Dev::UI::Spinner::SpinGroup+
     SpinGroup = Spinner::SpinGroup
 
-    # TODO: test
+    # Glyph resolution using +Dev::UI::Glyph.lookup+
+    # Look at the method signature for +Glyph.lookup+ for more details
+    #
+    # ==== Attributes
+    #
+    # * +handle+ - handle of the glyph to resolve
+    #
     def self.glyph(handle)
       Dev::UI::Glyph.lookup(handle)
     end
 
-    # TODO: test
+    # Color resolution using +Dev::UI::Color.lookup+
+    # Will lookup using +Color.lookup+ if a symbol, otherwise we assume it is a valid color and return it
+    #
+    # ==== Attributes
+    #
+    # * +input+ - color to resolve
+    #
     def self.resolve_color(input)
       case input
       when Symbol
@@ -31,35 +42,93 @@ module Dev
       end
     end
 
+    # Conviencence Method for +Dev::UI::Prompt.confirm+
+    #
+    # ==== Attributes
+    #
+    # * +question+ - question to confirm
+    #
     def self.confirm(question)
       Dev::UI::Prompt.confirm(question)
     end
 
+    # Conviencence Method for +Dev::UI::Prompt.ask+
+    #
+    # ==== Attributes
+    #
+    # * +question+ - question to ask
+    # * +kwargs+ - arugments for +Prompt.ask+
+    #
     def self.ask(question, **kwargs)
       Dev::UI::Prompt.ask(question, **kwargs)
     end
 
+    # Conviencence Method to resolve text using +Dev::UI::Formatter.format+
+    # Check +Dev::UI::Formatter::SGR_MAP+ for avaiable formatting options
+    #
+    # ==== Attributes
+    #
+    # * +input+ - input to format
+    #
     def self.resolve_text(input)
       return input if input.nil?
       Dev::UI::Formatter.new(input).format
     end
 
+    # Conviencence Method to format text using +Dev::UI::Formatter.format+
+    # Check +Dev::UI::Formatter::SGR_MAP+ for avaiable formatting options
+    #
+    # ==== Attributes
+    #
+    # * +input+ - input to format
+    #
+    # ==== Options
+    #
+    # * +enable_color+ - should color be used? default to true
+    #
     def self.fmt(input, enable_color: true)
       Dev::UI::Formatter.new(input).format(enable_color: enable_color)
     end
 
+    # Conviencence Method for +Dev::UI::Frame.open+
+    #
+    # ==== Attributes
+    #
+    # * +args+ - arguments for +Frame.open+
+    # * +block+ - block for +Frame.open+
+    #
     def self.frame(*args, &block)
       Dev::UI::Frame.open(*args, &block)
     end
 
+    # Conviencence Method for +Dev::UI::Spinner.spin+
+    #
+    # ==== Attributes
+    #
+    # * +args+ - arguments for +Spinner.open+
+    # * +block+ - block for +Spinner.open+
+    #
     def self.spinner(*args, &block)
       Dev::UI::Spinner.spin(*args, &block)
     end
 
+    # Conviencence Method to override frame color using +Dev::UI::Frame.with_frame_color+
+    #
+    # ==== Attributes
+    #
+    # * +color+ - color to override to
+    # * +block+ - block for +Frame.with_frame_color_override+
+    #
     def self.with_frame_color(color, &block)
       Dev::UI::Frame.with_frame_color_override(color, &block)
     end
 
+    # Duplicate output to a file path
+    #
+    # ==== Attributes
+    #
+    # * +path+ - path to duplicate output to
+    #
     def self.log_output_to(path)
       if Dev::UI::StdoutRouter.duplicate_output_to
         raise "multiple logs not allowed"
@@ -73,6 +142,12 @@ module Dev
       end
     end
 
+    # Disable all framing within a block
+    #
+    # ==== Attributes
+    #
+    # * +block+ - block in which to disable frames
+    #
     def self.raw
       prev = Thread.current[:no_devui_frame_inset]
       Thread.current[:no_devui_frame_inset] = true
