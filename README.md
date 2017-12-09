@@ -30,7 +30,7 @@ or add the following to your Gemfile:
 gem 'dev-ui'
 ```
 
-In your code, simply add a `require 'dev/ui'`.
+In your code, simply add a `require 'dev/ui'`. Most options assume `Dev::UI::StdoutRouter.enable` has been called.
 
 ## Example Usage
 
