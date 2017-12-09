@@ -4,6 +4,16 @@ module Dev
   module UI
     class Color
       attr_reader :sgr, :name, :code
+
+      # Creates a new color mapping
+      # Signatures can be found here:
+      # https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
+      #
+      # ==== Attributes
+      #
+      # * +sgr+ - The color signature
+      # * +name+ - The name of the color
+      #
       def initialize(sgr, name)
         @sgr  = sgr
         @code = Dev::UI::ANSI.sgr(sgr)
@@ -44,12 +54,23 @@ module Dev
         end
       end
 
+      # Looks up a color code by name
+      #
+      # ==== Raises
+      # Raises a InvalidColorName if the color is not available
+      # You likely need to add it to the +MAP+ or you made a typo
+      #
+      # ==== Returns
+      # Returns a color code
+      #
       def self.lookup(name)
         MAP.fetch(name)
       rescue KeyError
         raise InvalidColorName, name
       end
 
+      # All available colors by name
+      #
       def self.available
         MAP.keys
       end
