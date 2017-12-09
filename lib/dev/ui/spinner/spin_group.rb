@@ -9,6 +9,17 @@ module Dev
         #
         # * +:auto_debrief+ - Automatically debrief exceptions? Default to true
         #
+        # ==== Example Usage
+        #
+        #  spin_group = Dev::UI::SpinGroup.new
+        #  spin_group.add('Title')   { |spinner| sleep 3.0 }
+        #  spin_group.add('Title 2') { |spinner| sleep 3.0; spinner.update_title('New Title'); sleep 3.0 }
+        #  spin_group.wait
+        #
+        # Output:
+        #
+        # https://user-images.githubusercontent.com/3074765/33798558-c452fa26-dce8-11e7-9e90-b4b34df21a46.gif
+        #
         def initialize(auto_debrief: true)
           @m = Mutex.new
           @consumed_lines = 0
@@ -26,17 +37,6 @@ module Dev
           #
           # * +title+ - Title of the task
           # * +block+ - Block for the task, will be provided with an instance of the spinner
-          #
-          # ==== Example Usage
-          #
-          #  spin_group = Dev::UI::SpinGroup.new
-          #  spin_group.add('Title')   { |spinner| sleep 3.0 }
-          #  spin_group.add('Title 2') { |spinner| sleep 3.0; spinner.update_title('New Title'); sleep 3.0 }
-          #  spin_group.wait
-          #
-          # Output:
-          #
-          # https://user-images.githubusercontent.com/3074765/33798558-c452fa26-dce8-11e7-9e90-b4b34df21a46.gif
           #
           def initialize(title, &block)
             @title = title
