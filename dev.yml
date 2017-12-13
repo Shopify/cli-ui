@@ -3,5 +3,5 @@ up:
   - bundler
 
 commands:
-  test: bin/testunit
+  test: bundle exec rake test
   style: "bundle exec rubocop -D"

@@ -150,3 +150,16 @@ end
 Output:
 
 ![Example Output](https://user-images.githubusercontent.com/3074765/33797758-7a54c7cc-dcdb-11e7-918e-a47c9689f068.gif)
+
+## Development
+
+- Run tests using `bundle exec rake test`. All code should be tested.
+- No code, outside of development and tests needs, should use dependencies. This is a self contained library
+
+## Contributing
+
+Bug reports and pull requests are welcome on GitHub at https://github.com/Shopify/dev-ui.
+
+## License
+
+The code is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
