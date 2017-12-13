@@ -313,8 +313,6 @@ module Dev
         assert_equal(ret, actual_ret)
       end
 
-      private
-
       def strip_heredoc(str)
         str.gsub(/^#{str.scan(/^[ \t]*(?=\S)/).min}/, "".freeze)
       end

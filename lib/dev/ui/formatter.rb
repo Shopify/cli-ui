@@ -37,14 +37,14 @@ module Dev
 
       SCAN_FUNCNAME = /\w+:/
       SCAN_GLYPH    = /.}}/
-      SCAN_BODY     = %r{
+      SCAN_BODY     = /
         .*?
         (
           #{BEGIN_EXPR} |
           #{END_EXPR}   |
           \z
         )
-      }mx
+      /mx
 
       DISCARD_BRACES = 0..-3
 

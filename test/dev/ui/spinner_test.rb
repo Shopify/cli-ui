@@ -98,13 +98,14 @@ module Dev
       end
 
       def test_spinner_task_error_through_returning_error
-        out, err = capture_io do
+        out, _ = capture_io do
           Dev::UI::StdoutRouter.ensure_activated
           Dev::UI::Spinner.spin('broken') do
             $stderr.puts 'not empty'
             Dev::UI::Spinner::TASK_FAILED
           end
         end
+
         match_lines(
           out,
           /⠋ broken/,

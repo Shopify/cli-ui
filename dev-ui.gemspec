@@ -9,8 +9,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Burke Libbey", "Julian Nadeau"]
   spec.email         = ["burke.libbey@shopify.com", "julian.nadeau@shopify.com"]
 
-  spec.summary       = %q{Terminal UI framework}
-  spec.description   = %q{Terminal UI framework}
+  spec.summary       = 'Terminal UI framework'
+  spec.description   = 'Terminal UI framework'
   spec.homepage      = "https://github.com/shopify/dev-ui"
   spec.license       = "MIT"
 

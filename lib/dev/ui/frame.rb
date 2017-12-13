@@ -29,7 +29,7 @@ module Dev
         # * +:timing+ - How long did the frame content take? Invalid for blockless. Defaults to true for the block form
         #
         # ==== Example
-        # 
+        #
         # ===== Block Form (Assumes +Dev::UI::StdoutRouter.enable+ has been called)
         #
         #   Dev::UI::Frame.open('Open') { puts 'hi' }
@@ -38,7 +38,7 @@ module Dev
         #   ┏━━ Open ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         #   ┃ hi
         #   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ (0.0s) ━━
-        # 
+        #
         # ===== Blockless Form
         #
         #   Dev::UI::Frame.open('Open')
@@ -46,7 +46,7 @@ module Dev
         # Output:
         #   ┏━━ Open ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         #
-        # 
+        #
         def open(
           text,
           color: DEFAULT_FRAME_COLOR,
@@ -80,7 +80,7 @@ module Dev
           begin
             success = false
             success = yield
-          rescue Exception
+          rescue
             closed = true
             t_diff = timing ? (Time.now.to_f - t_start) : nil
             close(failure_text, color: :red, elapsed: t_diff)
@@ -118,7 +118,7 @@ module Dev
         # Output:
         #   ┗━━ Close ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         #
-        # 
+        #
         def close(text, color: DEFAULT_FRAME_COLOR, elapsed: nil)
           color = Dev::UI.resolve_color(color)
 
@@ -188,7 +188,7 @@ module Dev
           pfx
         end
 
-        # Override a color for a given thread. 
+        # Override a color for a given thread.
         #
         # ==== Attributes
         #
@@ -202,7 +202,7 @@ module Dev
           Thread.current[:devui_frame_color_override] = prev
         end
 
-        # The width of a prefix given the number of Frames in the stack 
+        # The width of a prefix given the number of Frames in the stack
         #
         def prefix_width
           w = FrameStack.items.size
@@ -254,15 +254,15 @@ module Dev
           # Jumping around the line can cause some unwanted flashes
           o << Dev::UI::ANSI.hide_cursor
 
-          if is_ci
-            # In CI, we can't use absolute horizontal positions because of timestamps.
-            # So we move around the line by offset from this cursor position.
-            o << Dev::UI::ANSI.cursor_save
-          else
-            # Outside of CI, we reset to column 1 so that things like ^C don't
-            # cause output misformatting.
-            o << "\r"
-          end
+          o << if is_ci
+                 # In CI, we can't use absolute horizontal positions because of timestamps.
+                 # So we move around the line by offset from this cursor position.
+                 Dev::UI::ANSI.cursor_save
+               else
+                 # Outside of CI, we reset to column 1 so that things like ^C don't
+                 # cause output misformatting.
+                 "\r"
+               end
 
           o << color.code
           o << Dev::UI::Box::Heavy::HORZ * termwidth # draw a full line

@@ -2,13 +2,7 @@ inherit_from:
   - http://shopify.github.io/ruby-style-guide/rubocop.yml
 
 AllCops:
-  Exclude:
-    - 'vendor/**/*'
-  TargetRubyVersion: 2.0
-
-# This doesn't understand that <<~ doesn't exist in 2.0
-Style/IndentHeredoc:
-  Enabled: false
+  TargetRubyVersion: 2.1
 
 # This doesn't take into account retrying from an exception
 Lint/HandleExceptions:

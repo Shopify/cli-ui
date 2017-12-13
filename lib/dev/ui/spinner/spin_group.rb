@@ -201,7 +201,7 @@ module Dev
 
               Dev::UI::Frame.open('Task Failed: ' + task.title, color: :red) do
                 if e
-                  puts"#{e.class}: #{e.message}"
+                  puts "#{e.class}: #{e.message}"
                   puts "\tfrom #{e.backtrace.join("\n\tfrom ")}"
                 end
 

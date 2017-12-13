@@ -140,7 +140,7 @@ module Dev
       yield
     ensure
       if file_descriptor = Dev::UI::StdoutRouter.duplicate_output_to
-        file_descriptor.close 
+        file_descriptor.close
         Dev::UI::StdoutRouter.duplicate_output_to = nil
       end
     end

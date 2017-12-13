@@ -9,3 +9,10 @@ Rake::TestTask.new do |t|
   t.verbose = false
   t.warning = false
 end
+
+desc "Check rubocop styles"
+task :style do
+  sh "rubocop"
+end
+
+task default: [:test, :style]
