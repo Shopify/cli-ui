@@ -1,6 +1,7 @@
 require 'dev/ui'
 require 'rake/testtask'
 require 'rubocop/rake_task'
+require 'bundler/gem_tasks'
 
 TEST_ROOT = File.expand_path('../test', __FILE__)
 
