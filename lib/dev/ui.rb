@@ -5,7 +5,6 @@ module Dev
     autoload :Color,              'dev/ui/color'
     autoload :Box,                'dev/ui/box'
     autoload :Frame,              'dev/ui/frame'
-    autoload :InteractivePrompt,  'dev/ui/interactive_prompt'
     autoload :Progress,           'dev/ui/progress'
     autoload :Prompt,             'dev/ui/prompt'
     autoload :Terminal,           'dev/ui/terminal'

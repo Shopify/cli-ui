@@ -4,6 +4,9 @@ require 'readline'
 module Dev
   module UI
     module Prompt
+      autoload :InteractiveOptions,  'dev/ui/prompt/interactive_options'
+      private_constant :InteractiveOptions
+
       class << self
         # Ask a user a question with either free form answer or a set of answers
         # Do not use this method for yes/no questions. Use +confirm+
@@ -12,7 +15,7 @@ module Dev
         # * Handles free form answers (options are nil)
         # * Handles default answers for free form text
         # * Handles file auto completion for file input
-        # * Handles interactively choosing answers using +InteractivePrompt+
+        # * Handles interactively choosing answers using +InteractiveOptions+
         #
         # https://user-images.githubusercontent.com/3074765/33799822-47f23302-dd01-11e7-82f3-9072a5a5f611.png
         #
@@ -22,7 +25,7 @@ module Dev
         #
         # ==== Options
         #
-        # * +:options+ - Options to ask the user. Will use +InteractivePrompt+ to do so
+        # * +:options+ - Options to ask the user. Will use +InteractiveOptions+ to do so
         # * +:default+ - The default answer to the question (e.g. they just press enter and don't input anything)
         # * +:is_file+ - Tells the input to use file auto-completion (tab completion)
         # * +:allow_empty+ - Allows the answer to be empty
@@ -64,7 +67,7 @@ module Dev
 
           # Present the user with options
           if options
-            resp = InteractivePrompt.call(options)
+            resp = InteractiveOptions.call(options)
 
             # Clear the line, and reset the question to include the answer
             print(ANSI.previous_line + ANSI.end_of_line + ' ')

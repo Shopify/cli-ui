@@ -47,7 +47,6 @@ Prompt user with options and ask them to choose. Can answer using arrow keys, nu
 
 ```ruby
 Dev::UI.ask('What language/framework do you use?', options: %w(rails go ruby python))
-Dev::UI::InteractivePrompt.call(%w(rails go ruby python))
 ```
 
 ![Interactive Prompt](https://user-images.githubusercontent.com/3074765/33797984-0ebb5e64-dcdf-11e7-9e7e-7204f279cece.gif)
