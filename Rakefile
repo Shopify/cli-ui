@@ -1,5 +1,6 @@
 require 'dev/ui'
 require 'rake/testtask'
+require 'rubocop/rake_task'
 
 TEST_ROOT = File.expand_path('../test', __FILE__)
 
@@ -10,9 +11,8 @@ Rake::TestTask.new do |t|
   t.warning = false
 end
 
-desc "Check rubocop styles"
-task :style do
-  sh "rubocop"
+RuboCop::RakeTask.new(:style) do |t|
+  t.options = ['--display-cop-names']
 end
 
 task default: [:test, :style]
