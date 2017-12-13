@@ -94,9 +94,11 @@ module Dev
           \e[?25l> 1. yes
             2. no
           \e[\e[C
-          > 1. yes
-            2. no
+          #{' ' * Dev::UI::Terminal.width}
+          #{' ' * Dev::UI::Terminal.width}
+          \e[\e[C
           \e[?25h\e[\e[C
+          \e[\e[C \e[s#{' ' * Dev::UI::Terminal.width}\e[u? q (You chose: yes)
         EOF
         assert_result(expected_out, "", true)
       end
@@ -111,9 +113,11 @@ module Dev
           > 1. yes
             2. no
           \e[\e[C
-          > 1. yes
-            2. no
+          #{' ' * Dev::UI::Terminal.width}
+          #{' ' * Dev::UI::Terminal.width}
+          \e[\e[C
           \e[?25h\e[\e[C
+          \e[\e[C \e[s#{' ' * Dev::UI::Terminal.width}\e[u? q (You chose: yes)
         EOF
         assert_result(expected_out, "", true)
       end
@@ -128,9 +132,11 @@ module Dev
           > 1. yes
             2. no
           \e[\e[C
-            1. yes
-          > 2. no
+          #{' ' * Dev::UI::Terminal.width}
+          #{' ' * Dev::UI::Terminal.width}
+          \e[\e[C
           \e[?25h\e[\e[C
+          \e[\e[C \e[s#{' ' * Dev::UI::Terminal.width}\e[u? q (You chose: no)
         EOF
         assert_result(expected_out, "", false)
       end
@@ -191,9 +197,11 @@ module Dev
           \e[?25l> 1. a
             2. b
           \e[\e[C
-            1. a
-          > 2. b
+          #{' ' * Dev::UI::Terminal.width}
+          #{' ' * Dev::UI::Terminal.width}
+          \e[\e[C
           \e[?25h\e[\e[C
+          \e[\e[C \e[s#{' ' * Dev::UI::Terminal.width}\e[u? q (You chose: b)
         EOF
         assert_result(expected_out, "", "b")
       end
@@ -208,9 +216,11 @@ module Dev
           1. a
         > 2. b
         \e[\e[C
-          1. a
-        > 2. b
+        #{' ' * Dev::UI::Terminal.width}
+        #{' ' * Dev::UI::Terminal.width}
+        \e[\e[C
         \e[?25h\e[\e[C
+        \e[\e[C \e[s#{' ' * Dev::UI::Terminal.width}\e[u? q (You chose: b)
         EOF
         assert_result(expected_out, "", "b")
       end
@@ -222,9 +232,11 @@ module Dev
         \e[?25l> 1. a
           2. b
         \e[\e[C
-        > 1. a
-          2. b
+        #{' ' * Dev::UI::Terminal.width}
+        #{' ' * Dev::UI::Terminal.width}
+        \e[\e[C
         \e[?25h\e[\e[C
+        \e[\e[C \e[s#{' ' * Dev::UI::Terminal.width}\e[u? q (You chose: a)
         EOF
         assert_result(expected_out, "", "a")
       end
@@ -269,9 +281,11 @@ module Dev
         > 1. a
           2. b
         \e[\e[C
-          1. a
-        > 2. b
+        #{' ' * Dev::UI::Terminal.width}
+        #{' ' * Dev::UI::Terminal.width}
+        \e[\e[C
         \e[?25h\e[\e[C
+        \e[\e[C \e[s#{' ' * Dev::UI::Terminal.width}\e[u? q (You chose: b)
         EOF
         assert_result(expected_out, "", "b")
       end
