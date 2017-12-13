@@ -10,6 +10,9 @@ module Dev
             [10, 70]
           end
         end
+
+        IO.expects(:respond_to?).with(:console).twice.returns(true)
+
         IO.expects(:console).returns(obj)
         assert_equal(70, Terminal.width)
 

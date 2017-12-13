@@ -8,7 +8,7 @@ module Dev
       # Otherwise will return 80
       #
       def self.width
-        if console = IO.console
+        if console = IO.respond_to?(:console) && IO.console
           console.winsize[1]
         else
           80
