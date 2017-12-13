@@ -42,16 +42,9 @@ module Dev
         while @answer.nil?
           render_options
           wait_for_user_input
-
-          # This will put us back at the beginning of the options
-          # When we redraw the options, they will be overwritten
-          Dev::UI.raw do
-            num_lines = @options.join("\n").split("\n").reject(&:empty?).size
-            num_lines.times { print(ANSI.previous_line) }
-            print(ANSI.previous_line + ANSI.end_of_line + "\n")
-          end
+          reset_position
         end
-        render_options
+        clear_output
         @answer
       ensure
         Dev::UI.raw do
@@ -61,6 +54,30 @@ module Dev
       end
 
       private
+
+      def reset_position
+        # This will put us back at the beginning of the options
+        # When we redraw the options, they will be overwritten
+        Dev::UI.raw do
+          num_lines.times { print(ANSI.previous_line) }
+          print(ANSI.previous_line + ANSI.end_of_line + "\n")
+        end
+      end
+
+      def clear_output
+        Dev::UI.raw do
+          # Write over all lines with whitespace
+          num_lines.times { puts(' ' * Dev::UI::Terminal.width) }
+        end
+        reset_position
+      end
+
+      def num_lines
+        # @options will be an array of questions but each option can be multi-line
+        # so to get the # of lines, you need to join then split
+        joined_options = @options.join("\n")
+        joined_options.split("\n").reject(&:empty?).size
+      end
 
       ESC = "\e"
 

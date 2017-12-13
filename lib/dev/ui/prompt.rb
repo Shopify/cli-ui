@@ -62,8 +62,21 @@ module Dev
             puts_question(question)
           end
 
-          return InteractivePrompt.call(options) if options
+          # Present the user with options
+          if options
+            resp = InteractivePrompt.call(options)
 
+            # Clear the line, and reset the question to include the answer
+            print(ANSI.previous_line + ANSI.end_of_line + ' ')
+            print(ANSI.cursor_save)
+            print(' ' * Dev::UI::Terminal.width)
+            print(ANSI.cursor_restore)
+            puts_question("#{question} (You chose: {{italic:#{resp}}})")
+
+            return resp
+          end
+
+          # Ask a free form question
           loop do
             line = readline(is_file: is_file)
 
@@ -83,12 +96,11 @@ module Dev
         #
         # ==== Example Usage:
         #
-        # Free form question
+        # Confirmation question
         #   Dev::UI::Prompt.confirm('Is the sky blue?')
         #
         def confirm(question)
-          puts_question("#{question} {{yellow:(choose with ↑ ↓ ⏎)}}")
-          InteractivePrompt.call(%w(yes no)) == 'yes'
+          ask(question, options: %w(yes no)) == 'yes'
         end
 
         private
