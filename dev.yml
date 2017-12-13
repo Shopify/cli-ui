@@ -3,5 +3,12 @@ up:
   - bundler
 
 commands:
-  test: bundle exec rake test
+  test:
+    run: |
+      if [ "$#" -eq 1 ] && [[ -f $1 ]];
+      then
+        rake test TEST=$1
+      else
+        rake test $@
+      fi
   style: "bundle exec rubocop -D"
