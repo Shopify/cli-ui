@@ -20,22 +20,21 @@ GEM
       ruby-progressbar
     mocha (1.2.1)
       metaclass (~> 0.0.1)
-    parallel (1.11.2)
-    parser (2.4.0.0)
-      ast (~> 2.2)
+    parallel (1.12.0)
+    parser (2.4.0.2)
+      ast (~> 2.3)
     powerpack (0.1.1)
-    rainbow (2.2.2)
-      rake
+    rainbow (3.0.0)
     rake (10.5.0)
-    rubocop (0.49.1)
+    rubocop (0.52.0)
       parallel (~> 1.10)
-      parser (>= 2.3.3.1, < 3.0)
+      parser (>= 2.4.0.2, < 3.0)
       powerpack (~> 0.1)
-      rainbow (>= 1.99.1, < 3.0)
+      rainbow (>= 2.2.2, < 4.0)
       ruby-progressbar (~> 1.7)
       unicode-display_width (~> 1.0, >= 1.0.1)
-    ruby-progressbar (1.8.1)
-    unicode-display_width (1.2.1)
+    ruby-progressbar (1.9.0)
+    unicode-display_width (1.3.0)
 
 PLATFORMS
   ruby
