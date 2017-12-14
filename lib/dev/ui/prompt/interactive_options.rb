@@ -147,9 +147,11 @@ module Dev
         end
 
         def render_options
+          max_num_length = (@options.size + 1).to_s.length
           @options.each_with_index do |choice, index|
             num = index + 1
-            message = "  #{num}."
+            padding = ' ' * (max_num_length - num.to_s.length)
+            message = "  #{num}.#{padding}"
             message += choice.split("\n").map { |l| " {{bold:#{l}}}" }.join("\n")
 
             if num == @active
