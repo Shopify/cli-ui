@@ -1,29 +1,29 @@
-Dev UI
+CLI UI
 ---
 
-Dev UI is a small framework who's only responsibility is to print pretty to the terminal
+CLI UI is a small framework for generating nice command-line user interfaces
 
-- [Master Documentation](http://www.rubydoc.info/github/Shopify/dev-ui/master/Dev/UI)
-- [Documentation of the Rubygems version](http://www.rubydoc.info/gems/dev-ui/)
-- [Rubygems](https://rubygems.org/gems/dev-ui)
+- [Master Documentation](http://www.rubydoc.info/github/Shopify/cli-ui/master/CLI/UI)
+- [Documentation of the Rubygems version](http://www.rubydoc.info/gems/cli-ui/)
+- [Rubygems](https://rubygems.org/gems/cli-ui)
 
 ## Installation
 
 ```bash
-gem install dev-ui
+gem install cli-ui
 ```
 
 or add the following to your Gemfile:
 
 ```ruby
-gem 'dev-ui'
+gem 'cli-ui'
 ```
 
-In your code, simply add a `require 'dev/ui'`. Most options assume `Dev::UI::StdoutRouter.enable` has been called.
+In your code, simply add a `require 'cli/ui'`. Most options assume `CLI::UI::StdoutRouter.enable` has been called.
 
 ## Features
 
-This may not be an exhaustive list. Please check our [documentation](http://www.rubydoc.info/github/Shopify/dev-ui/master/Dev/UI) for more information.
+This may not be an exhaustive list. Please check our [documentation](http://www.rubydoc.info/github/Shopify/cli-ui/master/CLI/UI) for more information.
 
 ---
 
@@ -31,9 +31,9 @@ This may not be an exhaustive list. Please check our [documentation](http://www.
 To handle content flow (see example below)
 
 ```ruby
-Dev::UI::StdoutRouter.enable
-Dev::UI::Frame.open('Frame 1') do
-  Dev::UI::Frame.open('Frame 2') { puts "inside frame 2" }
+CLI::UI::StdoutRouter.enable
+CLI::UI::Frame.open('Frame 1') do
+  CLI::UI::Frame.open('Frame 2') { puts "inside frame 2" }
   puts "inside frame 1" 
 end
 ```
@@ -46,7 +46,7 @@ end
 Prompt user with options and ask them to choose. Can answer using arrow keys, numbers, or vim bindings (or y/n for yes/no questions)
 
 ```ruby
-Dev::UI.ask('What language/framework do you use?', options: %w(rails go ruby python))
+CLI::UI.ask('What language/framework do you use?', options: %w(rails go ruby python))
 ```
 
 ![Interactive Prompt](https://user-images.githubusercontent.com/3074765/33797984-0ebb5e64-dcdf-11e7-9e7e-7204f279cece.gif)
@@ -56,7 +56,7 @@ Dev::UI.ask('What language/framework do you use?', options: %w(rails go ruby pyt
 ### Free form text prompts
 
 ```ruby
-Dev::UI.ask('Is Dev UI Awesome?', default: 'It is great!')
+CLI::UI.ask('Is CLI UI Awesome?', default: 'It is great!')
 ```
 
   ![Free form text prompt](https://user-images.githubusercontent.com/3074765/33799822-47f23302-dd01-11e7-82f3-9072a5a5f611.png)
@@ -67,7 +67,7 @@ Dev::UI.ask('Is Dev UI Awesome?', default: 'It is great!')
 Handle many multi-threaded processes while suppressing output unless there is an issue. Can update title to show state.
 
 ```ruby
-spin_group = Dev::UI::SpinGroup.new
+spin_group = CLI::UI::SpinGroup.new
 spin_group.add('Title')   { |spinner| sleep 3.0 }
 spin_group.add('Title 2') { |spinner| sleep 3.0; spinner.update_title('New Title'); sleep 3.0 }
 spin_group.wait
@@ -81,7 +81,7 @@ spin_group.wait
 e.g. `{{red:Red}} {{green:Green}}`
 
 ```ruby
-puts Dev::UI.fmt "{{red:Red}} {{green:Green}}"
+puts CLI::UI.fmt "{{red:Red}} {{green:Green}}"
 ```
 
 ![Text Format](https://user-images.githubusercontent.com/3074765/33799827-6d0721a2-dd01-11e7-9ab5-c3d455264afe.png)
@@ -92,7 +92,7 @@ puts Dev::UI.fmt "{{red:Red}} {{green:Green}}"
 e.g. `{{*}}` => a yellow ⭑
 
 ```ruby
-puts Dev::UI.fmt "{{*}} {{x}} {{?}} {{v}}"
+puts CLI::UI.fmt "{{*}} {{x}} {{?}} {{v}}"
 ```
 
 ![Symbol Formatting](https://user-images.githubusercontent.com/3074765/33799847-9ec03fd0-dd01-11e7-93f7-5f5cc540e61e.png)
@@ -104,7 +104,7 @@ puts Dev::UI.fmt "{{*}} {{x}} {{?}} {{v}}"
 Show progress of a process or operation.
 
 ```ruby
-Dev::UI::Progress.progress do |bar|
+CLI::UI::Progress.progress do |bar|
   100.times do
     bar.tick
   end
@@ -120,14 +120,14 @@ end
 The following code makes use of nested-framing, multi-threaded spinners, formatted text, and more.
 
 ```ruby
-require 'dev/ui'
+require 'cli/ui'
 
-Dev::UI::StdoutRouter.enable
+CLI::UI::StdoutRouter.enable
 
-Dev::UI::Frame.open('{{*}} {{bold:a}}', color: :green) do
-  Dev::UI::Frame.open('{{i}} b', color: :magenta) do
-    Dev::UI::Frame.open('{{?}} c', color: :cyan) do
-      sg = Dev::UI::SpinGroup.new
+CLI::UI::Frame.open('{{*}} {{bold:a}}', color: :green) do
+  CLI::UI::Frame.open('{{i}} b', color: :magenta) do
+    CLI::UI::Frame.open('{{?}} c', color: :cyan) do
+      sg = CLI::UI::SpinGroup.new
       sg.add('wow') do |spinner|
         sleep(2.5)
         spinner.update_title('second round!')
@@ -138,9 +138,9 @@ Dev::UI::Frame.open('{{*}} {{bold:a}}', color: :green) do
       sg.wait
     end
   end
-  Dev::UI::Frame.divider('{{v}} lol')
-  puts Dev::UI.fmt '{{info:words}} {{red:oh no!}} {{green:success!}}'
-  sg = Dev::UI::SpinGroup.new
+  CLI::UI::Frame.divider('{{v}} lol')
+  puts CLI::UI.fmt '{{info:words}} {{red:oh no!}} {{green:success!}}'
+  sg = CLI::UI::SpinGroup.new
   sg.add('more spins') { sleep(0.5) ; raise 'oh no' }
   sg.wait
 end
@@ -157,7 +157,7 @@ Output:
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/Shopify/dev-ui.
+Bug reports and pull requests are welcome on GitHub at https://github.com/Shopify/cli-ui.
 
 ## License
 

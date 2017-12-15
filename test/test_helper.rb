@@ -6,7 +6,7 @@ begin
   addpath.call("lib")
 end
 
-require 'dev/ui'
+require 'cli/ui'
 
 require 'fileutils'
 require 'tmpdir'

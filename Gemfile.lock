@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    dev-ui (0.1.2)
+    cli-ui (0.1.2)
 
 GEM
   remote: https://rubygems.org/
@@ -42,7 +42,7 @@ PLATFORMS
 DEPENDENCIES
   bundler (~> 1.15)
   byebug
-  dev-ui!
+  cli-ui!
   method_source
   minitest (>= 5.0.0)
   minitest-reporters
