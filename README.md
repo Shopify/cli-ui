@@ -150,10 +150,10 @@ Output:
 
 ![Example Output](https://user-images.githubusercontent.com/3074765/33797758-7a54c7cc-dcdb-11e7-918e-a47c9689f068.gif)
 
-## CLIelopment
+## Development
 
 - Run tests using `bundle exec rake test`. All code should be tested.
-- No code, outside of clielopment and tests needs, should use dependencies. This is a self contained library
+- No code, outside of development and tests needs, should use dependencies. This is a self contained library
 
 ## Contributing
 

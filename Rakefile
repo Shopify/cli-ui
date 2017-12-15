@@ -1,3 +1,4 @@
+$LOAD_PATH.unshift(File.expand_path('../lib', __FILE__))
 require 'cli/ui'
 require 'rake/testtask'
 require 'rubocop/rake_task'
