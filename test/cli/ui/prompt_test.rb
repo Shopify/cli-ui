@@ -157,15 +157,15 @@ module CLI
       end
 
       def test_ask_no_filename_completion
-        _run("/cli/nul\t") { Prompt.ask('q') }
+        _run("/dev/nul\t") { Prompt.ask('q') }
         # \a = terminal bell, because completion failed
-        assert_result("? q\n> /cli/nul\n", "\a", "/cli/nul")
+        assert_result("? q\n> /dev/nul\n", "\a", "/dev/nul")
       end
 
       def test_ask_filename_completion
-        _run("/cli\tnul\t") { Prompt.ask('q', is_file: true) }
+        _run("/dev\tnul\t") { Prompt.ask('q', is_file: true) }
         # \a = terminal bell, because completion failed
-        assert_result("? q\n> /cli/null\n", "", "/cli/null")
+        assert_result("? q\n> /dev/null\n", "", "/dev/null")
       end
 
       def test_ask_default
