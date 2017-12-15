@@ -1,7 +1,7 @@
 CLI UI
 ---
 
-CLI UI is a small framework who's only responsibility is to print pretty to the terminal
+CLI UI is a small framework for generating nice command-line user interfaces
 
 - [Master Documentation](http://www.rubydoc.info/github/Shopify/cli-ui/master/CLI/UI)
 - [Documentation of the Rubygems version](http://www.rubydoc.info/gems/cli-ui/)
