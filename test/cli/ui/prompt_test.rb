@@ -66,7 +66,10 @@ module CLI
       def test_options_sigint
         start_process do
           begin
-            Prompt.ask('q', options: %w(a b))
+            Prompt.ask('q') do |handler|
+              handler.add_option('a') {}
+              handler.add_option('b') {}
+            end
           rescue Interrupt
             @ret.write(Marshal.dump(:SIGINT))
           end
@@ -180,18 +183,36 @@ module CLI
       end
 
       def test_invalid_kwargs
-        kwargsets = [
-          { options: ['a'], default: 'a' },
-          { options: ['a'], is_file: true },
-          { default: 'a', allow_empty: false },
-        ]
-        kwargsets.each do |kwargs|
-          assert_raises(ArgumentError) { Prompt.ask('q', **kwargs) }
+        option = Proc.new do |h| h.add_option('a') {}; end
+        expected_error_message = 'conflicting arguments'
+
+        error = assert_raises(ArgumentError) { Prompt.ask('q', default: 'a', &option) }
+        assert_equal expected_error_message, error.message
+        error = assert_raises(ArgumentError) { Prompt.ask('q', is_file: true, &option) }
+        assert_equal expected_error_message, error.message
+        error = assert_raises(ArgumentError) { Prompt.ask('q', default: 'a', allow_empty: false ) }
+        assert_equal expected_error_message, error.message
+      end
+
+      def test_insufficient_options
+        exception = assert_raises(ArgumentError) do
+          Prompt.ask('q') {}
         end
+        assert_equal 'insufficient options', exception.message
+
+        exception = assert_raises(ArgumentError) do
+          Prompt.ask('q') { |h| h.add_option('a') {} }
+        end
+        assert_equal 'insufficient options', exception.message
       end
 
       def test_options_with_number
-        _run('2') { Prompt.ask('q', options: %w(a b)) }
+        _run('2') do
+          Prompt.ask('q') do |h|
+            h.add_option('a') { |_| 'a' }
+            h.add_option('b') { |_| 'b' }
+          end
+        end
         expected_out = strip_heredoc(<<-EOF)
           ? q (choose with ↑ ↓ ⏎)
           \e[?25l> 1. a
@@ -207,7 +228,12 @@ module CLI
       end
 
       def test_options_with_vim_bound_arrows
-        _run('j', ' ') { Prompt.ask('q', options: %w(a b)) }
+        _run('j', ' ') do
+          Prompt.ask('q') do |h|
+            h.add_option('a') { |_| 'a' }
+            h.add_option('b') { |_| 'b' }
+          end
+        end
         expected_out = strip_heredoc(<<-EOF)
         ? q (choose with ↑ ↓ ⏎)
         \e[?25l> 1. a
@@ -226,7 +252,12 @@ module CLI
       end
 
       def test_options_select_using_space
-        _run(' ') { Prompt.ask('q', options: %w(a b)) }
+        _run(' ') do
+          Prompt.ask('q') do |h|
+            h.add_option('a') { |_| 'a' }
+            h.add_option('b') { |_| 'b' }
+          end
+        end
         expected_out = strip_heredoc(<<-EOF)
         ? q (choose with ↑ ↓ ⏎)
         \e[?25l> 1. a
@@ -244,7 +275,10 @@ module CLI
       def test_options_escape
         _run("\e") do
           begin
-            Prompt.ask('q', options: %w(a b))
+            Prompt.ask('q') do |h|
+              h.add_option('a') { |_| 'a' }
+              h.add_option('b') { |_| 'b' }
+            end
           rescue Interrupt
             @ret.write(Marshal.dump(:SIGINT))
           end
@@ -263,7 +297,12 @@ module CLI
       end
 
       def test_options_invalid_input
-        _run('3', 'nan', '2') { Prompt.ask('q', options: %w(a b)) }
+        _run('3', 'nan', '2') do
+          Prompt.ask('q') do |h|
+            h.add_option('a') { |_| 'a' }
+            h.add_option('b') { |_| 'b' }
+          end
+        end
         expected_out = strip_heredoc(<<-EOF)
         ? q (choose with ↑ ↓ ⏎)
         \e[?25l> 1. a

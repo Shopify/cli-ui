@@ -53,16 +53,8 @@ module CLI
         #
         #
         def ask(question, default: nil, is_file: nil, allow_empty: true, &define_options)
-          if (default && !allow_empty) || (options && (default || is_file))
+          if (default && !allow_empty) || (block_given? && (default || is_file))
             raise(ArgumentError, 'conflicting arguments')
-          end
-
-          if default
-            puts_question("#{question} (empty = #{default})")
-          elsif options
-            puts_question("#{question} {{yellow:(choose with ↑ ↓ ⏎)}}")
-          else
-            puts_question(question)
           end
 
           # Present the user with options
@@ -71,7 +63,9 @@ module CLI
             handler = OptionsHandler.new
 
             yield handler
+            raise(ArgumentError, 'insufficient options') if handler.options.size < 2
 
+            puts_question("#{question} {{yellow:(choose with ↑ ↓ ⏎)}}")
             resp = InteractiveOptions.call(handler.options)
 
             # Clear the line, and reset the question to include the answer
@@ -81,7 +75,13 @@ module CLI
             print(ANSI.cursor_restore)
             puts_question("#{question} (You chose: {{italic:#{resp}}})")
 
-            return handler[resp].call(resp)
+            return handler.call(resp)
+          end
+
+          if default
+            puts_question("#{question} (empty = #{default})")
+          else
+            puts_question(question)
           end
 
           # Ask a free form question
@@ -108,7 +108,10 @@ module CLI
         #   CLI::UI::Prompt.confirm('Is the sky blue?')
         #
         def confirm(question)
-          ask(question, options: %w(yes no)) == 'yes'
+          ask(question) do |handler|
+            handler.add_option('yes') { |_| true }
+            handler.add_option('no') { |_| false }
+          end
         end
 
         private
