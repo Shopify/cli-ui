@@ -52,7 +52,7 @@ module CLI
         #   CLI::UI::Prompt.ask('What kind of project is this?', options: %w(rails go ruby python))
         #
         #
-        def ask(question, options: nil, default: nil, is_file: nil, allow_empty: true)
+        def ask(question, default: nil, is_file: nil, allow_empty: true, &define_options)
           if (default && !allow_empty) || (options && (default || is_file))
             raise(ArgumentError, 'conflicting arguments')
           end
@@ -66,8 +66,13 @@ module CLI
           end
 
           # Present the user with options
-          if options
-            resp = InteractiveOptions.call(options)
+          if block_given?
+            require 'cli/ui/prompt/options_handler'
+            handler = OptionsHandler.new
+
+            yield handler
+
+            resp = InteractiveOptions.call(handler.options)
 
             # Clear the line, and reset the question to include the answer
             print(ANSI.previous_line + ANSI.end_of_line + ' ')
@@ -76,7 +81,7 @@ module CLI
             print(ANSI.cursor_restore)
             puts_question("#{question} (You chose: {{italic:#{resp}}})")
 
-            return resp
+            return handler[resp].call(resp)
           end
 
           # Ask a free form question
