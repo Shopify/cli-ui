@@ -25,10 +25,11 @@ module CLI
         #
         # ==== Options
         #
-        # * +:options+ - Options to ask the user. Will use +InteractiveOptions+ to do so
         # * +:default+ - The default answer to the question (e.g. they just press enter and don't input anything)
         # * +:is_file+ - Tells the input to use file auto-completion (tab completion)
         # * +:allow_empty+ - Allows the answer to be empty
+        # * +:define_options+ - A Proc that takes a +OptionsHandler+ and uses the +:add_option+ method to
+        #                       add options and their respective handlers
         #
         # Note:
         # * +:options+ conflicts with +:default+ and +:is_file+, you cannot set options with either of these keywords
@@ -48,8 +49,12 @@ module CLI
         # Free form question when the answer can be empty
         #   CLI::UI::Prompt.ask('What is your opinion on this question?', allow_empty: true)
         #
-        # Question with answers
-        #   CLI::UI::Prompt.ask('What kind of project is this?', options: %w(rails go ruby python))
+        # Multiple choice question with defined handlers
+        #   CLI::UI::Prompt.ask('What kind of project is this?', options: %w(rails go ruby python)) do |handler|
+        #     handler.add_option('rails')  { |selection| puts selection } => outputs "rails" if selected
+        #     handler.add_option('go')     { |selection| puts selection } => outputs "go" if selected
+        #     handler.add_option('ruby')   { |selection| puts selection } => outputs "ruby" if selected
+        #     handler.add_option('python') { |selection| puts selection } => outputs "python" if selected
         #
         #
         def ask(question, default: nil, is_file: nil, allow_empty: true, &define_options)
