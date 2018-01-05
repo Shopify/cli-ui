@@ -63,13 +63,10 @@ module CLI
         assert_result("? q\n> ", "^C\n", :SIGINT)
       end
 
-      def test_options_sigint
+      def test_ask_interactive_sigint
         start_process do
           begin
-            Prompt.ask('q') do |handler|
-              handler.add_option('a') {}
-              handler.add_option('b') {}
-            end
+            Prompt.ask_interactive('q', %w(a b))
           rescue Interrupt
             @ret.write(Marshal.dump(:SIGINT))
           end
@@ -182,36 +179,9 @@ module CLI
         assert_result("? q (empty = asdf)\n> zxcv\n", "", "zxcv")
       end
 
-      def test_invalid_kwargs
-        option = Proc.new do |h| h.add_option('a') {}; end
-        expected_error_message = 'conflicting arguments'
-
-        error = assert_raises(ArgumentError) { Prompt.ask('q', default: 'a', &option) }
-        assert_equal expected_error_message, error.message
-        error = assert_raises(ArgumentError) { Prompt.ask('q', is_file: true, &option) }
-        assert_equal expected_error_message, error.message
-        error = assert_raises(ArgumentError) { Prompt.ask('q', default: 'a', allow_empty: false ) }
-        assert_equal expected_error_message, error.message
-      end
-
-      def test_insufficient_options
-        exception = assert_raises(ArgumentError) do
-          Prompt.ask('q') {}
-        end
-        assert_equal 'insufficient options', exception.message
-
-        exception = assert_raises(ArgumentError) do
-          Prompt.ask('q') { |h| h.add_option('a') {} }
-        end
-        assert_equal 'insufficient options', exception.message
-      end
-
-      def test_options_with_number
+      def test_ask_with_options
         _run('2') do
-          Prompt.ask('q') do |h|
-            h.add_option('a') { |_| 'a' }
-            h.add_option('b') { |_| 'b' }
-          end
+          Prompt.ask('q', options: %w(a b))
         end
         expected_out = strip_heredoc(<<-EOF)
           ? q (choose with ↑ ↓ ⏎)
@@ -227,12 +197,85 @@ module CLI
         assert_result(expected_out, "", "b")
       end
 
-      def test_options_with_vim_bound_arrows
-        _run('j', ' ') do
-          Prompt.ask('q') do |h|
-            h.add_option('a') { |_| 'a' }
-            h.add_option('b') { |_| 'b' }
+      def test_ask_invalid_kwargs
+        kwargsets = [
+          { options: ['a'], default: 'a' },
+          { options: ['a'], is_file: true },
+          { default: 'a', allow_empty: false },
+        ]
+
+        kwargsets.each do |kwargs|
+          error = assert_raises(ArgumentError) { Prompt.ask('q', **kwargs) }
+          assert_equal 'conflicting arguments', error.message
+        end
+      end
+
+      def test_ask_interactive_conflicting_arguments
+        error = assert_raises(ArgumentError) do
+          Prompt.ask_interactive('q', %w(a b)) { |h| h.add_option('a') }
+        end
+        assert_equal 'conflicting arguments', error.message
+      end
+
+      def test_ask_interactive_insufficient_options
+        exception = assert_raises(ArgumentError) do
+          Prompt.ask_interactive('q')
+        end
+        assert_equal 'insufficient options', exception.message
+
+        exception = assert_raises(ArgumentError) do
+          Prompt.ask_interactive('q', %w(a))
+        end
+        assert_equal 'insufficient options', exception.message
+
+        exception = assert_raises(ArgumentError) do
+          Prompt.ask_interactive('q') { |h| h.add_option('a') {} }
+        end
+        assert_equal 'insufficient options', exception.message
+      end
+
+      def test_ask_interactive_with_block
+        _run('2') do
+          Prompt.ask_interactive('q') do |h|
+            h.add_option('a') { |a| 'a was selected' }
+            h.add_option('b') { |b| 'b was selected' }
           end
+        end
+        expected_out = strip_heredoc(<<-EOF)
+          ? q (choose with ↑ ↓ ⏎)
+          \e[?25l> 1. a
+            2. b
+          \e[\e[C
+          #{' ' * CLI::UI::Terminal.width}
+          #{' ' * CLI::UI::Terminal.width}
+          \e[\e[C
+          \e[?25h\e[\e[C
+          \e[\e[C \e[s#{' ' * CLI::UI::Terminal.width}\e[u? q (You chose: b)
+        EOF
+        assert_result(expected_out, "", "b was selected")
+      end
+
+      def test_ask_interactive_with_number
+        _run('2') do
+          Prompt.ask_interactive('q', %w(a b))
+        end
+        expected_out = strip_heredoc(<<-EOF)
+          ? q (choose with ↑ ↓ ⏎)
+          \e[?25l> 1. a
+            2. b
+          \e[\e[C
+          #{' ' * CLI::UI::Terminal.width}
+          #{' ' * CLI::UI::Terminal.width}
+          \e[\e[C
+          \e[?25h\e[\e[C
+          \e[\e[C \e[s#{' ' * CLI::UI::Terminal.width}\e[u? q (You chose: b)
+        EOF
+        assert_result(expected_out, "", "b")
+      end
+
+      def test_ask_interactive_with_vim_bound_arrows
+        _run('j', ' ') do
+          Prompt.ask_interactive('q', %w(a b))
         end
         expected_out = strip_heredoc(<<-EOF)
         ? q (choose with ↑ ↓ ⏎)
@@ -251,12 +294,9 @@ module CLI
         assert_result(expected_out, "", "b")
       end
 
-      def test_options_select_using_space
+      def test_ask_interactive_select_using_space
         _run(' ') do
-          Prompt.ask('q') do |h|
-            h.add_option('a') { |_| 'a' }
-            h.add_option('b') { |_| 'b' }
-          end
+          Prompt.ask_interactive('q', %w(a b))
         end
         expected_out = strip_heredoc(<<-EOF)
         ? q (choose with ↑ ↓ ⏎)
@@ -272,13 +312,10 @@ module CLI
         assert_result(expected_out, "", "a")
       end
 
-      def test_options_escape
+      def test_ask_interactive_escape
         _run("\e") do
           begin
-            Prompt.ask('q') do |h|
-              h.add_option('a') { |_| 'a' }
-              h.add_option('b') { |_| 'b' }
-            end
+            Prompt.ask_interactive('q', %w(a b))
           rescue Interrupt
             @ret.write(Marshal.dump(:SIGINT))
           end
@@ -296,12 +333,9 @@ module CLI
         assert_result(expected_out, nil, :SIGINT)
       end
 
-      def test_options_invalid_input
+      def test_ask_interactive_invalid_input
         _run('3', 'nan', '2') do
-          Prompt.ask('q') do |h|
-            h.add_option('a') { |_| 'a' }
-            h.add_option('b') { |_| 'b' }
-          end
+          Prompt.ask_interactive('q', %w(a b))
         end
         expected_out = strip_heredoc(<<-EOF)
         ? q (choose with ↑ ↓ ⏎)
