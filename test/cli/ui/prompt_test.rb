@@ -183,30 +183,29 @@ module CLI
         kwargsets = [
           { options: ['a'], default: 'a' },
           { options: ['a'], is_file: true },
-          { default: 'a', allow_empty: false },
         ]
 
         kwargsets.each do |kwargs|
           error = assert_raises(ArgumentError) { Prompt.ask('q', **kwargs) }
-          assert_equal 'conflicting arguments', error.message
+          assert_equal 'conflicting arguments: options provided with default or is_file', error.message
         end
 
         error = assert_raises(ArgumentError) do
-          Prompt.ask('q', is_file: true) {}
+          Prompt.ask('q', default: 'a', allow_empty: false)
         end
-        assert_equal 'conflicting arguments', error.message
+        assert_equal 'conflicting arguments: default enabled but allow_empty is false', error.message
 
         error = assert_raises(ArgumentError) do
           Prompt.ask('q', default: 'b') {}
         end
-        assert_equal 'conflicting arguments', error.message
+        assert_equal 'conflicting arguments: options provided with default or is_file', error.message
       end
 
       def test_ask_interactive_conflicting_arguments
         error = assert_raises(ArgumentError) do
           Prompt.ask('q', options: %w(a b)) { |h| h.option('a') }
         end
-        assert_equal 'conflicting arguments', error.message
+        assert_equal 'conflicting arguments: options and block given', error.message
       end
 
       def test_ask_interactive_insufficient_options

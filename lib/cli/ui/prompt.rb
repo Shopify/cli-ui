@@ -10,7 +10,7 @@ module CLI
 
       class << self
         # Ask a user a question with either free form answer or a set of answers (multiple choice)
-        # Can use arrows, y/n, numbers (1/2), and vim bindings to control
+        # Can use arrows, y/n, numbers (1/2), and vim bindings to control multiple choice selection
         # Do not use this method for yes/no questions. Use +confirm+
         #
         # * Handles free form answers (options are nil)
@@ -32,13 +32,13 @@ module CLI
         # * +:allow_empty+ - Allows the answer to be empty
         #
         # Note:
-        # * +:options+ or providing a +Proc+ conflicts with +:default+ and +:is_file+, you cannot set options with either of these keywords
+        # * +:options+ or providing a +Block+ conflicts with +:default+ and +:is_file+, you cannot set options with either of these keywords
         # * +:default+ conflicts with +:allow_empty:, you cannot set these together
-        # * +:options+ conflicts with providing a +Proc+ , you may only set one
+        # * +:options+ conflicts with providing a +Block+ , you may only set one
         #
         # ==== Block (optional)
         #
-        # * A Proc that takes a +OptionsHandler+ and uses the public +:option+ method to add options and their
+        # * A Proc that provides a +OptionsHandler+ and uses the public +:option+ method to add options and their
         #   respective handlers
         #
         # ==== Example Usage:
@@ -56,17 +56,20 @@ module CLI
         #   CLI::UI::Prompt.ask('What is your opinion on this question?', allow_empty: true)
         #
         # Interactive (multiple choice) question
-        #   CLI::UI::Prompt.ask_interactive('What kind of project is this?', options: %w(rails go ruby python))
+        #   CLI::UI::Prompt.ask('What kind of project is this?', options: %w(rails go ruby python))
         #
         # Interactive (multiple choice) question with defined handlers
-        #   CLI::UI::Prompt.ask_interactive('What kind of project is this?', options: %w(rails go ruby python)) do |handler|
-        #     handler.option('rails')  { |selection| puts selection } => outputs "rails" if selected
-        #     handler.option('go')     { |selection| puts selection } => outputs "go" if selected
-        #     handler.option('ruby')   { |selection| puts selection } => outputs "ruby" if selected
-        #     handler.option('python') { |selection| puts selection } => outputs "python" if selected
+        #   CLI::UI::Prompt.ask('What kind of project is this?') do |handler|
+        #     handler.option('rails')  { |selection| selection } => "rails" if selected
+        #     handler.option('go')     { |selection| selection } => "go" if selected
+        #     handler.option('ruby')   { |selection| selection } => "ruby" if selected
+        #     handler.option('python') { |selection| selection } => "python" if selected
+        #   end
         #
         def ask(question, options: nil, default: nil, is_file: nil, allow_empty: true, &options_proc)
-          raise(ArgumentError, 'conflicting arguments') if ((options || block_given?) && (default || is_file))
+          if ((options || block_given?) && (default || is_file))
+            raise(ArgumentError, 'conflicting arguments: options provided with default or is_file')
+          end
 
           if options || block_given?
             ask_interactive(question, options, &options_proc)
@@ -90,7 +93,7 @@ module CLI
         private
 
         def ask_free_form(question, default, is_file, allow_empty)
-          raise(ArgumentError, 'conflicting arguments') if (default && !allow_empty)
+          raise(ArgumentError, 'conflicting arguments: default enabled but allow_empty is false') if (default && !allow_empty)
 
           if default
             puts_question("#{question} (empty = #{default})")
@@ -114,7 +117,7 @@ module CLI
         end
 
         def ask_interactive(question, options = nil)
-          raise(ArgumentError, 'conflicting arguments') if options && block_given?
+          raise(ArgumentError, 'conflicting arguments: options and block given') if options && block_given?
 
           options ||= if block_given?
             handler = OptionsHandler.new
