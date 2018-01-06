@@ -5,12 +5,13 @@ module CLI
   module UI
     module Prompt
       autoload :InteractiveOptions,  'cli/ui/prompt/interactive_options'
-      private_constant :InteractiveOptions
+      autoload :OptionsHandler,      'cli/ui/prompt/options_handler'
+      private_constant :InteractiveOptions, :OptionsHandler
 
       class << self
-        # Ask a user a question with either free form answer or a set of answers
+        # Ask a user a question with either free form answer or a set of answers (multiple choice)
+        # Can use arrows, y/n, numbers (1/2), and vim bindings to control multiple choice selection
         # Do not use this method for yes/no questions. Use +confirm+
-        # Can use arrows, y/n, numbers, and vim bindings to control
         #
         # * Handles free form answers (options are nil)
         # * Handles default answers for free form text
@@ -25,14 +26,25 @@ module CLI
         #
         # ==== Options
         #
-        # * +:options+ - Options to ask the user. Will use +InteractiveOptions+ to do so
+        # * +:options+ - Options that the user may select from. Will use +InteractiveOptions+ to do so.
         # * +:default+ - The default answer to the question (e.g. they just press enter and don't input anything)
         # * +:is_file+ - Tells the input to use file auto-completion (tab completion)
         # * +:allow_empty+ - Allows the answer to be empty
         #
         # Note:
-        # * +:options+ conflicts with +:default+ and +:is_file+, you cannot set options with either of these keywords
+        # * +:options+ or providing a +Block+ conflicts with +:default+ and +:is_file+, you cannot set options with either of these keywords
         # * +:default+ conflicts with +:allow_empty:, you cannot set these together
+        # * +:options+ conflicts with providing a +Block+ , you may only set one
+        #
+        # ==== Block (optional)
+        #
+        # * A Proc that provides a +OptionsHandler+ and uses the public +:option+ method to add options and their
+        #   respective handlers
+        #
+        # ==== Return Value
+        #
+        # * If a +Block+ was not provided, the selected option or response to the free form question will be returned
+        # * If a +Block+ was provided, the evaluted value of the +Block+ will be returned
         #
         # ==== Example Usage:
         #
@@ -48,35 +60,50 @@ module CLI
         # Free form question when the answer can be empty
         #   CLI::UI::Prompt.ask('What is your opinion on this question?', allow_empty: true)
         #
-        # Question with answers
+        # Interactive (multiple choice) question
         #   CLI::UI::Prompt.ask('What kind of project is this?', options: %w(rails go ruby python))
         #
+        # Interactive (multiple choice) question with defined handlers
+        #   CLI::UI::Prompt.ask('What kind of project is this?') do |handler|
+        #     handler.option('rails')  { |selection| selection }
+        #     handler.option('go')     { |selection| selection }
+        #     handler.option('ruby')   { |selection| selection }
+        #     handler.option('python') { |selection| selection }
+        #   end
         #
-        def ask(question, options: nil, default: nil, is_file: nil, allow_empty: true)
-          if (default && !allow_empty) || (options && (default || is_file))
-            raise(ArgumentError, 'conflicting arguments')
+        def ask(question, options: nil, default: nil, is_file: nil, allow_empty: true, &options_proc)
+          if ((options || block_given?) && (default || is_file))
+            raise(ArgumentError, 'conflicting arguments: options provided with default or is_file')
           end
+
+          if options || block_given?
+            ask_interactive(question, options, &options_proc)
+          else
+            ask_free_form(question, default, is_file, allow_empty)
+          end
+        end
+
+        # Asks the user a yes/no question.
+        # Can use arrows, y/n, numbers (1/2), and vim bindings to control
+        #
+        # ==== Example Usage:
+        #
+        # Confirmation question
+        #   CLI::UI::Prompt.confirm('Is the sky blue?')
+        #
+        def confirm(question)
+          ask_interactive(question, %w(yes no)) == 'yes'
+        end
+
+        private
+
+        def ask_free_form(question, default, is_file, allow_empty)
+          raise(ArgumentError, 'conflicting arguments: default enabled but allow_empty is false') if (default && !allow_empty)
 
           if default
             puts_question("#{question} (empty = #{default})")
-          elsif options
-            puts_question("#{question} {{yellow:(choose with ↑ ↓ ⏎)}}")
           else
             puts_question(question)
-          end
-
-          # Present the user with options
-          if options
-            resp = InteractiveOptions.call(options)
-
-            # Clear the line, and reset the question to include the answer
-            print(ANSI.previous_line + ANSI.end_of_line + ' ')
-            print(ANSI.cursor_save)
-            print(' ' * CLI::UI::Terminal.width)
-            print(ANSI.cursor_restore)
-            puts_question("#{question} (You chose: {{italic:#{resp}}})")
-
-            return resp
           end
 
           # Ask a free form question
@@ -94,19 +121,29 @@ module CLI
           end
         end
 
-        # Asks the user a yes/no question.
-        # Can use arrows, y/n, numbers (1/2), and vim bindings to control
-        #
-        # ==== Example Usage:
-        #
-        # Confirmation question
-        #   CLI::UI::Prompt.confirm('Is the sky blue?')
-        #
-        def confirm(question)
-          ask(question, options: %w(yes no)) == 'yes'
-        end
+        def ask_interactive(question, options = nil)
+          raise(ArgumentError, 'conflicting arguments: options and block given') if options && block_given?
 
-        private
+          options ||= if block_given?
+            handler = OptionsHandler.new
+            yield handler
+            handler.options
+          end
+
+          raise(ArgumentError, 'insufficient options') if options.nil? || options.size < 2
+          puts_question("#{question} {{yellow:(choose with ↑ ↓ ⏎)}}")
+          resp = InteractiveOptions.call(options)
+
+          # Clear the line, and reset the question to include the answer
+          print(ANSI.previous_line + ANSI.end_of_line + ' ')
+          print(ANSI.cursor_save)
+          print(' ' * CLI::UI::Terminal.width)
+          print(ANSI.cursor_restore)
+          puts_question("#{question} (You chose: {{italic:#{resp}}})")
+
+          return handler.call(resp) if block_given?
+          resp
+        end
 
         def write_default_over_empty_input(default)
           CLI::UI.raw do
