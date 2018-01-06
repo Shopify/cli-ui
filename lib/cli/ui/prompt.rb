@@ -41,6 +41,11 @@ module CLI
         # * A Proc that provides a +OptionsHandler+ and uses the public +:option+ method to add options and their
         #   respective handlers
         #
+        # ==== Return Value
+        #
+        # * If a +Block+ was not provided, the selected option or response to the free form question will be returned
+        # * If a +Block+ was provided, the evaluted value of the +Block+ will be returned
+        #
         # ==== Example Usage:
         #
         # Free form question
@@ -60,10 +65,10 @@ module CLI
         #
         # Interactive (multiple choice) question with defined handlers
         #   CLI::UI::Prompt.ask('What kind of project is this?') do |handler|
-        #     handler.option('rails')  { |selection| selection } => "rails" if selected
-        #     handler.option('go')     { |selection| selection } => "go" if selected
-        #     handler.option('ruby')   { |selection| selection } => "ruby" if selected
-        #     handler.option('python') { |selection| selection } => "python" if selected
+        #     handler.option('rails')  { |selection| selection }
+        #     handler.option('go')     { |selection| selection }
+        #     handler.option('ruby')   { |selection| selection }
+        #     handler.option('python') { |selection| selection }
         #   end
         #
         def ask(question, options: nil, default: nil, is_file: nil, allow_empty: true, &options_proc)
