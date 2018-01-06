@@ -11,7 +11,7 @@ module CLI
           @options.keys
         end
 
-        def add_option(option, &handler)
+        def option(option, &handler)
           @options[option] = handler
         end
 

@@ -11,12 +11,12 @@ module CLI
           assert_empty handler.options
         end
 
-        def test_add_option
+        def test_option
           handler = OptionsHandler.new
 
-          handler.add_option('a') {}
-          handler.add_option('b') {}
-          handler.add_option('c') {}
+          handler.option('a') {}
+          handler.option('b') {}
+          handler.option('c') {}
 
           assert_equal ['a', 'b', 'c'], handler.options
         end
@@ -29,7 +29,7 @@ module CLI
             selection
           end
 
-          handler.add_option('a', &procedure)
+          handler.option('a', &procedure)
           assert_equal 'a', handler.call('a')
           assert procedure_called
         end

@@ -48,7 +48,7 @@ module CLI
       end
 
       # ^C is not handled; raises Interrupt, which may be handled by caller.
-      def test_ask_sigint
+      def test_ask_free_form_sigint
         start_process do
           begin
             Prompt.ask('q')
@@ -66,7 +66,7 @@ module CLI
       def test_ask_interactive_sigint
         start_process do
           begin
-            Prompt.ask_interactive('q', %w(a b))
+            Prompt.ask('q', options: %w(a b))
           rescue Interrupt
             @ret.write(Marshal.dump(:SIGINT))
           end
@@ -141,60 +141,42 @@ module CLI
         assert_result(expected_out, "", false)
       end
 
-      def test_ask_happy_path
+      def test_ask_free_form_happy_path
         _run('asdf') { Prompt.ask('q') }
         assert_result("? q\n> asdf\n", "", "asdf")
       end
 
-      def test_ask_empty_answer_rejected
+      def test_ask_free_form_empty_answer_rejected
         _run("\n") { Prompt.ask('q') } # allow_empty: true
         assert_result("? q\n> \n", "", "")
       end
 
-      def test_ask_empty_answer_allowed
+      def test_ask_free_form_empty_answer_allowed
         _run("\n", 'asdf') { Prompt.ask('q', allow_empty: false) }
         assert_result("? q\n> \n> asdf\n", "", "asdf")
       end
 
-      def test_ask_no_filename_completion
+      def test_ask_free_form_no_filename_completion
         _run("/dev/nul\t") { Prompt.ask('q') }
         # \a = terminal bell, because completion failed
         assert_result("? q\n> /dev/nul\n", "\a", "/dev/nul")
       end
 
-      def test_ask_filename_completion
+      def test_ask_free_form_filename_completion
         _run("/dev\tnul\t") { Prompt.ask('q', is_file: true) }
         # \a = terminal bell, because completion failed
         assert_result("? q\n> /dev/null\n", "", "/dev/null")
       end
 
-      def test_ask_default
+      def test_ask_free_form_default
         _run('') { Prompt.ask('q', default: 'asdf') }
         # write to stderr is to overwrite default over empty prompt
         assert_result("? q (empty = asdf)\n> \n", "asdf\n", "asdf")
       end
 
-      def test_ask_default_nondefault
+      def test_ask_free_form_default_nondefault
         _run('zxcv') { Prompt.ask('q', default: 'asdf') }
         assert_result("? q (empty = asdf)\n> zxcv\n", "", "zxcv")
-      end
-
-      def test_ask_with_options
-        _run('2') do
-          Prompt.ask('q', options: %w(a b))
-        end
-        expected_out = strip_heredoc(<<-EOF)
-          ? q (choose with ↑ ↓ ⏎)
-          \e[?25l> 1. a
-            2. b
-          \e[\e[C
-          #{' ' * CLI::UI::Terminal.width}
-          #{' ' * CLI::UI::Terminal.width}
-          \e[\e[C
-          \e[?25h\e[\e[C
-          \e[\e[C \e[s#{' ' * CLI::UI::Terminal.width}\e[u? q (You chose: b)
-        EOF
-        assert_result(expected_out, "", "b")
       end
 
       def test_ask_invalid_kwargs
@@ -208,37 +190,42 @@ module CLI
           error = assert_raises(ArgumentError) { Prompt.ask('q', **kwargs) }
           assert_equal 'conflicting arguments', error.message
         end
+
+        error = assert_raises(ArgumentError) do
+          Prompt.ask('q', is_file: true) {}
+        end
+        assert_equal 'conflicting arguments', error.message
+
+        error = assert_raises(ArgumentError) do
+          Prompt.ask('q', default: 'b') {}
+        end
+        assert_equal 'conflicting arguments', error.message
       end
 
       def test_ask_interactive_conflicting_arguments
         error = assert_raises(ArgumentError) do
-          Prompt.ask_interactive('q', %w(a b)) { |h| h.add_option('a') }
+          Prompt.ask('q', options: %w(a b)) { |h| h.option('a') }
         end
         assert_equal 'conflicting arguments', error.message
       end
 
       def test_ask_interactive_insufficient_options
         exception = assert_raises(ArgumentError) do
-          Prompt.ask_interactive('q')
+          Prompt.ask('q', options: %w(a))
         end
         assert_equal 'insufficient options', exception.message
 
         exception = assert_raises(ArgumentError) do
-          Prompt.ask_interactive('q', %w(a))
-        end
-        assert_equal 'insufficient options', exception.message
-
-        exception = assert_raises(ArgumentError) do
-          Prompt.ask_interactive('q') { |h| h.add_option('a') {} }
+          Prompt.ask('q') { |h| h.option('a') {} }
         end
         assert_equal 'insufficient options', exception.message
       end
 
       def test_ask_interactive_with_block
         _run('2') do
-          Prompt.ask_interactive('q') do |h|
-            h.add_option('a') { |a| 'a was selected' }
-            h.add_option('b') { |b| 'b was selected' }
+          Prompt.ask('q') do |h|
+            h.option('a') { |a| 'a was selected' }
+            h.option('b') { |b| 'b was selected' }
           end
         end
         expected_out = strip_heredoc(<<-EOF)
@@ -257,7 +244,7 @@ module CLI
 
       def test_ask_interactive_with_number
         _run('2') do
-          Prompt.ask_interactive('q', %w(a b))
+          Prompt.ask('q', options: %w(a b))
         end
         expected_out = strip_heredoc(<<-EOF)
           ? q (choose with ↑ ↓ ⏎)
@@ -275,7 +262,7 @@ module CLI
 
       def test_ask_interactive_with_vim_bound_arrows
         _run('j', ' ') do
-          Prompt.ask_interactive('q', %w(a b))
+          Prompt.ask('q', options: %w(a b))
         end
         expected_out = strip_heredoc(<<-EOF)
         ? q (choose with ↑ ↓ ⏎)
@@ -296,7 +283,7 @@ module CLI
 
       def test_ask_interactive_select_using_space
         _run(' ') do
-          Prompt.ask_interactive('q', %w(a b))
+          Prompt.ask('q', options: %w(a b))
         end
         expected_out = strip_heredoc(<<-EOF)
         ? q (choose with ↑ ↓ ⏎)
@@ -315,7 +302,7 @@ module CLI
       def test_ask_interactive_escape
         _run("\e") do
           begin
-            Prompt.ask_interactive('q', %w(a b))
+            Prompt.ask('q', options: %w(a b))
           rescue Interrupt
             @ret.write(Marshal.dump(:SIGINT))
           end
@@ -335,7 +322,7 @@ module CLI
 
       def test_ask_interactive_invalid_input
         _run('3', 'nan', '2') do
-          Prompt.ask_interactive('q', %w(a b))
+          Prompt.ask('q', options: %w(a b))
         end
         expected_out = strip_heredoc(<<-EOF)
         ? q (choose with ↑ ↓ ⏎)
