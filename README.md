@@ -49,6 +49,19 @@ Prompt user with options and ask them to choose. Can answer using arrow keys, nu
 CLI::UI.ask('What language/framework do you use?', options: %w(rails go ruby python))
 ```
 
+Can also assign callbacks to each option
+
+```ruby
+CLI::UI.ask('What language/framework do you use?') do |handler|
+  handler.option('rails')  { |selection| selection }
+  handler.option('go')     { |selection| selection }
+  handler.option('ruby')   { |selection| selection }
+  handler.option('python') { |selection| selection }
+end
+```
+
+* Note that the two examples provided above are identical in functionality
+
 ![Interactive Prompt](https://user-images.githubusercontent.com/3074765/33797984-0ebb5e64-dcdf-11e7-9e7e-7204f279cece.gif)
 
 ---
