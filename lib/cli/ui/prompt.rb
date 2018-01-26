@@ -177,7 +177,14 @@ module CLI
           # thread to manage output, but the current strategy feels like a
           # better tradeoff.
           prefix = CLI::UI.with_frame_color(:blue) { CLI::UI::Frame.prefix }
-          prompt = prefix + CLI::UI.fmt('{{blue:> }}{{yellow:')
+          suffix = CLI::UI.fmt('{{blue:> }}{{yellow:')
+          prompt = prefix + suffix
+
+          unless $stdin.tty?
+            ret = $stdin.readline.chomp
+            puts "#{suffix}#{ret}"
+            return ret
+          end
 
           begin
             line = Readline.readline(prompt, true)
