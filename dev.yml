@@ -11,4 +11,5 @@ commands:
       else
         rake test $@
       fi
+  console: bin/console
   style: "bundle exec rubocop -D"
