@@ -34,11 +34,6 @@ module CLI
       def self.strip_codes(str)
         str.gsub(/\x1b\[[\d;]+[A-z]|\r/, '')
       end
-
-      # https://en.wikipedia.org/wiki/ANSI_escape_code#graphics
-      def self.sgr(params)
-        "\x1b[#{params}m"
-      end
     end
   end
 end
