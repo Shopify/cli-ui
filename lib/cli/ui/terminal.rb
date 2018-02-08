@@ -19,27 +19,39 @@ module CLI
         TermInfo.tigetnum('lines') || 24
       end
 
+      def self.previous_line
+        cursor_up + cursor_horizontal_absolute(1)
+      end
+
+      def self.next_line
+        cursor_down + cursor_horizontal_absolute(1)
+      end
+
       def self.cursor_right(n = 1)
+        return '' if n.zero?
         n == 1 ? fmt('cuf1') : fmt('cuf', n)
       end
 
       def self.cursor_left(n = 1)
+        return '' if n.zero?
         n == 1 ? fmt('cub1') : fmt('cub', n)
       end
 
       def self.cursor_up(n = 1)
+        return '' if n.zero?
         n == 1 ? fmt('cuu1') : fmt('cuu', n)
       end
 
       def self.cursor_down(n = 1)
+        return '' if n.zero?
         n == 1 ? fmt('cud1') : fmt('cud', n)
       end
 
-      def self.horizontal_position_absolute(n)
+      def self.cursor_horizontal_absolute(n)
         fmt('hpa', n)
       end
 
-      def self.vertical_position_absolute(n)
+      def self.cursor_vertical_absolute(n)
         fmt('vpa', n)
       end
 
@@ -47,23 +59,19 @@ module CLI
         fmt('el')
       end
 
-      def self.cursor_normal
+      def self.show_cursor
         fmt('cnorm')
       end
 
-      def self.cursor_very_visible
-        fmt('cvvis')
-      end
-
-      def self.cursor_invisible
+      def self.hide_cursor
         fmt('civis')
       end
 
-      def self.set_foreground(n)
+      def self.fg_color(n)
         fmt('setaf', n)
       end
 
-      def self.set_background(n)
+      def self.bg_color(n)
         fmt('setab', n)
       end
 
@@ -144,8 +152,6 @@ module CLI
           end
         end
 
-        private
-
         # TODO: manage libncurses dependency on Linux
         LIBTERMCAP = Fiddle.dlopen('/usr/lib/libtermcap.dylib')
         private_constant :LIBTERMCAP
@@ -162,7 +168,7 @@ module CLI
           Fiddle::TYPE_INT
         )
 
-        TPARM = (0..2).map do |n|
+        TPARM = (0..10).map do |n|
           Fiddle::Function.new(
             LIBTERMCAP['tparm'],
             [Fiddle::TYPE_VOIDP] * (n + 1),

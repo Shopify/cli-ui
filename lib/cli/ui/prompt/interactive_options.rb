@@ -39,7 +39,7 @@ module CLI
         # Usually used from +self.call+
         #
         def call
-          CLI::UI.raw { print(ANSI.hide_cursor) }
+          CLI::UI.raw { print(Terminal.hide_cursor) }
           while @answer.nil?
             render_options
             wait_for_user_input
@@ -49,8 +49,8 @@ module CLI
           @answer
         ensure
           CLI::UI.raw do
-            print(ANSI.show_cursor)
-            puts(ANSI.previous_line + ANSI.end_of_line)
+            print(Terminal.show_cursor)
+            puts(Terminal.previous_line + Terminal.clear_to_end_of_line)
           end
         end
 
@@ -60,8 +60,8 @@ module CLI
           # This will put us back at the beginning of the options
           # When we redraw the options, they will be overwritten
           CLI::UI.raw do
-            num_lines.times { print(ANSI.previous_line) }
-            print(ANSI.previous_line + ANSI.end_of_line + "\n")
+            num_lines.times { print(Terminal.previous_line) }
+            print(Terminal.previous_line + Terminal.clear_to_end_of_line + "\n")
           end
         end
 

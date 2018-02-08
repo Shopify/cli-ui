@@ -30,13 +30,13 @@ module CLI
       #   end
       def self.progress(width: Terminal.width)
         bar = Progress.new(width: width)
-        print CLI::UI::ANSI.hide_cursor
+        print CLI::UI::Terminal.hide_cursor
         yield(bar)
       ensure
         puts bar.to_s
         CLI::UI.raw do
-          print(ANSI.show_cursor)
-          puts(ANSI.previous_line + ANSI.end_of_line)
+          print(Terminal.show_cursor)
+          puts(Terminal.previous_line + Terminal.clear_to_end_of_line)
         end
       end
 
@@ -67,8 +67,8 @@ module CLI
         @percent_done = [@percent_done, 1.0].min # Make sure we can't go above 1.0
 
         print to_s
-        print CLI::UI::ANSI.previous_line
-        print CLI::UI::ANSI.end_of_line + "\n"
+        print CLI::UI::Terminal.previous_line
+        print CLI::UI::Terminal.clear_to_end_of_line + "\n"
       end
 
       # Format the progress bar to be printed to terminal
