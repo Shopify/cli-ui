@@ -132,7 +132,7 @@ module CLI
 
           raise(ArgumentError, 'insufficient options') if options.nil? || options.size < 2
           puts_question("#{question} {{yellow:(choose with ↑ ↓ ⏎)}}")
-          resp = InteractiveOptions.call(options)
+          resp = interactive_prompt(options)
 
           # Clear the line, and reset the question to include the answer
           print(ANSI.previous_line + ANSI.end_of_line + ' ')
@@ -143,6 +143,11 @@ module CLI
 
           return handler.call(resp) if block_given?
           resp
+        end
+
+        # Useful for stubbing in tests
+        def interactive_prompt(options)
+          InteractiveOptions.call(options)
         end
 
         def write_default_over_empty_input(default)
