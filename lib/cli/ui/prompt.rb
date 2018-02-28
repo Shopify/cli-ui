@@ -135,10 +135,10 @@ module CLI
           resp = interactive_prompt(options)
 
           # Clear the line, and reset the question to include the answer
-          print(ANSI.previous_line + ANSI.end_of_line + ' ')
-          print(ANSI.cursor_save)
-          print(' ' * CLI::UI::Terminal.width)
-          print(ANSI.cursor_restore)
+          print(Terminal.previous_line + Terminal.clear_to_end_of_line + ' ')
+          print(Terminal.save_cursor)
+          print(' ' * Terminal.width)
+          print(Terminal.restore_cursor)
           puts_question("#{question} (You chose: {{italic:#{resp}}})")
 
           return handler.call(resp) if block_given?
@@ -153,9 +153,9 @@ module CLI
         def write_default_over_empty_input(default)
           CLI::UI.raw do
             STDERR.puts(
-              CLI::UI::ANSI.cursor_up(1) +
+              CLI::UI::Terminal.cursor_up(1) +
               "\r" +
-              CLI::UI::ANSI.cursor_forward(4) + # TODO: width
+              CLI::UI::Terminal.cursor_right(4) + # TODO: width
               default +
               CLI::UI::Color::RESET.code
             )

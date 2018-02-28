@@ -13,23 +13,23 @@ module CLI
       #
       SGR_MAP = {
         # presentational
-        'red'       => '31',
-        'green'     => '32',
-        'yellow'    => '33',
-        'blue'      => '34',
-        'magenta'   => '35',
-        'cyan'      => '36',
-        'bold'      => '1',
-        'italic'    => '3',
-        'underline' => '4',
-        'reset'     => '0',
+        'red'       => CLI::UI::Color::RED.to_s,
+        'green'     => CLI::UI::Color::GREEN.to_s,
+        'yellow'    => CLI::UI::Color::YELLOW.to_s,
+        'blue'      => CLI::UI::Color::DIM_BLUE.to_s,
+        'magenta'   => CLI::UI::Color::MAGENTA.to_s,
+        'cyan'      => CLI::UI::Color::CYAN.to_s,
+        'bold'      => CLI::UI::Terminal.bold_on,
+        'italic'    => CLI::UI::Terminal.italics_on,
+        'underline' => CLI::UI::Terminal.underline_on,
+        'reset'     => CLI::UI::Terminal.sgr0,
 
         # semantic
-        'error'   => '31', # red
-        'success' => '32', # success
-        'warning' => '33', # yellow
-        'info'    => '34', # blue
-        'command' => '36', # cyan
+        'error'   => CLI::UI::Color::RED.to_s,
+        'success' => CLI::UI::Color::GREEN.to_s,
+        'warning' => CLI::UI::Color::YELLOW.to_s,
+        'info'    => CLI::UI::Color::DIM_BLUE.to_s,
+        'command' => CLI::UI::Color::CYAN.to_s,
       }.freeze
 
       BEGIN_EXPR = '{{'
@@ -105,11 +105,14 @@ module CLI
 
       private
 
+      # IDEA:
+      # track only fg color and sgr modes
+      # do sgr, then setaf
       def apply_format(text, fmt, sgr_map)
-        sgr = fmt.each_with_object(String.new('0')) do |name, str|
+        formatter = fmt.each_with_object(String.new('')) do |name, str|
           next if name == LITERAL_BRACES
           begin
-            str << ';' << sgr_map.fetch(name)
+            str << sgr_map.fetch(name)
           rescue KeyError
             raise FormatError.new(
               "invalid format specifier: #{name}",
@@ -118,7 +121,7 @@ module CLI
             )
           end
         end
-        CLI::UI::ANSI.sgr(sgr) + text
+        formatter + text
       end
 
       def parse_expr(sc, stack)

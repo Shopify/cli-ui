@@ -107,7 +107,7 @@ module CLI
           end
 
           def partial_render(index)
-            CLI::UI::ANSI.cursor_forward(inset_width) + glyph(index) + CLI::UI::Color::RESET.code
+            CLI::UI::Terminal.cursor_right(inset_width) + glyph(index) + CLI::UI::Color::RESET.code
           end
 
           def glyph(index)
@@ -170,8 +170,8 @@ module CLI
                     @consumed_lines += 1
                   else
                     offset = @consumed_lines - int_index
-                    move_to   = CLI::UI::ANSI.cursor_up(offset) + "\r"
-                    move_from = "\r" + CLI::UI::ANSI.cursor_down(offset)
+                    move_to   = CLI::UI::Terminal.cursor_up(offset) + "\r"
+                    move_from = "\r" + CLI::UI::Terminal.cursor_down(offset)
 
                     print(move_to + task.render(idx, idx.zero?) + move_from)
                   end

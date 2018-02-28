@@ -3,43 +3,52 @@ require 'cli/ui'
 module CLI
   module UI
     class Color
-      attr_reader :sgr, :name, :code
+      attr_reader :index, :name, :to_s
 
       # Creates a new color mapping
-      # Signatures can be found here:
-      # https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
+      #
+      # The +index+ parameter can be 0 through 7, or 8
+      # through 15 for bright colours, or whatever other
+      # arguments +setaf+ can take.
+      #
+      # https://www.freebsd.org/cgi/man.cgi?query=terminfo&sektion=5
       #
       # ==== Attributes
       #
-      # * +sgr+ - The color signature
+      # * +index+ - The color argument for terminfo
       # * +name+ - The name of the color
       #
-      def initialize(sgr, name)
-        @sgr  = sgr
-        @code = CLI::UI::ANSI.sgr(sgr)
+      def initialize(index, name)
+        @index = index
+        @to_s = CLI::UI::Terminal.fg_color(index)
         @name = name
       end
 
-      RED     = new('31', :red)
-      GREEN   = new('32', :green)
-      YELLOW  = new('33', :yellow)
-      # default blue is low-contrast against black in some default terminal color scheme
-      BLUE    = new('94', :blue) # 9x = high-intensity fg color x
-      MAGENTA = new('35', :magenta)
-      CYAN    = new('36', :cyan)
-      RESET   = new('0',  :reset)
-      BOLD    = new('1',  :bold)
-      WHITE   = new('97', :white)
+      # default blue is low-contrast against black in some
+      #   default terminal color scheme
+      #
+      # when we want white, it looks better bright, too.
+      bright = 8
+
+      BLACK    = new(0,          :black)
+      RED      = new(1,          :red)
+      GREEN    = new(2,          :green)
+      YELLOW   = new(3,          :yellow)
+      BLUE     = new(4 + bright, :blue)
+      DIM_BLUE = new(4,          :dim_blue)
+      MAGENTA  = new(5,          :magenta)
+      CYAN     = new(6,          :cyan)
+      WHITE    = new(7 + bright, :white)
 
       MAP = {
+        black:   BLACK,
         red:     RED,
         green:   GREEN,
         yellow:  YELLOW,
         blue:    BLUE,
         magenta: MAGENTA,
         cyan:    CYAN,
-        reset:   RESET,
-        bold:    BOLD,
+        white:   WHITE,
       }.freeze
 
       class InvalidColorName < ArgumentError

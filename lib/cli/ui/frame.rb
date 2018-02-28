@@ -252,12 +252,12 @@ module CLI
           is_ci = ![0, '', nil].include?(ENV['CI'])
 
           # Jumping around the line can cause some unwanted flashes
-          o << CLI::UI::ANSI.hide_cursor
+          o << CLI::UI::Terminal.hide_cursor
 
           o << if is_ci
                  # In CI, we can't use absolute horizontal positions because of timestamps.
                  # So we move around the line by offset from this cursor position.
-                 CLI::UI::ANSI.cursor_save
+                 CLI::UI::Terminal.save_cursor
                else
                  # Outside of CI, we reset to column 1 so that things like ^C don't
                  # cause output misformatting.
@@ -270,7 +270,7 @@ module CLI
           o << color.code
           o << print_at_x(suffix_start, suffix, is_ci)
           o << CLI::UI::Color::RESET.code
-          o << CLI::UI::ANSI.show_cursor
+          o << CLI::UI::Terminal.show_cursor
           o << "\n"
 
           o
@@ -278,9 +278,9 @@ module CLI
 
         def print_at_x(x, str, is_ci)
           if is_ci
-            CLI::UI::ANSI.cursor_restore + CLI::UI::ANSI.cursor_forward(x) + str
+            CLI::UI::Terminal.restore_cursor + CLI::UI::Terminal.cursor_right(x) + str
           else
-            CLI::UI::ANSI.cursor_horizontal_absolute(1 + x) + str
+            CLI::UI::Terminal.cursor_horizontal_absolute(1 + x) + str
           end
         end
 
