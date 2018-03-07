@@ -76,8 +76,8 @@ module CLI
       def to_s
         suffix = " #{(@percent_done * 100).round(2)}%"
         workable_width = @max_width - Frame.prefix_width - suffix.size
-        filled = (@percent_done * workable_width.to_f).ceil
-        unfilled = workable_width - filled
+        filled = [(@percent_done * workable_width.to_f).ceil, 0].max
+        unfilled = [workable_width - filled, 0].max
 
         CLI::UI.resolve_text [
           FILLED_BAR + ' ' * filled,
