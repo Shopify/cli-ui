@@ -9,7 +9,8 @@ module CLI
       #
       def self.width
         if console = IO.respond_to?(:console) && IO.console
-          console.winsize[1]
+          width = console.winsize[1]
+          width.zero? ? 80 : width
         else
           80
         end
