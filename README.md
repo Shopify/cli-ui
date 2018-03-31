@@ -52,7 +52,7 @@ CLI::UI.ask('What language/framework do you use?', options: %w(rails go ruby pyt
 Can also assign callbacks to each option
 
 ```ruby
-CLI::UI.ask('What language/framework do you use?') do |handler|
+CLI::UI::Prompt.ask('What language/framework do you use?') do |handler|
   handler.option('rails')  { |selection| selection }
   handler.option('go')     { |selection| selection }
   handler.option('ruby')   { |selection| selection }
