@@ -76,8 +76,13 @@ module CLI
         def num_lines
           # @options will be an array of questions but each option can be multi-line
           # so to get the # of lines, you need to join then split
+
+          # empty_option_count is needed since empty option titles are omitted
+          # from the line count when reject(&:empty?) is called
+
+          empty_option_count =  @options.count(&:empty?)
           joined_options = @options.join("\n")
-          joined_options.split("\n").reject(&:empty?).size
+          joined_options.split("\n").reject(&:empty?).size + empty_option_count
         end
 
         ESC = "\e"
