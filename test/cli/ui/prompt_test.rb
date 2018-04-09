@@ -349,6 +349,34 @@ module CLI
         assert_result(expected_out, "", "b")
       end
 
+      def test_ask_interactive_with_blank_option
+        _run('j','j',' ') do
+          Prompt.ask('q') do |h|
+            h.option('a') { |a| 'a was selected' }
+            h.option('') { |b| 'b was selected' }
+          end
+        end
+        blank = ''
+        expected_out = strip_heredoc(<<-EOF)
+          ? q (choose with ↑ ↓ ⏎)
+          \e[?25l> 1. a
+            2.#{blank}
+          \e[\e[C
+            1. a
+          > 2.#{blank}
+          \e[\e[C
+          > 1. a
+            2.#{blank}
+          \e[\e[C
+          #{' ' * CLI::UI::Terminal.width}
+          #{' ' * CLI::UI::Terminal.width}
+          \e[\e[C
+          \e[?25h\e[\e[C
+          \e[\e[C \e[s#{' ' * CLI::UI::Terminal.width}\e[u? q (You chose: a)
+        EOF
+        assert_result(expected_out, "", "a was selected")
+      end
+
       private
 
       def _run(*lines)
