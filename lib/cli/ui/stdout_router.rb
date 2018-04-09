@@ -15,13 +15,15 @@ module CLI
         end
 
         def write(*args)
-          if auto_frame_inset?
-            str = args[0].dup # unfreeze
-            str = str.force_encoding(Encoding::UTF_8)
-            str = apply_line_prefix(str, CLI::UI::Frame.prefix)
-            args[0] = str
-          else
-            @pending_newline = false
+          args = args.map do |str|
+            if auto_frame_inset?
+              str = str.dup # unfreeze
+              str = str.force_encoding(Encoding::UTF_8)
+              apply_line_prefix(str, CLI::UI::Frame.prefix)
+            else
+              @pending_newline = false
+              str
+            end
           end
 
           hook = Thread.current[:cliui_output_hook]
