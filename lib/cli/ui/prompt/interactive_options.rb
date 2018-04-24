@@ -113,6 +113,7 @@ module CLI
           case @state
           when :root
             case char
+            when :timeout                  ; raise Interrupt # Timeout, use interrupt to simulate
             when ESC                       ; @state = :esc
             when 'k'                       ; up
             when 'j'                       ; down
@@ -123,22 +124,27 @@ module CLI
             end
           when :esc
             case char
-            when '[' ; @state = :esc_bracket
-            else     ; raise Interrupt # unhandled escape sequence.
+            when :timeout ; raise Interrupt # Timeout, use interrupt to simulate
+            when '['      ; @state = :esc_bracket
+            else          ; raise Interrupt # unhandled escape sequence.
             end
           when :esc_bracket
             @state = :root
             case char
-            when 'A' ; up
-            when 'B' ; down
-            else     ; raise Interrupt # unhandled escape sequence.
+            when :timeout ; raise Interrupt # Timeout, use interrupt to simulate
+            when 'A'      ; up
+            when 'B'      ; down
+            else          ; raise Interrupt # unhandled escape sequence.
             end
           end
         end
         # rubocop:enable Style/WhenThen,Layout/SpaceBeforeSemicolon
 
         def read_char
-          raw_tty! { $stdin.getc.chr }
+          raw_tty! do
+            getc = $stdin.getc
+            getc ? getc.chr : :timeout
+          end
         rescue IOError
           "\e"
         end
