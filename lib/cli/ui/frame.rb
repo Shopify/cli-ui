@@ -175,7 +175,7 @@ module CLI
         # * +:color+ - The color of the prefix. Defaults to +Thread.current[:cliui_frame_color_override]+ or nil
         #
         def prefix(color: nil)
-          pfx = String.new
+          pfx = +''
           items = FrameStack.items
           items[0..-2].each do |item|
             pfx << CLI::UI.resolve_color(item).code << CLI::UI::Box::Heavy::VERT
@@ -215,7 +215,7 @@ module CLI
           color = CLI::UI.resolve_color(color)
           text  = CLI::UI.resolve_text("{{#{color.name}:#{text}}}")
 
-          prefix = String.new
+          prefix = +''
           FrameStack.items.each do |item|
             prefix << CLI::UI.resolve_color(item).code << CLI::UI::Box::Heavy::VERT
           end
@@ -227,7 +227,7 @@ module CLI
 
           termwidth = CLI::UI::Terminal.width
 
-          suffix = String.new
+          suffix = +''
           if right_text
             suffix << ' ' << right_text << ' '
           end
@@ -247,7 +247,7 @@ module CLI
             # next line and call it poor usage of this API.
           end
 
-          o = String.new
+          o = +''
 
           is_ci = ![0, '', nil].include?(ENV['CI'])
 
