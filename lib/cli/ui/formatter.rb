@@ -84,7 +84,7 @@ module CLI
         @nodes = []
         stack = parse_body(StringScanner.new(@text))
         prev_fmt = nil
-        content = @nodes.each_with_object(String.new) do |(text, fmt), str|
+        content = @nodes.each_with_object(+'') do |(text, fmt), str|
           if prev_fmt != fmt && enable_color
             text = apply_format(text, fmt, sgr_map)
           end
@@ -106,7 +106,7 @@ module CLI
       private
 
       def apply_format(text, fmt, sgr_map)
-        sgr = fmt.each_with_object(String.new('0')) do |name, str|
+        sgr = fmt.each_with_object(+'0') do |name, str|
           next if name == LITERAL_BRACES
           begin
             str << ';' << sgr_map.fetch(name)

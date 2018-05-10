@@ -45,7 +45,7 @@ module CLI
 
         def apply_line_prefix(str, prefix)
           return '' if str.empty?
-          prefixed = String.new
+          prefixed = +''
           str.force_encoding(Encoding::UTF_8).lines.each do |line|
             if @pending_newline
               prefixed << line
