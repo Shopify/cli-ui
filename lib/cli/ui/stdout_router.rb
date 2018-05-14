@@ -29,26 +29,26 @@ module CLI
           hook = Thread.current[:cliui_output_hook]
           # hook return of false suppresses output.
           if !hook || hook.call(args.first, @name) != false
-            @stream.write_without_cli_ui(*prepend_uuid(@stream, args))
+            @stream.write_without_cli_ui(*prepend_id(@stream, args))
             if dup = StdoutRouter.duplicate_output_to
-              dup.write(*prepend_uuid(dup, args))
+              dup.write(*prepend_id(dup, args))
             end
           end
         end
 
         private
 
-        def prepend_uuid(stream, args)
-          return args unless prepend_uuid_for_stream(stream)
+        def prepend_id(stream, args)
+          return args unless prepend_id_for_stream(stream)
           args.map do |a|
             next a if a.chomp.empty? # allow new lines to be new lines
-            "[#{Thread.current[:cliui_output_uuid][:uuid]}] #{a}"
+            "[#{Thread.current[:cliui_output_id][:id]}] #{a}"
           end
         end
 
-        def prepend_uuid_for_stream(stream)
-          return false unless Thread.current[:cliui_output_uuid]
-          return true if Thread.current[:cliui_output_uuid][:streams].include?(stream)
+        def prepend_id_for_stream(stream)
+          return false unless Thread.current[:cliui_output_id]
+          return true if Thread.current[:cliui_output_id][:streams].include?(stream)
           false
         end
 
@@ -146,7 +146,7 @@ module CLI
 
         NotEnabled = Class.new(StandardError)
 
-        def with_uuid(on_streams:)
+        def with_id(on_streams:)
           unless on_streams.is_a?(Array) && on_streams.all? { |s| s.respond_to?(:write) }
             raise ArgumentError, <<~EOF
             on_streams must be an array of objects that respond to `write`
@@ -156,14 +156,14 @@ module CLI
           end
 
           require 'securerandom'
-          uuid = SecureRandom.uuid
-          Thread.current[:cliui_output_uuid] = {
-            uuid: uuid,
+          id = format("%05d", rand(100))
+          Thread.current[:cliui_output_id] = {
+            id: id,
             streams: on_streams
           }
-          yield(uuid)
+          yield(id)
         ensure
-          Thread.current[:cliui_output_uuid] = nil
+          Thread.current[:cliui_output_id] = nil
         end
 
         def assert_enabled!
