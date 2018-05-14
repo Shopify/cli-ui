@@ -29,7 +29,7 @@ module CLI
           hook = Thread.current[:cliui_output_hook]
           # hook return of false suppresses output.
           if !hook || hook.call(args.first, @name) != false
-            @stream.write_without_cli_ui(*prepend_uuid(@steam, args))
+            @stream.write_without_cli_ui(*prepend_uuid(@stream, args))
             if dup = StdoutRouter.duplicate_output_to
               dup.write(*prepend_uuid(dup, args))
             end
