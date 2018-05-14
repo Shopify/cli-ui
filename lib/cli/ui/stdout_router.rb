@@ -29,15 +29,28 @@ module CLI
           hook = Thread.current[:cliui_output_hook]
           # hook return of false suppresses output.
           if !hook || hook.call(args.first, @name) != false
-            args.first
-            @stream.write_without_cli_ui(*args)
+            @stream.write_without_cli_ui(*prepend_id(@stream, args))
             if dup = StdoutRouter.duplicate_output_to
-              dup.write(*args)
+              dup.write(*prepend_id(dup, args))
             end
           end
         end
 
         private
+
+        def prepend_id(stream, args)
+          return args unless prepend_id_for_stream(stream)
+          args.map do |a|
+            next a if a.chomp.empty? # allow new lines to be new lines
+            "[#{Thread.current[:cliui_output_id][:id]}] #{a}"
+          end
+        end
+
+        def prepend_id_for_stream(stream)
+          return false unless Thread.current[:cliui_output_id]
+          return true if Thread.current[:cliui_output_id][:streams].include?(stream)
+          false
+        end
 
         def auto_frame_inset?
           !Thread.current[:no_cliui_frame_inset]
@@ -132,6 +145,26 @@ module CLI
         WRITE_WITHOUT_CLI_UI = :write_without_cli_ui
 
         NotEnabled = Class.new(StandardError)
+
+        def with_id(on_streams:)
+          unless on_streams.is_a?(Array) && on_streams.all? { |s| s.respond_to?(:write) }
+            raise ArgumentError, <<~EOF
+            on_streams must be an array of objects that respond to `write`
+            These do not respond to write
+            #{on_streams.reject { |s| s.respond_to?(:write) }.map.with_index { |s| s.class.to_s }.join("\n")}
+            EOF
+          end
+
+          require 'securerandom'
+          id = format("%05d", rand(100))
+          Thread.current[:cliui_output_id] = {
+            id: id,
+            streams: on_streams
+          }
+          yield(id)
+        ensure
+          Thread.current[:cliui_output_id] = nil
+        end
 
         def assert_enabled!
           raise NotEnabled unless enabled?
