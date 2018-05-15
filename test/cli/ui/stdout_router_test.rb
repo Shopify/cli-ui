@@ -21,6 +21,12 @@ module CLI
           end
         end
       end
+
+      def test_current_id
+        StdoutRouter.with_id(on_streams: [$stdout]) do |id|
+          assert_equal({ id: id, streams: [$stdout] }, StdoutRouter.current_id)
+        end
+      end
     end
   end
 end

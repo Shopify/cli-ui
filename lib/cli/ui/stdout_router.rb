@@ -166,6 +166,10 @@ module CLI
           Thread.current[:cliui_output_id] = nil
         end
 
+        def current_id
+          Thread.current[:cliui_output_id]
+        end
+
         def assert_enabled!
           raise NotEnabled unless enabled?
         end
