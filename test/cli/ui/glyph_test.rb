@@ -10,6 +10,7 @@ module CLI
         assert_equal("\x1b[32m✓\x1b[0m", Glyph::CHECK.to_s)
         assert_equal("\x1b[31m✗\x1b[0m", Glyph::X.to_s)
         assert_equal("\x1b[97m🐛\x1b[0m", Glyph::BUG.to_s)
+        assert_equal("\x1b[33m»\x1b[0m", Glyph::CHEVRON.to_s)
 
         assert_equal(Glyph::STAR,     Glyph.lookup('*'))
         assert_equal(Glyph::INFO,     Glyph.lookup('i'))
@@ -17,6 +18,7 @@ module CLI
         assert_equal(Glyph::CHECK,    Glyph.lookup('v'))
         assert_equal(Glyph::X,        Glyph.lookup('x'))
         assert_equal(Glyph::BUG,      Glyph.lookup('b'))
+        assert_equal(Glyph::CHEVRON,  Glyph.lookup('>'))
 
         assert_raises(Glyph::InvalidGlyphHandle) do
           Glyph.lookup('$')
