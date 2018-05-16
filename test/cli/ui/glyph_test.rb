@@ -9,12 +9,14 @@ module CLI
         assert_equal("\x1b[94m?\x1b[0m", Glyph::QUESTION.to_s)
         assert_equal("\x1b[32m✓\x1b[0m", Glyph::CHECK.to_s)
         assert_equal("\x1b[31m✗\x1b[0m", Glyph::X.to_s)
+        assert_equal("\x1b[97m🐛\x1b[0m", Glyph::BUG.to_s)
 
         assert_equal(Glyph::STAR,     Glyph.lookup('*'))
         assert_equal(Glyph::INFO,     Glyph.lookup('i'))
         assert_equal(Glyph::QUESTION, Glyph.lookup('?'))
         assert_equal(Glyph::CHECK,    Glyph.lookup('v'))
         assert_equal(Glyph::X,        Glyph.lookup('x'))
+        assert_equal(Glyph::BUG,      Glyph.lookup('b'))
 
         assert_raises(Glyph::InvalidGlyphHandle) do
           Glyph.lookup('$')
