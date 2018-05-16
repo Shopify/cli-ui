@@ -50,6 +50,8 @@ module CLI
       X        = new('x', 0x2717,  Color::RED)
       # Bug emoji (🐛)
       BUG      = new('b', 0x1f41b, Color::WHITE)
+      # RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK (»)
+      CHEVRON  = new('>', 0xbb,    Color::YELLOW)
 
       # Looks up a glyph by name
       #
