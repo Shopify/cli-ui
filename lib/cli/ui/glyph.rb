@@ -48,6 +48,8 @@ module CLI
       CHECK    = new('v', 0x2713,  Color::GREEN)
       # RED BALLOT X (✗)
       X        = new('x', 0x2717,  Color::RED)
+      # Bug emoji (🐛)
+      BUG      = new('b', 0x1f41b, Color::WHITE)
 
       # Looks up a glyph by name
       #
