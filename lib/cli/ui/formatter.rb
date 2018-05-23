@@ -16,7 +16,8 @@ module CLI
         'red'       => '31',
         'green'     => '32',
         'yellow'    => '33',
-        'blue'      => '34',
+         # default blue is low-contrast against black in some default terminal color scheme
+        'blue'      => '94', # 9x = high-intensity fg color x
         'magenta'   => '35',
         'cyan'      => '36',
         'bold'      => '1',
@@ -28,7 +29,7 @@ module CLI
         'error'   => '31', # red
         'success' => '32', # success
         'warning' => '33', # yellow
-        'info'    => '34', # blue
+        'info'    => '94', # bright blue
         'command' => '36', # cyan
       }.freeze
 

@@ -5,7 +5,7 @@ module CLI
     class FormatterTest < MiniTest::Test
       def test_format
         input = "a{{blue:b {{*}}{{bold:c {{red:d}}}}{{bold: e}}}} f"
-        expected = "\e[0ma\e[0;34mb \e[0;33m⭑\e[0;34;1mc \e[0;34;1;31md\e[0;34;1m e\e[0m f"
+        expected = "\e[0ma\e[0;94mb \e[0;33m⭑\e[0;94;1mc \e[0;94;1;31md\e[0;94;1m e\e[0m f"
         actual = CLI::UI::Formatter.new(input).format
         assert_equal(expected, actual)
       end
@@ -19,7 +19,7 @@ module CLI
 
       def test_format_trailing
         input = "a{{bold:a {{blue:"
-        expected = "\e[0ma\e[0;1ma \e[0;1;34m"
+        expected = "\e[0ma\e[0;1ma \e[0;1;94m"
         actual = CLI::UI::Formatter.new(input).format
         assert_equal(expected, actual)
       end
