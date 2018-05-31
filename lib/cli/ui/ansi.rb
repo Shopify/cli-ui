@@ -150,6 +150,10 @@ module CLI
       def self.end_of_line
         control("\033[", 'C')
       end
+
+      def self.clear_to_end_of_line
+        control('', 'K')
+      end
     end
   end
 end

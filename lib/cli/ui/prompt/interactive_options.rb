@@ -42,7 +42,7 @@ module CLI
           CLI::UI.raw { print(ANSI.hide_cursor) }
           while @answer.nil?
             render_options
-            wait_for_user_input
+            wait_for_actionable_user_input
             reset_position
           end
           clear_output
@@ -74,14 +74,15 @@ module CLI
         end
 
         def num_lines
+          options = presented_options.map(&:first)
           # @options will be an array of questions but each option can be multi-line
           # so to get the # of lines, you need to join then split
 
           # empty_option_count is needed since empty option titles are omitted
           # from the line count when reject(&:empty?) is called
 
-          empty_option_count =  @options.count(&:empty?)
-          joined_options = @options.join("\n")
+          empty_option_count = options.count(&:empty?)
+          joined_options = options.join("\n")
           joined_options.split("\n").reject(&:empty?).size + empty_option_count
         end
 
@@ -105,6 +106,13 @@ module CLI
           opt = @options.detect { |o| o.start_with?(char) }
           @active = @options.index(opt) + 1
           @answer = @options.index(opt) + 1
+        end
+
+        def wait_for_actionable_user_input
+          last_active = @active
+          while @active == last_active && @answer.nil?
+            wait_for_user_input
+          end
         end
 
         # rubocop:disable Style/WhenThen,Layout/SpaceBeforeSemicolon
@@ -157,12 +165,55 @@ module CLI
           end
         end
 
+        def presented_options(recalculate: false)
+          return @presented_options unless recalculate
+
+          @presented_options = @options.zip(1..Float::INFINITY)
+          while num_lines > max_options
+            # try to keep the selection centered in the window:
+            if distance_from_selection_to_end > distance_from_start_to_selection
+              # selection is closer to top than bottom, so trim a row from the bottom
+              ensure_last_item_is_continuation_marker
+              @presented_options.delete_at(-2)
+            else
+              # selection is closer to bottom than top, so trim a row from the top
+              ensure_first_item_is_continuation_marker
+              @presented_options.delete_at(1)
+            end
+          end
+
+          @presented_options
+        end
+
+        def distance_from_selection_to_end
+          last_visible_option_number = @presented_options[-1].last || @presented_options[-2].last
+          last_visible_option_number - @active
+        end
+
+        def distance_from_start_to_selection
+          first_visible_option_number = @presented_options[0].last || @presented_options[1].last
+          @active - first_visible_option_number
+        end
+
+        def ensure_last_item_is_continuation_marker
+          @presented_options.push(["...", nil]) if @presented_options.last.last
+        end
+
+        def ensure_first_item_is_continuation_marker
+          @presented_options.unshift(["...", nil]) if @presented_options.first.last
+        end
+
+
+        def max_options
+          @max_options ||= CLI::UI::Terminal.height - 2 # Keeps a one line question visible
+        end
+
         def render_options
           max_num_length = (@options.size + 1).to_s.length
-          @options.each_with_index do |choice, index|
-            num = index + 1
+
+          presented_options(recalculate: true).each do |choice, num|
             padding = ' ' * (max_num_length - num.to_s.length)
-            message = "  #{num}.#{padding}"
+            message = "  #{num}#{num ? '.' : ' '}#{padding}"
             message += choice.split("\n").map { |l| " {{bold:#{l}}}" }.join("\n")
 
             if num == @active
@@ -172,7 +223,7 @@ module CLI
             end
 
             CLI::UI.with_frame_color(:blue) do
-              puts CLI::UI.fmt(message)
+              puts CLI::UI.fmt(message) + CLI::UI::ANSI.clear_to_end_of_line
             end
           end
         end
