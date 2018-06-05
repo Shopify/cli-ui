@@ -37,11 +37,8 @@ module CLI
 
         expected_out = strip_heredoc(<<-EOF) + ' '
           ? q (choose with ↑ ↓ ⏎)
-          \e[?25l> 1. yes
-            2. no
-          \e[\e[C
-          > 1. yes
-            2. no
+          \e[?25l> 1. yes\e[K
+            2. no\e[K
           \e[?25h\e[\e[C
         EOF
         assert_result(expected_out, "", :SIGINT)
@@ -77,11 +74,8 @@ module CLI
 
         expected_out = strip_heredoc(<<-EOF) + ' '
           ? q (choose with ↑ ↓ ⏎)
-          \e[?25l> 1. a
-            2. b
-          \e[\e[C
-          > 1. a
-            2. b
+          \e[?25l> 1. a\e[K
+            2. b\e[K
           \e[?25h\e[\e[C
         EOF
         assert_result(expected_out, "", :SIGINT)
@@ -91,8 +85,8 @@ module CLI
         _run('y') { assert Prompt.confirm('q') }
         expected_out = strip_heredoc(<<-EOF) + ' '
           ? q (choose with ↑ ↓ ⏎)
-          \e[?25l> 1. yes
-            2. no
+          \e[?25l> 1. yes\e[K
+            2. no\e[K
           \e[\e[C
           #{' ' * CLI::UI::Terminal.width}
           #{' ' * CLI::UI::Terminal.width}
@@ -107,11 +101,8 @@ module CLI
         _run(%w(r y n)) { Prompt.confirm('q') }
         expected_out = strip_heredoc(<<-EOF) + ' '
           ? q (choose with ↑ ↓ ⏎)
-          \e[?25l> 1. yes
-            2. no
-          \e[\e[C
-          > 1. yes
-            2. no
+          \e[?25l> 1. yes\e[K
+            2. no\e[K
           \e[\e[C
           #{' ' * CLI::UI::Terminal.width}
           #{' ' * CLI::UI::Terminal.width}
@@ -126,11 +117,8 @@ module CLI
         _run('x', 'n') { Prompt.confirm('q') }
         expected_out = strip_heredoc(<<-EOF) + ' '
           ? q (choose with ↑ ↓ ⏎)
-          \e[?25l> 1. yes
-            2. no
-          \e[\e[C
-          > 1. yes
-            2. no
+          \e[?25l> 1. yes\e[K
+            2. no\e[K
           \e[\e[C
           #{' ' * CLI::UI::Terminal.width}
           #{' ' * CLI::UI::Terminal.width}
@@ -229,8 +217,8 @@ module CLI
         end
         expected_out = strip_heredoc(<<-EOF)
           ? q (choose with ↑ ↓ ⏎)
-          \e[?25l> 1. a
-            2. b
+          \e[?25l> 1. a\e[K
+            2. b\e[K
           \e[\e[C
           #{' ' * CLI::UI::Terminal.width}
           #{' ' * CLI::UI::Terminal.width}
@@ -247,8 +235,8 @@ module CLI
         end
         expected_out = strip_heredoc(<<-EOF)
           ? q (choose with ↑ ↓ ⏎)
-          \e[?25l> 1. a
-            2. b
+          \e[?25l> 1. a\e[K
+            2. b\e[K
           \e[\e[C
           #{' ' * CLI::UI::Terminal.width}
           #{' ' * CLI::UI::Terminal.width}
@@ -265,11 +253,11 @@ module CLI
         end
         expected_out = strip_heredoc(<<-EOF)
         ? q (choose with ↑ ↓ ⏎)
-        \e[?25l> 1. a
-          2. b
+        \e[?25l> 1. a\e[K
+          2. b\e[K
         \e[\e[C
-          1. a
-        > 2. b
+          1. a\e[K
+        > 2. b\e[K
         \e[\e[C
         #{' ' * CLI::UI::Terminal.width}
         #{' ' * CLI::UI::Terminal.width}
@@ -286,8 +274,8 @@ module CLI
         end
         expected_out = strip_heredoc(<<-EOF)
         ? q (choose with ↑ ↓ ⏎)
-        \e[?25l> 1. a
-          2. b
+        \e[?25l> 1. a\e[K
+          2. b\e[K
         \e[\e[C
         #{' ' * CLI::UI::Terminal.width}
         #{' ' * CLI::UI::Terminal.width}
@@ -309,11 +297,8 @@ module CLI
 
         expected_out = strip_heredoc(<<-EOF)
         ? q (choose with ↑ ↓ ⏎)
-        \e[?25l> 1. a
-          2. b
-        \e[\e[C
-        > 1. a
-          2. b
+        \e[?25l> 1. a\e[K
+          2. b\e[K
         \e[?25h\e[\e[C
         EOF
         assert_result(expected_out, nil, :SIGINT)
@@ -325,20 +310,8 @@ module CLI
         end
         expected_out = strip_heredoc(<<-EOF)
         ? q (choose with ↑ ↓ ⏎)
-        \e[?25l> 1. a
-          2. b
-        \e[\e[C
-        > 1. a
-          2. b
-        \e[\e[C
-        > 1. a
-          2. b
-        \e[\e[C
-        > 1. a
-          2. b
-        \e[\e[C
-        > 1. a
-          2. b
+        \e[?25l> 1. a\e[K
+          2. b\e[K
         \e[\e[C
         #{' ' * CLI::UI::Terminal.width}
         #{' ' * CLI::UI::Terminal.width}
@@ -359,14 +332,14 @@ module CLI
         blank = ''
         expected_out = strip_heredoc(<<-EOF)
           ? q (choose with ↑ ↓ ⏎)
-          \e[?25l> 1. a
-            2.#{blank}
+          \e[?25l> 1. a\e[K
+            2.#{blank}\e[K
           \e[\e[C
-            1. a
-          > 2.#{blank}
+            1. a\e[K
+          > 2.#{blank}\e[K
           \e[\e[C
-          > 1. a
-            2.#{blank}
+          > 1. a\e[K
+            2.#{blank}\e[K
           \e[\e[C
           #{' ' * CLI::UI::Terminal.width}
           #{' ' * CLI::UI::Terminal.width}
