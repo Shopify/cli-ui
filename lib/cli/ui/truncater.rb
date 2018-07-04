@@ -17,7 +17,8 @@ module CLI
       SEMICOLON           = 0x3b
 
       # EMOJI_RANGE in particular is super inaccurate. This is best-effort.
-      # Make it better if you need it better.
+      # If you need this to be more accurate, we'll almost certainly accept a
+      # PR improving it.
       EMOJI_RANGE    = 0x1f300..0x1f5ff
       NUMERIC_RANGE  = 0x30..0x39
       LC_ALPHA_RANGE = 0x40..0x5a
@@ -44,12 +45,10 @@ module CLI
                 mode = PARSE_ZWJ
               else
                 width += width(cp)
-                case width <=> printing_width
-                when -1
-                when 0
+                if width >= printing_width
                   truncation_index ||= index
-                when 1
-                  truncation_index ||= index
+                  # it looks like we could break here but we still want the
+                  # width calculation for the rest of the characters.
                 end
               end
             when PARSE_ESC
@@ -66,6 +65,9 @@ module CLI
               when NUMERIC_RANGE, SEMICOLON
               when LC_ALPHA_RANGE, UC_ALPHA_RANGE
                 mode = PARSE_ROOT
+              else
+                # unexpected. let's just go back to the root state I guess?
+                mode = PARSE_ROOT
               end
             when PARSE_ZWJ
               # consume any character and consider it as having no width
@@ -74,6 +76,11 @@ module CLI
             end
           end
 
+          # Without the `width <= printing_width` check, we truncate
+          # "foo\x1b[0m" for a width of 3, but it should not be truncated.
+          # It's specifically for the case where we decided "Yes, this is the
+          # point at which we'd have to add a truncation!" but it's actually
+          # the end of the string.
           return text if !truncation_index || width <= printing_width
 
           codepoints[0...truncation_index].pack("U*") + TRUNCATED
