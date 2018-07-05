@@ -81,9 +81,10 @@ module CLI
           #
           # * +index+ - index of the task
           # * +force+ - force rerender of the task
+          # * +width+ - current terminal width to format for
           #
-          def render(index, force = true)
-            return full_render(index) if force || @force_full_render
+          def render(index, force = true, width: CLI::UI::Terminal.width)
+            return full_render(index, width) if force || @force_full_render
             partial_render(index)
           ensure
             @force_full_render = false
@@ -102,8 +103,17 @@ module CLI
 
           private
 
-          def full_render(index)
-            inset + glyph(index) + CLI::UI::Color::RESET.code + ' ' + CLI::UI.resolve_text(title) + "\e[K"
+          def full_render(index, terminal_width)
+            prefix = inset +
+              glyph(index) +
+              CLI::UI::Color::RESET.code +
+              ' '
+
+            truncation_width = terminal_width - CLI::UI::ANSI.printing_width(prefix)
+
+            prefix +
+              CLI::UI.resolve_text(title, truncate_to: truncation_width) +
+              "\e[K"
           end
 
           def partial_render(index)
@@ -158,6 +168,8 @@ module CLI
           loop do
             all_done = true
 
+            width = CLI::UI::Terminal.width
+
             @m.synchronize do
               CLI::UI.raw do
                 @tasks.each.with_index do |task, int_index|
@@ -166,14 +178,14 @@ module CLI
                   all_done = false unless task_done
 
                   if nat_index > @consumed_lines
-                    print(task.render(idx, true) + "\n")
+                    print(task.render(idx, true, width: width) + "\n")
                     @consumed_lines += 1
                   else
                     offset = @consumed_lines - int_index
                     move_to   = CLI::UI::ANSI.cursor_up(offset) + "\r"
                     move_from = "\r" + CLI::UI::ANSI.cursor_down(offset)
 
-                    print(move_to + task.render(idx, idx.zero?) + move_from)
+                    print(move_to + task.render(idx, idx.zero?, width: width) + move_from)
                   end
                 end
               end

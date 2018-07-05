@@ -8,6 +8,7 @@ module CLI
     autoload :Progress,           'cli/ui/progress'
     autoload :Prompt,             'cli/ui/prompt'
     autoload :Terminal,           'cli/ui/terminal'
+    autoload :Truncater,          'cli/ui/truncater'
     autoload :Formatter,          'cli/ui/formatter'
     autoload :Spinner,            'cli/ui/spinner'
 
@@ -68,10 +69,13 @@ module CLI
     # ==== Attributes
     #
     # * +input+ - input to format
+    # * +truncate_to+ - number of characters to truncate the string to (or nil)
     #
-    def self.resolve_text(input)
+    def self.resolve_text(input, truncate_to: nil)
       return input if input.nil?
-      CLI::UI::Formatter.new(input).format
+      formatted = CLI::UI::Formatter.new(input).format
+      return formatted unless truncate_to
+      return CLI::UI::Truncater.call(formatted, truncate_to)
     end
 
     # Conviencence Method to format text using +CLI::UI::Formatter.format+
