@@ -71,13 +71,13 @@ module CLI
         #     handler.option('python') { |selection| selection }
         #   end
         #
-        def ask(question, options: nil, default: nil, is_file: nil, allow_empty: true, &options_proc)
+        def ask(question, options: nil, default: nil, is_file: nil, allow_empty: true, multiple: false, &options_proc)
           if ((options || block_given?) && (default || is_file))
             raise(ArgumentError, 'conflicting arguments: options provided with default or is_file')
           end
 
           if options || block_given?
-            ask_interactive(question, options, &options_proc)
+            ask_interactive(question, options, multiple: multiple, &options_proc)
           else
             ask_free_form(question, default, is_file, allow_empty)
           end
@@ -121,7 +121,7 @@ module CLI
           end
         end
 
-        def ask_interactive(question, options = nil)
+        def ask_interactive(question, options = nil, multiple: false)
           raise(ArgumentError, 'conflicting arguments: options and block given') if options && block_given?
 
           options ||= if block_given?
@@ -131,23 +131,36 @@ module CLI
           end
 
           raise(ArgumentError, 'insufficient options') if options.nil? || options.size < 2
-          puts_question("#{question} {{yellow:(choose with ↑ ↓ ⏎)}}")
-          resp = interactive_prompt(options)
+          instructions = (multiple ? "Toggle options. " : "") + "Choose with ↑ ↓ ⏎"
+          puts_question("#{question} {{yellow:(#{instructions})}}")
+          resp = interactive_prompt(options, multiple: multiple)
 
           # Clear the line, and reset the question to include the answer
           print(ANSI.previous_line + ANSI.end_of_line + ' ')
           print(ANSI.cursor_save)
           print(' ' * CLI::UI::Terminal.width)
           print(ANSI.cursor_restore)
-          puts_question("#{question} (You chose: {{italic:#{resp}}})")
+
+          resp_text = resp
+          if multiple
+            resp_text = case resp.size
+            when 0
+              "<nothing>"
+            when 1..2
+              resp.join(" and ")
+            else
+              "#{resp.size} items"
+            end
+          end
+          puts_question("#{question} (You chose: {{italic:#{resp_text}}})")
 
           return handler.call(resp) if block_given?
           resp
         end
 
         # Useful for stubbing in tests
-        def interactive_prompt(options)
-          InteractiveOptions.call(options)
+        def interactive_prompt(options, multiple: false)
+          InteractiveOptions.call(options, multiple: multiple)
         end
 
         def write_default_over_empty_input(default)
