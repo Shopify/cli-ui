@@ -36,7 +36,7 @@ module CLI
         Process.kill('INT', @pid)
 
         expected_out = strip_heredoc(<<-EOF) + ' '
-          ? q (choose with ↑ ↓ ⏎)
+          ? q (Choose with ↑ ↓ ⏎)
           \e[?25l> 1. yes\e[K
             2. no\e[K
           \e[?25h\e[\e[C
@@ -73,7 +73,7 @@ module CLI
         Process.kill('INT', @pid)
 
         expected_out = strip_heredoc(<<-EOF) + ' '
-          ? q (choose with ↑ ↓ ⏎)
+          ? q (Choose with ↑ ↓ ⏎)
           \e[?25l> 1. a\e[K
             2. b\e[K
           \e[?25h\e[\e[C
@@ -84,7 +84,7 @@ module CLI
       def test_confirm_happy_path
         _run('y') { assert Prompt.confirm('q') }
         expected_out = strip_heredoc(<<-EOF) + ' '
-          ? q (choose with ↑ ↓ ⏎)
+          ? q (Choose with ↑ ↓ ⏎)
           \e[?25l> 1. yes\e[K
             2. no\e[K
           \e[\e[C
@@ -100,7 +100,7 @@ module CLI
       def test_confirm_invalid
         _run(%w(r y n)) { Prompt.confirm('q') }
         expected_out = strip_heredoc(<<-EOF) + ' '
-          ? q (choose with ↑ ↓ ⏎)
+          ? q (Choose with ↑ ↓ ⏎)
           \e[?25l> 1. yes\e[K
             2. no\e[K
           \e[\e[C
@@ -116,7 +116,7 @@ module CLI
       def test_confirm_no_match_internal
         _run('x', 'n') { Prompt.confirm('q') }
         expected_out = strip_heredoc(<<-EOF) + ' '
-          ? q (choose with ↑ ↓ ⏎)
+          ? q (Choose with ↑ ↓ ⏎)
           \e[?25l> 1. yes\e[K
             2. no\e[K
           \e[\e[C
@@ -216,7 +216,7 @@ module CLI
           end
         end
         expected_out = strip_heredoc(<<-EOF)
-          ? q (choose with ↑ ↓ ⏎)
+          ? q (Choose with ↑ ↓ ⏎)
           \e[?25l> 1. a\e[K
             2. b\e[K
           \e[\e[C
@@ -234,7 +234,7 @@ module CLI
           Prompt.ask('q', options: %w(a b))
         end
         expected_out = strip_heredoc(<<-EOF)
-          ? q (choose with ↑ ↓ ⏎)
+          ? q (Choose with ↑ ↓ ⏎)
           \e[?25l> 1. a\e[K
             2. b\e[K
           \e[\e[C
@@ -252,7 +252,7 @@ module CLI
           Prompt.ask('q', options: %w(a b))
         end
         expected_out = strip_heredoc(<<-EOF)
-        ? q (choose with ↑ ↓ ⏎)
+        ? q (Choose with ↑ ↓ ⏎)
         \e[?25l> 1. a\e[K
           2. b\e[K
         \e[\e[C
@@ -273,7 +273,7 @@ module CLI
           Prompt.ask('q', options: %w(a b))
         end
         expected_out = strip_heredoc(<<-EOF)
-        ? q (choose with ↑ ↓ ⏎)
+        ? q (Choose with ↑ ↓ ⏎)
         \e[?25l> 1. a\e[K
           2. b\e[K
         \e[\e[C
@@ -296,7 +296,7 @@ module CLI
         end
 
         expected_out = strip_heredoc(<<-EOF)
-        ? q (choose with ↑ ↓ ⏎)
+        ? q (Choose with ↑ ↓ ⏎)
         \e[?25l> 1. a\e[K
           2. b\e[K
         \e[?25h\e[\e[C
@@ -309,7 +309,7 @@ module CLI
           Prompt.ask('q', options: %w(a b))
         end
         expected_out = strip_heredoc(<<-EOF)
-        ? q (choose with ↑ ↓ ⏎)
+        ? q (Choose with ↑ ↓ ⏎)
         \e[?25l> 1. a\e[K
           2. b\e[K
         \e[\e[C
@@ -331,7 +331,7 @@ module CLI
         end
         blank = ''
         expected_out = strip_heredoc(<<-EOF)
-          ? q (choose with ↑ ↓ ⏎)
+          ? q (Choose with ↑ ↓ ⏎)
           \e[?25l> 1. a\e[K
             2.#{blank}\e[K
           \e[\e[C
