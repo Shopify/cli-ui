@@ -79,9 +79,9 @@ module CLI
       #
       # ===== Options
       #
-      # * +:enable_color+ - enable color output? Default is true
+      # * +:enable_color+ - enable color output? Default is true unless output is redirected
       #
-      def format(sgr_map = SGR_MAP, enable_color: true)
+      def format(sgr_map = SGR_MAP, enable_color: CLI::UI.enable_color?)
         @nodes = []
         stack = parse_body(StringScanner.new(@text))
         prev_fmt = nil

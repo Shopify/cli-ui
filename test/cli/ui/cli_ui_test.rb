@@ -8,5 +8,16 @@ module CLI
       actual = CLI::UI.resolve_text(input)
       assert_equal(expected, actual)
     end
+
+    def test_color
+      prev = CLI::UI.enable_color?
+
+      CLI::UI.enable_color = true
+      assert_equal("\e[0;31ma\e[0m", CLI::UI.fmt("{{red:a}}"))
+      CLI::UI.enable_color = false
+      assert_equal("a", CLI::UI.fmt("{{red:a}}"))
+    ensure
+      CLI::UI.enable_color = prev
+    end
   end
 end
