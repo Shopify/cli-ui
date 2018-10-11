@@ -4,6 +4,148 @@ module CLI
   module UI
     module Frame
       class UnnestedFrameException < StandardError; end
+
+      module EdgeRendererComponents
+        def with_hidden_cursor(o)
+          # Jumping around the line can cause some unwanted flashes
+          o << CLI::UI::ANSI.hide_cursor
+          yield
+        ensure
+          o << CLI::UI::ANSI.show_cursor
+        end
+
+        def reset_cursor(o)
+          # We can't do this in CI because of log-prefixed lines, but in user
+          # terminals, it's nice to reset to column 1 to overwrite any dangling
+          # ^C or the like.
+          o << "\r"
+        end
+
+        def set_color(o, color)
+          if CLI::UI.enable_color?
+            o << color.code
+          end
+        end
+
+        def print_at_x(x, str)
+          CLI::UI::ANSI.cursor_horizontal_absolute(1 + x) + str
+        end
+
+        Text = Struct.new(:text, :width, :start_index, :end_index)
+
+        def calculate_prefix(prefix)
+          text        = prefix
+          width       = CLI::UI::ANSI.printing_width(text)
+          start_index = 0
+          end_index   = start_index + width
+          Text.new(prefix, width, start_index, end_index)
+        end
+
+        def calculate_suffix(suffix, termwidth, prefix)
+          text = suffix
+          width = CLI::UI::ANSI.printing_width(suffix)
+          end_index = termwidth - 2
+          start_index = end_index - width
+
+          # If the prefix and suffix can't both fit, leave out the suffix
+          # completely.
+          if prefix.end_index > start_index
+            text = ''
+            width = 0
+            start_index = end_index
+          end
+
+          Text.new(text, width, start_index, end_index)
+        end
+
+      end
+
+      # Uses cursor save/restore to more accurately render edges to precise
+      # widths, even when we have emoji that print at semi-variable widths.
+      module MacOSTerminalEdgeRenderer
+        extend EdgeRendererComponents
+
+        def self.render(termwidth:, color:, prefix:, suffix:)
+          prefix = calculate_prefix(prefix)
+          suffix = calculate_suffix(suffix, termwidth, prefix)
+
+          o = +''
+          with_hidden_cursor(o) do
+            reset_cursor(o)
+            set_color(o, color)
+            o << CLI::UI::Box::Heavy::HORZ * termwidth # draw a full line
+            o << print_at_x(prefix.start_index, prefix.text)
+            set_color(o, color)
+            o << print_at_x(suffix.start_index, suffix.text)
+            set_color(o, CLI::UI::Color::RESET)
+          end
+          o << "\n"
+        end
+      end
+
+      # Doesn't use cursor save/restore or other semi-exotic ANSI escape
+      # sequences, which aren't supported by all terminals.
+      module BuildkiteEdgeRenderer
+        extend EdgeRendererComponents
+
+        def self.render(termwidth:, color:, prefix:, suffix:)
+          prefix = calculate_prefix(prefix)
+          suffix = calculate_suffix(suffix, termwidth, prefix)
+
+          interstitial_width = termwidth - (2 + prefix.width + suffix.width)
+
+          o = +''
+          o << prefix.text
+
+          set_color(o, color)
+          o << CLI::UI::Box::Heavy::HORZ * interstitial_width
+
+          o << suffix.text
+
+          set_color(o, color)
+          o << CLI::UI::Box::Heavy::HORZ * 2
+
+          set_color(o, CLI::UI::Color::RESET)
+          o << "\n"
+        end
+      end
+
+      module PipeEdgeRenderer
+        extend EdgeRendererComponents
+
+        # color is unused but necessary for the interface.
+        # rubocop:disable Lint/UnusedMethodArgument
+        def self.render(termwidth:, color:, prefix:, suffix:)
+          prefix = calculate_prefix(prefix)
+          suffix = calculate_suffix(suffix, termwidth, prefix)
+
+          interstitial_width = termwidth - (2 + prefix.width + suffix.width)
+
+          o = +''
+          o << prefix.text
+          o << CLI::UI::Box::Heavy::HORZ * interstitial_width
+          o << suffix.text
+          o << CLI::UI::Box::Heavy::HORZ * 2
+          o << "\n"
+        end
+      end
+
+      class << self
+        attr_accessor :edge_renderer
+      end
+
+      def self.default_edge_renderer
+        if ENV.key?('BUILDKITE')
+          BuildkiteEdgeRenderer
+        elsif !$stdout.tty?
+          PipeEdgeRenderer
+        else
+          MacOSTerminalEdgeRenderer
+        end
+      end
+
+      self.edge_renderer = default_edge_renderer
+
       class << self
         DEFAULT_FRAME_COLOR = CLI::UI.resolve_color(:cyan)
 
@@ -178,12 +320,12 @@ module CLI
           pfx = +''
           items = FrameStack.items
           items[0..-2].each do |item|
-            pfx << CLI::UI.resolve_color(item).code << CLI::UI::Box::Heavy::VERT
+            pfx << if_color(CLI::UI.resolve_color(item).code) << CLI::UI::Box::Heavy::VERT
           end
           if item = items.last
             c = Thread.current[:cliui_frame_color_override] || color || item
-            pfx << CLI::UI.resolve_color(c).code \
-              << CLI::UI::Box::Heavy::VERT << ' ' << CLI::UI::Color::RESET.code
+            pfx << if_color(CLI::UI.resolve_color(c).code) \
+              << CLI::UI::Box::Heavy::VERT << ' ' << if_color(CLI::UI::Color::RESET.code)
           end
           pfx
         end
@@ -217,9 +359,9 @@ module CLI
 
           prefix = +''
           FrameStack.items.each do |item|
-            prefix << CLI::UI.resolve_color(item).code << CLI::UI::Box::Heavy::VERT
+            prefix << if_color(CLI::UI.resolve_color(item).code) << CLI::UI::Box::Heavy::VERT
           end
-          prefix << color.code << first << (CLI::UI::Box::Heavy::HORZ * 2)
+          prefix << if_color(color.code) << first << (CLI::UI::Box::Heavy::HORZ * 2)
           text ||= ''
           unless text.empty?
             prefix << ' ' << text << ' '
@@ -232,55 +374,19 @@ module CLI
             suffix << ' ' << right_text << ' '
           end
 
-          suffix_width = CLI::UI::ANSI.printing_width(suffix)
-          suffix_end   = termwidth - 2
-          suffix_start = suffix_end - suffix_width
-
-          prefix_width = CLI::UI::ANSI.printing_width(prefix)
-          prefix_start = 0
-          prefix_end   = prefix_start + prefix_width
-
-          if prefix_end > suffix_start
-            suffix = ''
-            # if prefix_end > termwidth
-            # we *could* truncate it, but let's just let it overflow to the
-            # next line and call it poor usage of this API.
-          end
-
-          o = +''
-
-          is_ci = ![0, '', nil].include?(ENV['CI'])
-
-          # Jumping around the line can cause some unwanted flashes
-          o << CLI::UI::ANSI.hide_cursor
-
-          o << if is_ci
-                 # In CI, we can't use absolute horizontal positions because of timestamps.
-                 # So we move around the line by offset from this cursor position.
-                 CLI::UI::ANSI.cursor_save
-               else
-                 # Outside of CI, we reset to column 1 so that things like ^C don't
-                 # cause output misformatting.
-                 "\r"
-               end
-
-          o << color.code
-          o << CLI::UI::Box::Heavy::HORZ * termwidth # draw a full line
-          o << print_at_x(prefix_start, prefix, is_ci)
-          o << color.code
-          o << print_at_x(suffix_start, suffix, is_ci)
-          o << CLI::UI::Color::RESET.code
-          o << CLI::UI::ANSI.show_cursor
-          o << "\n"
-
-          o
+          edge_renderer.render(
+            termwidth:    termwidth,
+            color:        color,
+            prefix:       prefix,
+            suffix:       suffix,
+          )
         end
 
-        def print_at_x(x, str, is_ci)
-          if is_ci
-            CLI::UI::ANSI.cursor_restore + CLI::UI::ANSI.cursor_forward(x) + str
+        def if_color(text)
+          if CLI::UI.enable_color?
+            text
           else
-            CLI::UI::ANSI.cursor_horizontal_absolute(1 + x) + str
+            ''
           end
         end
 
