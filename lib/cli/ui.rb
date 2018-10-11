@@ -90,9 +90,9 @@ module CLI
     #
     # ==== Options
     #
-    # * +enable_color+ - should color be used? default to true
+    # * +enable_color+ - should color be used? default to true unless output is redirected.
     #
-    def self.fmt(input, enable_color: true)
+    def self.fmt(input, enable_color: enable_color?)
       CLI::UI::Formatter.new(input).format(enable_color: enable_color)
     end
 
@@ -161,6 +161,26 @@ module CLI
     ensure
       Thread.current[:no_cliui_frame_inset] = prev
     end
+
+    # Check whether colour is enabled in Formatter output. By default, colour
+    # is enabled when STDOUT is a TTY; that is, when output has not been
+    # redirected to another program or to a file.
+    #
+    def self.enable_color?
+      @enable_color
+    end
+
+    # Turn colour output in Formatter on or off.
+    #
+    # ==== Attributes
+    #
+    # * +bool+ - true or false; enable or disable colour.
+    #
+    def self.enable_color=(bool)
+      @enable_color = !!bool
+    end
+
+    self.enable_color = $stdout.tty?
   end
 end
 
