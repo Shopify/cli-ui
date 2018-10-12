@@ -63,7 +63,6 @@ module CLI
         ensure
           CLI::UI.raw do
             print(ANSI.show_cursor)
-            puts(ANSI.previous_line + ANSI.end_of_line)
           end
         end
 
@@ -74,7 +73,6 @@ module CLI
           # When we redraw the options, they will be overwritten
           CLI::UI.raw do
             num_lines.times { print(ANSI.previous_line) }
-            print(ANSI.previous_line + ANSI.end_of_line + "\n")
           end
         end
 
