@@ -39,7 +39,7 @@ module CLI
           ? q (Choose with ↑ ↓ ⏎)
           \e[?25l> 1. yes\e[K
             2. no\e[K
-          \e[?25h\e[\e[C
+          \e[?25h
         EOF
         assert_result(expected_out, "", :SIGINT)
       end
@@ -76,7 +76,7 @@ module CLI
           ? q (Choose with ↑ ↓ ⏎)
           \e[?25l> 1. a\e[K
             2. b\e[K
-          \e[?25h\e[\e[C
+          \e[?25h
         EOF
         assert_result(expected_out, "", :SIGINT)
       end
@@ -87,12 +87,10 @@ module CLI
           ? q (Choose with ↑ ↓ ⏎)
           \e[?25l> 1. yes\e[K
             2. no\e[K
-          \e[\e[C
           #{' ' * CLI::UI::Terminal.width}
           #{' ' * CLI::UI::Terminal.width}
-          \e[\e[C
-          \e[?25h\e[\e[C
-          \e[\e[C \e[s#{' ' * CLI::UI::Terminal.width}\e[u? q (You chose: yes)
+          \e[?25h\e[K
+          ? q (You chose: yes)
         EOF
         assert_result(expected_out, "", true)
       end
@@ -103,12 +101,10 @@ module CLI
           ? q (Choose with ↑ ↓ ⏎)
           \e[?25l> 1. yes\e[K
             2. no\e[K
-          \e[\e[C
           #{' ' * CLI::UI::Terminal.width}
           #{' ' * CLI::UI::Terminal.width}
-          \e[\e[C
-          \e[?25h\e[\e[C
-          \e[\e[C \e[s#{' ' * CLI::UI::Terminal.width}\e[u? q (You chose: yes)
+          \e[?25h\e[K
+          ? q (You chose: yes)
         EOF
         assert_result(expected_out, "", true)
       end
@@ -119,12 +115,10 @@ module CLI
           ? q (Choose with ↑ ↓ ⏎)
           \e[?25l> 1. yes\e[K
             2. no\e[K
-          \e[\e[C
           #{' ' * CLI::UI::Terminal.width}
           #{' ' * CLI::UI::Terminal.width}
-          \e[\e[C
-          \e[?25h\e[\e[C
-          \e[\e[C \e[s#{' ' * CLI::UI::Terminal.width}\e[u? q (You chose: no)
+          \e[?25h\e[K
+          ? q (You chose: no)
         EOF
         assert_result(expected_out, "", false)
       end
@@ -219,12 +213,10 @@ module CLI
           ? q (Choose with ↑ ↓ ⏎)
           \e[?25l> 1. a\e[K
             2. b\e[K
-          \e[\e[C
           #{' ' * CLI::UI::Terminal.width}
           #{' ' * CLI::UI::Terminal.width}
-          \e[\e[C
-          \e[?25h\e[\e[C
-          \e[\e[C \e[s#{' ' * CLI::UI::Terminal.width}\e[u? q (You chose: b)
+          \e[?25h\e[K
+          ? q (You chose: b)
         EOF
         assert_result(expected_out, "", "b was selected")
       end
@@ -237,12 +229,10 @@ module CLI
           ? q (Choose with ↑ ↓ ⏎)
           \e[?25l> 1. a\e[K
             2. b\e[K
-          \e[\e[C
           #{' ' * CLI::UI::Terminal.width}
           #{' ' * CLI::UI::Terminal.width}
-          \e[\e[C
-          \e[?25h\e[\e[C
-          \e[\e[C \e[s#{' ' * CLI::UI::Terminal.width}\e[u? q (You chose: b)
+          \e[?25h\e[K
+          ? q (You chose: b)
         EOF
         assert_result(expected_out, "", "b")
       end
@@ -255,15 +245,12 @@ module CLI
         ? q (Choose with ↑ ↓ ⏎)
         \e[?25l> 1. a\e[K
           2. b\e[K
-        \e[\e[C
           1. a\e[K
         > 2. b\e[K
-        \e[\e[C
         #{' ' * CLI::UI::Terminal.width}
         #{' ' * CLI::UI::Terminal.width}
-        \e[\e[C
-        \e[?25h\e[\e[C
-        \e[\e[C \e[s#{' ' * CLI::UI::Terminal.width}\e[u? q (You chose: b)
+        \e[?25h\e[K
+        ? q (You chose: b)
         EOF
         assert_result(expected_out, "", "b")
       end
@@ -276,12 +263,10 @@ module CLI
         ? q (Choose with ↑ ↓ ⏎)
         \e[?25l> 1. a\e[K
           2. b\e[K
-        \e[\e[C
         #{' ' * CLI::UI::Terminal.width}
         #{' ' * CLI::UI::Terminal.width}
-        \e[\e[C
-        \e[?25h\e[\e[C
-        \e[\e[C \e[s#{' ' * CLI::UI::Terminal.width}\e[u? q (You chose: a)
+        \e[?25h\e[K
+        ? q (You chose: a)
         EOF
         assert_result(expected_out, "", "a")
       end
@@ -299,7 +284,7 @@ module CLI
         ? q (Choose with ↑ ↓ ⏎)
         \e[?25l> 1. a\e[K
           2. b\e[K
-        \e[?25h\e[\e[C
+        \e[?25h
         EOF
         assert_result(expected_out, nil, :SIGINT)
       end
@@ -312,12 +297,10 @@ module CLI
         ? q (Choose with ↑ ↓ ⏎)
         \e[?25l> 1. a\e[K
           2. b\e[K
-        \e[\e[C
         #{' ' * CLI::UI::Terminal.width}
         #{' ' * CLI::UI::Terminal.width}
-        \e[\e[C
-        \e[?25h\e[\e[C
-        \e[\e[C \e[s#{' ' * CLI::UI::Terminal.width}\e[u? q (You chose: b)
+        \e[?25h\e[K
+        ? q (You chose: b)
         EOF
         assert_result(expected_out, "", "b")
       end
@@ -334,18 +317,14 @@ module CLI
           ? q (Choose with ↑ ↓ ⏎)
           \e[?25l> 1. a\e[K
             2.#{blank}\e[K
-          \e[\e[C
             1. a\e[K
           > 2.#{blank}\e[K
-          \e[\e[C
           > 1. a\e[K
             2.#{blank}\e[K
-          \e[\e[C
           #{' ' * CLI::UI::Terminal.width}
           #{' ' * CLI::UI::Terminal.width}
-          \e[\e[C
-          \e[?25h\e[\e[C
-          \e[\e[C \e[s#{' ' * CLI::UI::Terminal.width}\e[u? q (You chose: a)
+          \e[?25h\e[K
+          ? q (You chose: a)
         EOF
         assert_result(expected_out, "", "a was selected")
       end

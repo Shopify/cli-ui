@@ -145,12 +145,6 @@ module CLI
         cursor_up + control('1', 'G')
       end
 
-      # Move to the end of the line
-      #
-      def self.end_of_line
-        control("\033[", 'C')
-      end
-
       def self.clear_to_end_of_line
         control('', 'K')
       end

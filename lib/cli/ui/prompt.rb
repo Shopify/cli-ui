@@ -135,12 +135,12 @@ module CLI
           puts_question("#{question} {{yellow:(#{instructions})}}")
           resp = interactive_prompt(options, multiple: multiple)
 
-          # Clear the line, and reset the question to include the answer
-          print(ANSI.previous_line + ANSI.end_of_line + ' ')
-          print(ANSI.cursor_save)
-          print(' ' * CLI::UI::Terminal.width)
-          print(ANSI.cursor_restore)
+          # Clear the line
+          print ANSI.previous_line + ANSI.clear_to_end_of_line
+          # Force StdoutRouter to prefix
+          print ANSI.previous_line + "\n"
 
+          # reset the question to include the answer
           resp_text = resp
           if multiple
             resp_text = case resp.size

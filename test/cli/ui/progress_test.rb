@@ -39,7 +39,7 @@ module CLI
           assert_equal expected_bar, bar.to_s
         end
 
-        assert_equal expected_bar + "\e[1A\e[1G\e[\e[C\n", out
+        assert_equal expected_bar + "\e[1A\e[1G\n", out
       end
     end
   end
