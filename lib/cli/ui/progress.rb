@@ -72,7 +72,7 @@ module CLI
       # Format the progress bar to be printed to terminal
       #
       def to_s
-        suffix = " #{(@percent_done * 100).round(2)}%"
+        suffix = " #{(@percent_done * 100).floor}%".ljust(5)
         workable_width = @max_width - Frame.prefix_width - suffix.size
         filled = [(@percent_done * workable_width.to_f).ceil, 0].max
         unfilled = [workable_width - filled, 0].max

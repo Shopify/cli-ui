@@ -4,19 +4,19 @@ module CLI
   module UI
     class ProgressTest < MiniTest::Test
       def test_tick_with_percent
-        assert_bar(set_percent: 0.1, expected_filled: 1, expected_unfilled: 9, suffix: ' 10.0%')
+        assert_bar(set_percent: 0.1, expected_filled: 1, expected_unfilled: 9, suffix: ' 10% ')
       end
 
       def test_tick_with_set_percent
-        assert_bar(set_percent: 0.9, expected_filled: 9, expected_unfilled: 1, suffix: ' 90.0%')
+        assert_bar(set_percent: 0.9, expected_filled: 9, expected_unfilled: 1, suffix: ' 90% ')
       end
 
       def test_tick_with_set_percent_above_100_percent_is_set_to_100_percent
-        assert_bar(set_percent: 2.0, expected_filled: 10, suffix: ' 100.0%')
+        assert_bar(set_percent: 2.0, expected_filled: 10, suffix: ' 100%')
       end
 
       def test_tick_with_percent_change_to_above_100_percent_is_set_to_100_percent
-        assert_bar(percent: 2.0, expected_filled: 10, suffix: ' 100.0%')
+        assert_bar(percent: 2.0, expected_filled: 10, suffix: ' 100%')
       end
 
       def test_tick_with_set_percent_and_percent_raises
