@@ -197,7 +197,13 @@ module CLI
             sleep(PERIOD)
           end
 
-          debrief if @auto_debrief
+          if @auto_debrief
+            debrief
+          else
+            @m.synchronize do
+              @tasks.all?(&:success)
+            end
+          end
         end
 
         # Debriefs failed tasks is +auto_debrief+ is true
