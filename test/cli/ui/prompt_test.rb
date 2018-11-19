@@ -95,6 +95,22 @@ module CLI
         assert_result(expected_out, "", true)
       end
 
+      def test_confirm_default_no
+        _run("\n") { Prompt.confirm('q', default_yes: false) }
+
+        expected_out = strip_heredoc(<<-EOF) + ' '
+          ? q (Choose with ↑ ↓ ⏎)
+          \e[?25l> 1. no\e[K
+            2. yes\e[K
+          #{' ' * CLI::UI::Terminal.width}
+          #{' ' * CLI::UI::Terminal.width}
+          \e[?25h\e[K
+          ? q (You chose: no)
+        EOF
+
+        assert_result(expected_out, "", false)
+      end
+
       def test_confirm_invalid
         _run(%w(r y n)) { Prompt.confirm('q') }
         expected_out = strip_heredoc(<<-EOF) + ' '
