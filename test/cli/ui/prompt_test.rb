@@ -73,7 +73,7 @@ module CLI
         Process.kill('INT', @pid)
 
         expected_out = strip_heredoc(<<-EOF) + ' '
-          ? q (Choose with ↑ ↓ ⏎)
+          ? q (Choose with ↑ ↓ ⏎, filter with 'f')
           \e[?25l> 1. a\e[K
             2. b\e[K
           \e[?25h
@@ -226,7 +226,7 @@ module CLI
           end
         end
         expected_out = strip_heredoc(<<-EOF)
-          ? q (Choose with ↑ ↓ ⏎)
+          ? q (Choose with ↑ ↓ ⏎, filter with 'f')
           \e[?25l> 1. a\e[K
             2. b\e[K
           #{' ' * CLI::UI::Terminal.width}
@@ -242,7 +242,7 @@ module CLI
           Prompt.ask('q', options: %w(a b))
         end
         expected_out = strip_heredoc(<<-EOF)
-          ? q (Choose with ↑ ↓ ⏎)
+          ? q (Choose with ↑ ↓ ⏎, filter with 'f')
           \e[?25l> 1. a\e[K
             2. b\e[K
           #{' ' * CLI::UI::Terminal.width}
@@ -258,7 +258,7 @@ module CLI
           Prompt.ask('q', options: %w(a b))
         end
         expected_out = strip_heredoc(<<-EOF)
-        ? q (Choose with ↑ ↓ ⏎)
+        ? q (Choose with ↑ ↓ ⏎, filter with 'f')
         \e[?25l> 1. a\e[K
           2. b\e[K
           1. a\e[K
@@ -276,7 +276,7 @@ module CLI
           Prompt.ask('q', options: %w(a b))
         end
         expected_out = strip_heredoc(<<-EOF)
-        ? q (Choose with ↑ ↓ ⏎)
+        ? q (Choose with ↑ ↓ ⏎, filter with 'f')
         \e[?25l> 1. a\e[K
           2. b\e[K
         #{' ' * CLI::UI::Terminal.width}
@@ -297,7 +297,7 @@ module CLI
         end
 
         expected_out = strip_heredoc(<<-EOF)
-        ? q (Choose with ↑ ↓ ⏎)
+        ? q (Choose with ↑ ↓ ⏎, filter with 'f')
         \e[?25l> 1. a\e[K
           2. b\e[K
         \e[?25h
@@ -310,7 +310,7 @@ module CLI
           Prompt.ask('q', options: %w(a b))
         end
         expected_out = strip_heredoc(<<-EOF)
-        ? q (Choose with ↑ ↓ ⏎)
+        ? q (Choose with ↑ ↓ ⏎, filter with 'f')
         \e[?25l> 1. a\e[K
           2. b\e[K
         #{' ' * CLI::UI::Terminal.width}
@@ -330,7 +330,7 @@ module CLI
         end
         blank = ''
         expected_out = strip_heredoc(<<-EOF)
-          ? q (Choose with ↑ ↓ ⏎)
+          ? q (Choose with ↑ ↓ ⏎, filter with 'f')
           \e[?25l> 1. a\e[K
             2.#{blank}\e[K
             1. a\e[K
@@ -343,6 +343,100 @@ module CLI
           ? q (You chose: a)
         EOF
         assert_result(expected_out, "", "a was selected")
+      end
+
+      def test_ask_interactive_filter_options
+        _run('f', 'a', "\n") do
+          Prompt.ask('q', options: %w(a b))
+        end
+
+        expected_out = strip_heredoc(<<-EOF)
+          ? q (Choose with ↑ ↓ ⏎, filter with 'f')
+          \e[?25l> 1. a\e[K
+            2. b\e[K
+            Filter: Ctrl-D anytime or Backspace now to exit\e[K
+          > 1. a\e[K
+            2. b\e[K
+          #{' ' * CLI::UI::Terminal.width}
+          #{' ' * CLI::UI::Terminal.width}
+          #{' ' * CLI::UI::Terminal.width}
+            Filter: a\e[K
+          > 1. a\e[K
+          #{' ' * CLI::UI::Terminal.width}
+          #{' ' * CLI::UI::Terminal.width}
+          \e[?25h\e[K
+          ? q (You chose: a)
+        EOF
+
+        assert_result(expected_out, '', 'a')
+      end
+
+      def test_ask_interactive_line_selection
+        _run('e', '1', '0', "\n") do
+          Prompt.ask('q', options: ('1'..'10').to_a)
+        end
+
+        expected_out = strip_heredoc(<<-EOF)
+          ? q (Choose with ↑ ↓ ⏎, filter with 'f', enter option with 'e')
+          \e[?25l> 1.  1\e[K
+            2.  2\e[K
+            3.  3\e[K
+            4.  4\e[K
+            5.  5\e[K
+            6.  6\e[K
+            7.  7\e[K
+            8.  8\e[K
+            9.  9\e[K
+            10. 10\e[K
+            Select: e, q, or up/down anytime to exit\e[K
+            1.  1\e[K
+            2.  2\e[K
+            3.  3\e[K
+            4.  4\e[K
+            5.  5\e[K
+            6.  6\e[K
+            7.  7\e[K
+            8.  8\e[K
+            9.  9\e[K
+            10. 10\e[K
+            Select: 1\e[K
+          > 1.  1\e[K
+            2.  2\e[K
+            3.  3\e[K
+            4.  4\e[K
+            5.  5\e[K
+            6.  6\e[K
+            7.  7\e[K
+            8.  8\e[K
+            9.  9\e[K
+            10. 10\e[K
+            Select: 10\e[K
+            1.  1\e[K
+            2.  2\e[K
+            3.  3\e[K
+            4.  4\e[K
+            5.  5\e[K
+            6.  6\e[K
+            7.  7\e[K
+            8.  8\e[K
+            9.  9\e[K
+          > 10. 10\e[K
+          #{' ' * CLI::UI::Terminal.width}
+          #{' ' * CLI::UI::Terminal.width}
+          #{' ' * CLI::UI::Terminal.width}
+          #{' ' * CLI::UI::Terminal.width}
+          #{' ' * CLI::UI::Terminal.width}
+          #{' ' * CLI::UI::Terminal.width}
+          #{' ' * CLI::UI::Terminal.width}
+          #{' ' * CLI::UI::Terminal.width}
+          #{' ' * CLI::UI::Terminal.width}
+          #{' ' * CLI::UI::Terminal.width}
+          #{' ' * CLI::UI::Terminal.width}
+          \e[?25h\e[K
+          ? q (You chose: 10)
+        EOF
+
+        assert_result(expected_out, '', '10')
       end
 
       private

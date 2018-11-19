@@ -34,7 +34,7 @@ To handle content flow (see example below)
 CLI::UI::StdoutRouter.enable
 CLI::UI::Frame.open('Frame 1') do
   CLI::UI::Frame.open('Frame 2') { puts "inside frame 2" }
-  puts "inside frame 1" 
+  puts "inside frame 1"
 end
 ```
 
@@ -43,7 +43,10 @@ end
 ---
 
 ### Interactive Prompts
-Prompt user with options and ask them to choose. Can answer using arrow keys, numbers, or vim bindings (or y/n for yes/no questions)
+Prompt user with options and ask them to choose. Can answer using arrow keys, vim bindings (`j`/`k`), or numbers  (or y/n for yes/no questions).
+
+For large numbers of options, using `e`, `:`, or `G` will toggle "line select" mode which allows numbers greater than 9 to be typed and
+`f` or `/` will allow the user to filter options using a free-form text input.
 
 ```ruby
 CLI::UI.ask('What language/framework do you use?', options: %w(rails go ruby python))

@@ -1,3 +1,4 @@
+# coding: utf-8
 require 'io/console'
 
 module CLI
@@ -10,6 +11,9 @@ module CLI
         # Prompts the user with options
         # Uses an interactive session to allow the user to pick an answer
         # Can use arrows, y/n, numbers (1/2), and vim bindings to control
+        # For more than 9 options, hitting 'e', ':', or 'G' will enter select
+        # mode allowing the user to type in longer numbers
+        # Pressing 'f' or '/' will allow the user to filter the results
         #
         # https://user-images.githubusercontent.com/3074765/33797984-0ebb5e64-dcdf-11e7-9e7e-7204f279cece.gif
         #
@@ -42,16 +46,22 @@ module CLI
           @answer = nil
           @state = :root
           @multiple = multiple
+          # Indicate that an extra line (the "metadata" line) is present and
+          # the terminal output should be drawn over when processing user input
+          @displaying_metadata = false
+          @filter = ''
           # 0-indexed array representing if selected
           # @options[0] is selected if @chosen[0]
           @chosen = Array.new(@options.size) { false } if multiple
           @redraw = true
+          @presented_options = []
         end
 
         # Calls the +InteractiveOptions+ and asks the question
         # Usually used from +self.call+
         #
         def call
+          calculate_option_line_lengths
           CLI::UI.raw { print(ANSI.hide_cursor) }
           while @answer.nil?
             render_options
@@ -59,6 +69,7 @@ module CLI
             reset_position
           end
           clear_output
+
           @answer
         ensure
           CLI::UI.raw do
@@ -68,61 +79,96 @@ module CLI
 
         private
 
-        def reset_position
-          # This will put us back at the beginning of the options
-          # When we redraw the options, they will be overwritten
-          CLI::UI.raw do
-            num_lines.times { print(ANSI.previous_line) }
-          end
-        end
-
-        def clear_output
-          CLI::UI.raw do
-            # Write over all lines with whitespace
-            num_lines.times { puts(' ' * CLI::UI::Terminal.width) }
-          end
-          reset_position
-        end
-
-        def num_lines
-          options = presented_options.map(&:first)
-
-          # empty_option_count is needed since empty option titles are omitted
-          # from the line count when reject(&:empty?) is called
-          empty_option_count = options.count(&:empty?)
-
+        def calculate_option_line_lengths
+          @terminal_width_at_calculation_time = CLI::UI::Terminal.width
           # options will be an array of questions but each option can be multi-line
           # so to get the # of lines, you need to join then split
 
           # since lines may be longer than the terminal is wide, we need to
           # determine how many extra lines would be taken up by them
-          max_width = (CLI::UI::Terminal.width -
-                       options.count.to_s.size - # Width of the displayed number
-                       5 -                       # Extra characters added during rendering
-                       (@multiple ? 1 : 0)       # Space for the checkbox, if rendered
+          max_width = (@terminal_width_at_calculation_time -
+                       @options.count.to_s.size - # Width of the displayed number
+                       5 -                        # Extra characters added during rendering
+                       (@multiple ? 1 : 0)        # Space for the checkbox, if rendered
                       ).to_f
 
-          total_non_empty_lines = options
-                                    .join("\n")
-                                    .split("\n")
-                                    .reject(&:empty?)
-                                    .map { |l| (l.length / max_width).ceil }
-                                    .reduce(&:+)
+          @option_lengths = @options.map do |text|
+            width = 1 if text.empty?
+            width ||= text
+                        .split("\n")
+                        .reject(&:empty?)
+                        .map { |l| (l.length / max_width).ceil }
+                        .reduce(&:+)
 
-          total_non_empty_lines + empty_option_count
+            width
+          end
+        end
+
+        def reset_position(number_of_lines=num_lines)
+          # This will put us back at the beginning of the options
+          # When we redraw the options, they will be overwritten
+          CLI::UI.raw do
+            number_of_lines.times { print(ANSI.previous_line) }
+          end
+        end
+
+        def clear_output(number_of_lines=num_lines)
+          CLI::UI.raw do
+            # Write over all lines with whitespace
+            number_of_lines.times { puts(' ' * CLI::UI::Terminal.width) }
+          end
+          reset_position number_of_lines
+
+          # Update if metadata is being displayed
+          # This must be done _after_ the output is cleared or it won't draw over
+          # the entire output
+          @displaying_metadata = display_metadata?
+        end
+
+        # Don't use this in place of +@displaying_metadata+, this updates too
+        # quickly to be useful when drawing to the screen.
+        def display_metadata?
+          filtering? or selecting? or has_filter?
+        end
+
+        def num_lines
+          calculate_option_line_lengths if terminal_width_changed?
+
+          option_length = presented_options.reduce(0) do |total_length, (_, option_number)|
+            # Handle continuation markers and "Done" option when multiple is true
+            next total_length + 1 if option_number.nil? or option_number.zero?
+            total_length + @option_lengths[option_number - 1]
+          end
+
+          option_length + (@displaying_metadata ? 1 : 0)
+        end
+
+        def terminal_width_changed?
+          @terminal_width_at_calculation_time != CLI::UI::Terminal.width
         end
 
         ESC = "\e"
+        BACKSPACE = "\u007F"
+        CTRL_C = "\u0003"
+        CTRL_D = "\u0004"
 
         def up
-          min_pos = @multiple ? 0 : 1
-          @active = @active - 1 >= min_pos ? @active - 1 : @options.length
+          active_index = @filtered_options.index { |_,num| num == @active } || 0
+
+          previous_visible = @filtered_options[active_index - 1]
+          previous_visible ||= @filtered_options.last
+
+          @active = previous_visible ? previous_visible.last : -1
           @redraw = true
         end
 
         def down
-          min_pos = @multiple ? 0 : 1
-          @active = @active + 1 <= @options.length ? @active + 1 : min_pos
+          active_index = @filtered_options.index { |_,num| num == @active } || 0
+
+          next_visible = @filtered_options[active_index + 1]
+          next_visible ||= @filtered_options.first
+
+          @active = next_visible ? next_visible.last : -1
           @redraw = true
         end
 
@@ -156,7 +202,36 @@ module CLI
           @redraw = true
         end
 
+        def build_selection(char)
+          @active = (@active.to_s + char).to_i
+          @redraw = true
+        end
+
+        def chop_selection
+          @active = @active.to_s.chop.to_i
+          @redraw = true
+        end
+
+        def update_search(char)
+          @redraw = true
+
+          # Control+D or Backspace on empty search closes search
+          if char == CTRL_D or (@filter.empty? and char == BACKSPACE)
+            @filter = ''
+            @state = :root
+            return
+          end
+
+          if char == BACKSPACE
+            @filter.chop!
+          else
+            @filter += char
+          end
+        end
+
         def select_current
+          # Prevent selection of invisible options
+          return unless presented_options.any? { |_,num| num == @active }
           select_n(@active)
         end
 
@@ -168,29 +243,49 @@ module CLI
         # rubocop:disable Style/WhenThen,Layout/SpaceBeforeSemicolon
         def wait_for_user_input
           char = read_char
+          @last_char = char
+
+          case char
+          when :timeout ; raise Interrupt # Timeout, use interrupt to simulate
+          when CTRL_C   ; raise Interrupt
+          end
+
           case @state
           when :root
             case char
-            when :timeout                  ; raise Interrupt # Timeout, use interrupt to simulate
             when ESC                       ; @state = :esc
             when 'k'                       ; up
             when 'j'                       ; down
-            when '0'                       ; select_n(char.to_i)
-            when ('1'..@options.size.to_s) ; select_n(char.to_i)
+            when 'e', ':', 'G'             ; start_line_select
+            when 'f', '/'                  ; start_filter
+            when ('0'..@options.size.to_s) ; select_n(char.to_i)
             when 'y', 'n'                  ; select_bool(char)
             when " ", "\r", "\n"           ; select_current  # <enter>
-            when "\u0003"                  ; raise Interrupt # Ctrl-c
+            end
+          when :filter
+            case char
+            when ESC        ; @state = :esc
+            when "\r", "\n" ; select_current
+            else            ; update_search(char)
+            end
+          when :line_select
+            case char
+            when ESC             ; @state = :esc
+            when 'k'             ; up   ; @state = :root
+            when 'j'             ; down ; @state = :root
+            when 'e',':','G','q' ; stop_line_select
+            when '0'..'9'        ; build_selection(char)
+            when BACKSPACE       ; chop_selection  # Pop last input on backspace
+            when ' ', "\r", "\n" ; select_current
             end
           when :esc
             case char
-            when :timeout ; raise Interrupt # Timeout, use interrupt to simulate
             when '['      ; @state = :esc_bracket
             else          ; raise Interrupt # unhandled escape sequence.
             end
           when :esc_bracket
-            @state = :root
+            @state = has_filter? ? :filter : :root
             case char
-            when :timeout ; raise Interrupt # Timeout, use interrupt to simulate
             when 'A'      ; up
             when 'B'      ; down
             else          ; raise Interrupt # unhandled escape sequence.
@@ -198,6 +293,35 @@ module CLI
           end
         end
         # rubocop:enable Style/WhenThen,Layout/SpaceBeforeSemicolon
+
+        def selecting?
+          @state == :line_select
+        end
+
+        def filtering?
+          @state == :filter
+        end
+
+        def has_filter?
+          !@filter.empty?
+        end
+
+        def start_filter
+          @state = :filter
+          @redraw = true
+        end
+
+        def start_line_select
+          @state  = :line_select
+          @active = 0
+          @redraw = true
+        end
+
+        def stop_line_select
+          @state = :root
+          @active = 1 if @active.zero?
+          @redraw = true
+        end
 
         def read_char
           raw_tty! do
@@ -220,9 +344,18 @@ module CLI
           return @presented_options unless recalculate
 
           @presented_options = @options.zip(1..Float::INFINITY)
+          if has_filter?
+            @presented_options.select! { |option,_| option.downcase.include?(@filter.downcase) }
+          end
+
+          # Used for selection purposes
+          @filtered_options = @presented_options.dup
+
           @presented_options.unshift([DONE, 0]) if @multiple
 
-          while num_lines > max_options
+          ensure_visible_is_active if has_filter?
+
+          while num_lines > max_lines
             # try to keep the selection centered in the window:
             if distance_from_selection_to_end > distance_from_start_to_selection
               # selection is closer to top than bottom, so trim a row from the bottom
@@ -238,14 +371,22 @@ module CLI
           @presented_options
         end
 
+        def ensure_visible_is_active
+          unless presented_options.any? { |_, num| num == @active }
+            @active = presented_options.first&.last.to_i
+          end
+        end
+
         def distance_from_selection_to_end
-          last_visible_option_number = @presented_options[-1].last || @presented_options[-2].last
-          last_visible_option_number - @active
+          @presented_options.count - index_of_active_option
         end
 
         def distance_from_start_to_selection
-          first_visible_option_number = @presented_options[0].last || @presented_options[1].last
-          @active - first_visible_option_number
+          index_of_active_option
+        end
+
+        def index_of_active_option
+          @presented_options.index { |_,num| num == @active }.to_i
         end
 
         def ensure_last_item_is_continuation_marker
@@ -256,14 +397,38 @@ module CLI
           @presented_options.unshift(["...", nil]) if @presented_options.first.last
         end
 
-        def max_options
-          @max_options ||= CLI::UI::Terminal.height - 2 # Keeps a one line question visible
+        def max_lines
+          CLI::UI::Terminal.height - (@displaying_metadata ? 3 : 2) # Keeps a one line question visible
         end
 
         def render_options
+          previously_displayed_lines = num_lines
+
+          @displaying_metadata = display_metadata?
+
+          options = presented_options(recalculate: true)
+
+          clear_output(previously_displayed_lines) if previously_displayed_lines > num_lines
+
           max_num_length = (@options.size + 1).to_s.length
 
-          presented_options(recalculate: true).each do |choice, num|
+          metadata_text = if selecting?
+                            select_text = @active
+                            select_text = '{{info:e, q, or up/down anytime to exit}}' if @active == 0
+                            "Select: #{select_text}"
+                          elsif filtering? or has_filter?
+                            filter_text = @filter
+                            filter_text = '{{info:Ctrl-D anytime or Backspace now to exit}}' if @filter.empty?
+                            "Filter: #{filter_text}"
+                          end
+
+          if metadata_text
+            CLI::UI.with_frame_color(:blue) do
+              puts CLI::UI.fmt("  {{green:#{metadata_text}}}#{ANSI.clear_to_end_of_line}")
+            end
+          end
+
+          options.each do |choice, num|
             is_chosen = @multiple && num && @chosen[num - 1]
 
             padding = ' ' * (max_num_length - num.to_s.length)
@@ -279,7 +444,9 @@ module CLI
             message += format_choice(format, choice)
 
             if num == @active
-              message = message.split("\n").map { |l| "{{blue:> #{l.strip}}}" }.join("\n")
+
+              color = (filtering? or selecting?) ? 'green' : 'blue'
+              message = message.split("\n").map { |l| "{{#{color}:> #{l.strip}}}" }.join("\n")
             end
 
             CLI::UI.with_frame_color(:blue) do
