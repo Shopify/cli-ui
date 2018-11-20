@@ -48,8 +48,8 @@ module CLI
     #
     # * +question+ - question to confirm
     #
-    def self.confirm(question)
-      CLI::UI::Prompt.confirm(question)
+    def self.confirm(question, **kwargs)
+      CLI::UI::Prompt.confirm(question, **kwargs)
     end
 
     # Conviencence Method for +CLI::UI::Prompt.ask+

@@ -91,8 +91,10 @@ module CLI
         # Confirmation question
         #   CLI::UI::Prompt.confirm('Is the sky blue?')
         #
-        def confirm(question)
-          ask_interactive(question, %w(yes no)) == 'yes'
+        #   CLI::UI::Prompt.confirm('Do a dangerous thing?', default: false)
+        #
+        def confirm(question, default: true)
+          ask_interactive(question, default ? %w(yes no) : %w(no yes)) == 'yes'
         end
 
         private
