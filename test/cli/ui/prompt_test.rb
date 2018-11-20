@@ -96,7 +96,7 @@ module CLI
       end
 
       def test_confirm_default_no
-        _run("\n") { Prompt.confirm('q', default_yes: false) }
+        _run("\n") { Prompt.confirm('q', default: false) }
 
         expected_out = strip_heredoc(<<-EOF) + ' '
           ? q (Choose with ↑ ↓ ⏎)
