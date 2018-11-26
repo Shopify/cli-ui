@@ -197,10 +197,11 @@ module CLI
           # thread to manage output, but the current strategy feels like a
           # better tradeoff.
           prefix = CLI::UI.with_frame_color(:blue) { CLI::UI::Frame.prefix }
-          prompt = prefix + CLI::UI.fmt('{{blue:> }}{{yellow:')
+          prompt = prefix + CLI::UI.fmt('{{blue:> }}') + CLI::UI::Color::YELLOW.code
 
           begin
             line = Readline.readline(prompt, true)
+            print CLI::UI::Color::RESET.code
             line.to_s.chomp
           rescue Interrupt
             CLI::UI.raw { STDERR.puts('^C' + CLI::UI::Color::RESET.code) }
