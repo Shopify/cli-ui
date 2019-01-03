@@ -107,7 +107,7 @@ module CLI
                                     .split("\n")
                                     .reject(&:empty?)
                                     .map { |l| (l.length / max_width).ceil }
-                                    .sum
+                                    .reduce(&:+)
 
           total_non_empty_lines + empty_option_count
         end
