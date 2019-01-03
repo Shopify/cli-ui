@@ -279,9 +279,6 @@ module CLI
             message += format_choice(format, choice)
 
             if num == @active
-              # message = message.split("\n").map.with_index do |l, idx|
-              #   idx == 0 ? "{{blue:> #{l.strip}}}" : "{{blue:>#{l.strip}}}"
-              # end.join("\n")
               message = message.split("\n").map { |l| "{{blue:> #{l.strip}}}" }.join("\n")
             end
 
