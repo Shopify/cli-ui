@@ -86,15 +86,30 @@ module CLI
 
         def num_lines
           options = presented_options.map(&:first)
-          # @options will be an array of questions but each option can be multi-line
-          # so to get the # of lines, you need to join then split
 
           # empty_option_count is needed since empty option titles are omitted
           # from the line count when reject(&:empty?) is called
-
           empty_option_count = options.count(&:empty?)
-          joined_options = options.join("\n")
-          joined_options.split("\n").reject(&:empty?).size + empty_option_count
+
+          # options will be an array of questions but each option can be multi-line
+          # so to get the # of lines, you need to join then split
+
+          # since lines may be longer than the terminal is wide, we need to
+          # determine how many extra lines would be taken up by them
+          max_width = (CLI::UI::Terminal.width -
+                       options.count.to_s.size - # Width of the displayed number
+                       5 -                       # Extra characters added during rendering
+                       (@multiple ? 1 : 0)       # Space for the checkbox, if rendered
+                      ).to_f
+
+          total_non_empty_lines = options
+                                    .join("\n")
+                                    .split("\n")
+                                    .reject(&:empty?)
+                                    .map { |l| (l.length / max_width).ceil }
+                                    .reduce(&:+)
+
+          total_non_empty_lines + empty_option_count
         end
 
         ESC = "\e"
@@ -261,18 +276,26 @@ module CLI
             format = " #{format}"
 
             message += sprintf(format, CHECKBOX_ICON[is_chosen]) if @multiple && num && num > 0
-            message += choice.split("\n").map { |l| sprintf(format, l) }.join("\n")
+            message += format_choice(format, choice)
 
             if num == @active
-              message = message.split("\n").map.with_index do |l, idx|
-                idx == 0 ? "{{blue:> #{l.strip}}}" : "{{blue:>#{l.strip}}}"
-              end.join("\n")
+              message = message.split("\n").map { |l| "{{blue:> #{l.strip}}}" }.join("\n")
             end
 
             CLI::UI.with_frame_color(:blue) do
-              puts CLI::UI.fmt(message) + CLI::UI::ANSI.clear_to_end_of_line
+              puts CLI::UI.fmt(message)
             end
           end
+        end
+
+        def format_choice(format, choice)
+          eol = CLI::UI::ANSI.clear_to_end_of_line
+          lines = choice.split("\n")
+
+          return eol if lines.empty? # Handle blank options
+
+          lines.map! { |l| sprintf(format, l) + eol }
+          lines.join("\n")
         end
       end
     end
