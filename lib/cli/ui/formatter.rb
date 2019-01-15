@@ -171,7 +171,7 @@ module CLI
         elsif match && match.end_with?(END_EXPR)
           @brace_counter -= 1
           emit(match[DISCARD_BRACES], stack)
-          if stack.empty? or stack.pop == LITERAL_BRACES
+          if stack.pop == LITERAL_BRACES
             emit('}}', stack)
             @brace_counter += 1 # Prevent literal braces from decreasing the counter
           end
