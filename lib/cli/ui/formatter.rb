@@ -69,9 +69,6 @@ module CLI
       #
       def initialize(text)
         @text = text
-        # Used to keep track of opening braces to detect mismatched braces
-        # in the input string.
-        @brace_counter = 0
       end
 
       # Format the text using a map.
@@ -87,11 +84,6 @@ module CLI
       def format(sgr_map = SGR_MAP, enable_color: CLI::UI.enable_color?)
         @nodes = []
         stack = parse_body(StringScanner.new(@text))
-        if @brace_counter > 0
-          raise FormatError.new('Mismatched braces in input',
-                                @text,
-                                -1)
-        end
         prev_fmt = nil
         content = @nodes.each_with_object(+'') do |(text, fmt), str|
           if prev_fmt != fmt && enable_color
@@ -136,8 +128,6 @@ module CLI
           begin
             glyph = Glyph.lookup(glyph_handle)
             emit(glyph.char, [glyph.color.name.to_s])
-            # Glyphs match on their closing braces, so we have to decrease the count here
-            @brace_counter -= 1
           rescue Glyph::InvalidGlyphHandle
             index = sc.pos - 2 # rewind past '}}'
             raise FormatError.new(
@@ -156,7 +146,6 @@ module CLI
           # pairs of {{ }} at least.
           emit('{{', stack)
           stack.push(LITERAL_BRACES)
-          @brace_counter -= 1 # Don't count literal opening braces
         end
         parse_body(sc, stack)
         stack
@@ -165,15 +154,12 @@ module CLI
       def parse_body(sc, stack = [])
         match = sc.scan(SCAN_BODY)
         if match && match.end_with?(BEGIN_EXPR)
-          @brace_counter += 1
           emit(match[DISCARD_BRACES], stack)
           parse_expr(sc, stack)
         elsif match && match.end_with?(END_EXPR)
-          @brace_counter -= 1
           emit(match[DISCARD_BRACES], stack)
-          if stack.empty? or stack.pop == LITERAL_BRACES
+          if stack.pop == LITERAL_BRACES
             emit('}}', stack)
-            @brace_counter += 1 # Prevent literal braces from decreasing the counter
           end
           parse_body(sc, stack)
         elsif match
