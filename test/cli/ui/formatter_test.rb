@@ -1,4 +1,3 @@
-# coding: utf-8
 require 'test_helper'
 
 module CLI
@@ -12,7 +11,7 @@ module CLI
       end
 
       def test_format_no_color
-        input = "a{{blue:b {{*}}{{bold:c {{red:d}}}}{{bold: e}}}} f {{bold:}}"
+        input = "a{{blue:b {{*}}{{bold:c {{red:d}}}}{{bold: e}}}} f {{bold:"
         expected = "ab ⭑c d e f "
         actual = CLI::UI::Formatter.new(input).format(enable_color: false)
         assert_equal(expected, actual)
@@ -20,13 +19,9 @@ module CLI
 
       def test_format_trailing
         input = "a{{bold:a {{blue:"
-        ex = assert_raises(CLI::UI::Formatter::FormatError) do
-          CLI::UI::Formatter.new(input).format
-        end
-        expected = 'Mismatched braces in input'
-        assert_equal(input, ex.input)
-        assert_equal(-1, ex.index)
-        assert_equal(expected, ex.message)
+        expected = "\e[0ma\e[0;1ma \e[0;1;94m"
+        actual = CLI::UI::Formatter.new(input).format
+        assert_equal(expected, actual)
       end
 
       def test_invalid_funcname
