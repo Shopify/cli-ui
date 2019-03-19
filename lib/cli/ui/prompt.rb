@@ -137,7 +137,7 @@ module CLI
             handler.options
           end
 
-          raise(ArgumentError, 'insufficient options') if options.nil? || options.size < 2
+          raise(ArgumentError, 'insufficient options') if options.nil? || options.empty?
           instructions = (multiple ? "Toggle options. " : "") + "Choose with ↑ ↓ ⏎"
           instructions += ", filter with 'f'" if filter_ui
           instructions += ", enter option with 'e'" if select_ui and options.size > 9

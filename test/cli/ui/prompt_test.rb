@@ -208,33 +208,30 @@ module CLI
 
       def test_ask_interactive_insufficient_options
         exception = assert_raises(ArgumentError) do
-          Prompt.ask('q', options: %w(a))
+          Prompt.ask('q', options: %w())
         end
         assert_equal 'insufficient options', exception.message
 
         exception = assert_raises(ArgumentError) do
-          Prompt.ask('q') { |h| h.option('a') {} }
+          Prompt.ask('q') { |h| {} }
         end
         assert_equal 'insufficient options', exception.message
       end
 
       def test_ask_interactive_with_block
-        _run('2') do
+        _run('1') do
           Prompt.ask('q') do |h|
             h.option('a') { |a| 'a was selected' }
-            h.option('b') { |b| 'b was selected' }
           end
         end
         expected_out = strip_heredoc(<<-EOF)
           ? q (Choose with ↑ ↓ ⏎, filter with 'f')
           \e[?25l> 1. a\e[K
-            2. b\e[K
-          #{' ' * CLI::UI::Terminal.width}
           #{' ' * CLI::UI::Terminal.width}
           \e[?25h\e[K
-          ? q (You chose: b)
+          ? q (You chose: a)
         EOF
-        assert_result(expected_out, "", "b was selected")
+        assert_result(expected_out, "", "a was selected")
       end
 
       def test_ask_interactive_with_number
