@@ -288,6 +288,8 @@ module CLI
             case char
             when 'A'      ; up
             when 'B'      ; down
+            when 'C'      ; # Ignore right key
+            when 'D'      ; # Ignore left key
             else          ; raise Interrupt # unhandled escape sequence.
             end
           end
