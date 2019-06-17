@@ -88,6 +88,33 @@ module CLI
           end
         end
 
+        # Asks the user for a single-line answer, without displaying the characters while typing.
+        # Typically used for password prompts
+        #
+        # ==== Return Value
+        #
+        # The password, without a trailing newline.
+        # If the user simply presses "Enter" without typing any password, this will return an empty string.
+        def ask_password(question)
+          require 'io/console'
+
+          CLI::UI.with_frame_color(:blue) do
+            STDOUT.print(CLI::UI.fmt('{{?}} ' + question)) # Do not use puts_question to avoid the new line.
+
+            # noecho interacts poorly with Readline under system Ruby, so do a manual `gets` here.
+            # No fancy Readline integration (like echoing back) is required for a password prompt anyway.
+            password = STDIN.noecho do
+              # Chomp will remove the one new line character added by `gets`, without touching potential extra spaces:
+              # " 123 \n".chomp => " 123 "
+              STDIN.gets.chomp
+            end
+
+            STDOUT.puts # Complete the line
+
+            password
+          end
+        end
+
         # Asks the user a yes/no question.
         # Can use arrows, y/n, numbers (1/2), and vim bindings to control
         #
