@@ -272,9 +272,9 @@ module CLI
 
           o << color.code
           o << CLI::UI::Box::Heavy::HORZ * termwidth # draw a full line
-          o << print_at_x(prefix_start, prefix, is_ci)
+          o << print_at_x(prefix_start, prefix)
           o << color.code
-          o << print_at_x(suffix_start, suffix, is_ci)
+          o << print_at_x(suffix_start, suffix)
           o << CLI::UI::Color::RESET.code
           o << CLI::UI::ANSI.show_cursor
           o << "\n"
@@ -282,12 +282,8 @@ module CLI
           o
         end
 
-        def print_at_x(x, str, is_ci)
-          if is_ci
-            CLI::UI::ANSI.cursor_restore + CLI::UI::ANSI.cursor_forward(x) + str
-          else
-            CLI::UI::ANSI.cursor_horizontal_absolute(1 + x) + str
-          end
+        def print_at_x(x, str)
+          CLI::UI::ANSI.cursor_horizontal_absolute(1 + x) + str
         end
 
         module FrameStack
