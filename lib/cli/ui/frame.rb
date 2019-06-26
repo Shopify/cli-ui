@@ -249,20 +249,26 @@ module CLI
 
           o = +''
 
-          is_ci = ![0, '', nil].include?(ENV['CI'])
+          # Shopify's CI system supports terminal emulation, but not some of
+          # the fancier features that we normally use to draw frames
+          # extra-reliably, so we fall back to a less foolproof strategy. This
+          # is probably better in general for cases with impoverished terminal
+          # emulators and no active user.
+          if (is_ci = ![0, '', nil].include?(ENV['CI']))
+            linewidth = termwidth - (prefix_width + suffix_width)
+
+            o << color.code << prefix
+            o << color.code << (CLI::UI::Box::Heavy::HORZ * linewidth)
+            o << color.code << suffix
+            o << CLI::UI::Color::RESET.code << "\n"
+            return o
+          end
 
           # Jumping around the line can cause some unwanted flashes
           o << CLI::UI::ANSI.hide_cursor
 
-          o << if is_ci
-                 # In CI, we can't use absolute horizontal positions because of timestamps.
-                 # So we move around the line by offset from this cursor position.
-                 CLI::UI::ANSI.cursor_save
-               else
-                 # Outside of CI, we reset to column 1 so that things like ^C don't
-                 # cause output misformatting.
-                 "\r"
-               end
+          # reset to column 1 so that things like ^C don't ruin formatting
+          o << "\r"
 
           o << color.code
           o << CLI::UI::Box::Heavy::HORZ * termwidth # draw a full line
