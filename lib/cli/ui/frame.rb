@@ -249,26 +249,32 @@ module CLI
 
           o = +''
 
-          is_ci = ![0, '', nil].include?(ENV['CI'])
+          # Shopify's CI system supports terminal emulation, but not some of
+          # the fancier features that we normally use to draw frames
+          # extra-reliably, so we fall back to a less foolproof strategy. This
+          # is probably better in general for cases with impoverished terminal
+          # emulators and no active user.
+          if (is_ci = ![0, '', nil].include?(ENV['CI']))
+            linewidth = termwidth - (prefix_width + suffix_width)
+
+            o << color.code << prefix
+            o << color.code << (CLI::UI::Box::Heavy::HORZ * linewidth)
+            o << color.code << suffix
+            o << CLI::UI::Color::RESET.code << "\n"
+            return o
+          end
 
           # Jumping around the line can cause some unwanted flashes
           o << CLI::UI::ANSI.hide_cursor
 
-          o << if is_ci
-                 # In CI, we can't use absolute horizontal positions because of timestamps.
-                 # So we move around the line by offset from this cursor position.
-                 CLI::UI::ANSI.cursor_save
-               else
-                 # Outside of CI, we reset to column 1 so that things like ^C don't
-                 # cause output misformatting.
-                 "\r"
-               end
+          # reset to column 1 so that things like ^C don't ruin formatting
+          o << "\r"
 
           o << color.code
           o << CLI::UI::Box::Heavy::HORZ * termwidth # draw a full line
-          o << print_at_x(prefix_start, prefix, is_ci)
+          o << print_at_x(prefix_start, prefix)
           o << color.code
-          o << print_at_x(suffix_start, suffix, is_ci)
+          o << print_at_x(suffix_start, suffix)
           o << CLI::UI::Color::RESET.code
           o << CLI::UI::ANSI.show_cursor
           o << "\n"
@@ -276,12 +282,8 @@ module CLI
           o
         end
 
-        def print_at_x(x, str, is_ci)
-          if is_ci
-            CLI::UI::ANSI.cursor_restore + CLI::UI::ANSI.cursor_forward(x) + str
-          else
-            CLI::UI::ANSI.cursor_horizontal_absolute(1 + x) + str
-          end
+        def print_at_x(x, str)
+          CLI::UI::ANSI.cursor_horizontal_absolute(1 + x) + str
         end
 
         module FrameStack
