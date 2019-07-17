@@ -36,6 +36,7 @@ module CLI
       BEGIN_EXPR = '{{'
       END_EXPR   = '}}'
 
+      SCAN_WIDGET   = %r[@widget/(?<handle>\w+):(?<args>.*?)}}]
       SCAN_FUNCNAME = /\w+:/
       SCAN_GLYPH    = /.}}/
       SCAN_BODY     = /
@@ -135,6 +136,19 @@ module CLI
               @text,
               index
             )
+          end
+        elsif match = sc.scan(SCAN_WIDGET)
+          match_data = SCAN_WIDGET.match(match)
+          widget_handle = match_data['handle']
+          begin
+            widget = Widgets.lookup(widget_handle)
+            emit(widget.call(match_data['args']), stack)
+          rescue Widgets::InvalidWidgetHandle
+            index = sc.pos - 2 # rewind past '}}'
+            raise(FormatError.new(
+              "invalid widget handle at index #{index}: '#{widget_handle}'",
+              @text, index,
+            ))
           end
         elsif match = sc.scan(SCAN_FUNCNAME)
           funcname = match.chop

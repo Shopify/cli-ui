@@ -1,3 +1,4 @@
+# frozen-string-literal: true
 require 'cli/ui'
 
 module CLI
@@ -9,11 +10,20 @@ module CLI
       PERIOD = 0.1 # seconds
       TASK_FAILED = :task_failed
 
+      RUNES = %w(⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏).freeze
+
       begin
-        runes = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
         colors = [CLI::UI::Color::CYAN.code] * 5 + [CLI::UI::Color::MAGENTA.code] * 5
-        raise unless runes.size == colors.size
-        GLYPHS = colors.zip(runes).map(&:join)
+        raise unless RUNES.size == colors.size
+        GLYPHS = colors.zip(RUNES).map(&:join)
+      end
+
+      class << self
+        attr_accessor(:index)
+
+        def current_rune
+          RUNES[index || 0]
+        end
       end
 
       # Adds a single spinner

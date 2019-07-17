@@ -31,6 +31,9 @@ module CLI
       BOLD    = new('1',  :bold)
       WHITE   = new('97', :white)
 
+      # 240 is very dark gray; 255 is very light gray. 248 is medium.
+      GRAY = new('38;5;244', :grey)
+
       MAP = {
         red:     RED,
         green:   GREEN,
@@ -40,6 +43,7 @@ module CLI
         cyan:    CYAN,
         reset:   RESET,
         bold:    BOLD,
+        gray:    GRAY,
       }.freeze
 
       class InvalidColorName < ArgumentError

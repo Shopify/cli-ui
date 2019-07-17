@@ -40,6 +40,7 @@ module CLI
           #
           def initialize(title, &block)
             @title = title
+            @always_full_render = title =~ Formatter::SCAN_WIDGET
             @thread = Thread.new do
               cap = CLI::UI::StdoutRouter::Capture.new(self, with_frame_inset: false, &block)
               begin
@@ -84,8 +85,11 @@ module CLI
           # * +width+ - current terminal width to format for
           #
           def render(index, force = true, width: CLI::UI::Terminal.width)
-            return full_render(index, width) if force || @force_full_render
-            partial_render(index)
+            if force || @always_full_render || @force_full_render
+              full_render(index, width)
+            else
+              partial_render(index)
+            end
           ensure
             @force_full_render = false
           end
@@ -97,6 +101,7 @@ module CLI
           # * +title+ - title to change the spinner to
           #
           def update_title(new_title)
+            @always_full_render = new_title =~ Formatter::SCAN_WIDGET
             @title = new_title
             @force_full_render = true
           end
@@ -194,6 +199,7 @@ module CLI
             break if all_done
 
             idx = (idx + 1) % GLYPHS.size
+            Spinner.index = idx
             sleep(PERIOD)
           end
 
