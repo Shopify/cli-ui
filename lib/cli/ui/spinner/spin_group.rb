@@ -76,7 +76,17 @@ module CLI
             @done
           end
 
-          # Re-renders the task if required
+          # Re-renders the task if required:
+          #
+          # We try to be as lazy as possible in re-rendering the full line. The
+          # spinner rune will change on each render for the most part, but the
+          # body text will rarely have changed. If the body text *has* changed,
+          # we set @force_full_render.
+          #
+          # Further, if the title string includes any CLI::UI::Widgets, we
+          # assume that it may change from render to render, since those
+          # evaluate more dynamically than the rest of our format codes, which
+          # are just text formatters. This is controlled by @always_full_render.
           #
           # ==== Attributes
           #

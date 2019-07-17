@@ -21,6 +21,16 @@ module CLI
       class << self
         attr_accessor(:index)
 
+        # We use this from CLI::UI::Widgets::Status to render an additional
+        # spinner next to the "working" element. While this global state looks
+        # a bit repulsive at first, it's worth realizing that:
+        #
+        # * It's managed by the SpinGroup#wait method, not individual tasks; and
+        # * It would be complete insanity to run two separate but concurrent SpinGroups.
+        #
+        # While it would be possible to stitch through some connection between
+        # the SpinGroup and the Widgets included in its title, this is simpler
+        # in practice and seems unlikely to cause issues in practice.
         def current_rune
           RUNES[index || 0]
         end
