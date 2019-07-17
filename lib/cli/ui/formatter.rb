@@ -138,6 +138,7 @@ module CLI
             )
           end
         elsif match = sc.scan(SCAN_WIDGET)
+          # We could call Regexp.last_match but that wouldn't be threadsafe.
           match_data = SCAN_WIDGET.match(match)
           widget_handle = match_data['handle']
           begin
