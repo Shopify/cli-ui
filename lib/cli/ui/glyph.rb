@@ -38,7 +38,7 @@ module CLI
 
       # Mapping of glyphs to terminal output
       MAP = {}
-      STAR      = new('*', 0x2b51,           Color::YELLOW) # YELLOw SMALL STAR (⭑)
+      STAR      = new('*', 0x2b51,           Color::YELLOW) # YELLOW SMALL STAR (⭑)
       INFO      = new('i', 0x1d4be,          Color::BLUE)   # BLUE MATHEMATICAL SCRIPT SMALL i (𝒾)
       QUESTION  = new('?', 0x003f,           Color::BLUE)   # BLUE QUESTION MARK (?)
       CHECK     = new('v', 0x2713,           Color::GREEN)  # GREEN CHECK MARK (✓)
