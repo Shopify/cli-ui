@@ -13,6 +13,8 @@ module CLI
         }x # e.g. "1:23:3:404"
         OPEN  = Color::RESET.code + Color::BOLD.code + '[' + Color::RESET.code
         CLOSE = Color::RESET.code + Color::BOLD.code + ']' + Color::RESET.code
+        ARROW = Color::RESET.code + Color::GRAY.code + '◂' + Color::RESET.code
+        COMMA = Color::RESET.code + Color::GRAY.code + ',' + Color::RESET.code
 
         SPINNER_STOPPED = CLI::UI::Spinner::RUNES[4]
         EMPTY_SET = "∅"
@@ -21,8 +23,8 @@ module CLI
           if zero?(@succeeded) && zero?(@failed) && zero?(@working) && zero?(@pending)
             Color::RESET.code + Color::BOLD.code + EMPTY_SET + Color::RESET.code
           else
-            #   [          0✓               2✗             3⠼              4⌛︎           ]
-            "#{OPEN}#{succeeded_part} #{failed_part} #{working_part} #{pending_part}#{CLOSE}"
+            #   [          0✓            ,         2✗          ◂         3⠼           ◂         4⌛︎           ]
+            "#{OPEN}#{succeeded_part}#{COMMA}#{failed_part}#{ARROW}#{working_part}#{ARROW}#{pending_part}#{CLOSE}"
           end
         end
 
