@@ -31,7 +31,7 @@ module CLI
       BOLD    = new('1',  :bold)
       WHITE   = new('97', :white)
 
-      # 240 is very dark gray; 255 is very light gray. 248 is medium.
+      # 240 is very dark gray; 255 is very light gray. 244 is somewhat dark.
       GRAY = new('38;5;244', :grey)
 
       MAP = {
