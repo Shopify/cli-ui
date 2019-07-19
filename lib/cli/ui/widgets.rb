@@ -2,8 +2,9 @@ require('cli/ui')
 
 module CLI
   module UI
-    # Widgets are formatter objects with custom implementations than the other
-    # features, which all center around formatting text with colours, etc.
+    # Widgets are formatter objects with more custom implementations than the
+    # other features, which all center around formatting text with colours,
+    # etc.
     #
     # If you want to extend CLI::UI with your own widgets, you may want to do
     # something like this:
