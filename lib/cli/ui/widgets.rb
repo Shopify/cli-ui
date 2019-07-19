@@ -2,6 +2,18 @@ require('cli/ui')
 
 module CLI
   module UI
+    # Widgets are formatter objects with custom implementations than the other
+    # features, which all center around formatting text with colours, etc.
+    #
+    # If you want to extend CLI::UI with your own widgets, you may want to do
+    # something like this:
+    #
+    #   require('cli/ui')
+    #   class MyWidget < CLI::UI::Widgets::Base
+    #     # ...
+    #   end
+    #   CLI::UI::Widgets.register('my-widget') { MyWidget }
+    #   puts(CLI::UI.fmt("{{@widget/my-widget:args}}"))
     module Widgets
       MAP = {}
 
