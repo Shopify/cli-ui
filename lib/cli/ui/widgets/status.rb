@@ -11,15 +11,19 @@ module CLI
           :  (?<working>   \d+)
           :  (?<pending>   \d+) \z
         }x # e.g. "1:23:3:404"
-
         OPEN  = Color::RESET.code + Color::BOLD.code + '[' + Color::RESET.code
         CLOSE = Color::RESET.code + Color::BOLD.code + ']' + Color::RESET.code
 
         SPINNER_STOPPED = CLI::UI::Spinner::RUNES[4]
+        EMPTY_SET = "∅"
 
         def render
-          #   [          0✓               2✗             3⠼              4⌛︎           ]
-          "#{OPEN}#{succeeded_part} #{failed_part} #{working_part} #{pending_part}#{CLOSE}"
+          if zero?(@succeeded) && zero?(@failed) && zero?(@working) && zero?(@pending)
+            Color::RESET.code + Color::BOLD.code + EMPTY_SET + Color::RESET.code
+          else
+            #   [          0✓               2✗             3⠼              4⌛︎           ]
+            "#{OPEN}#{succeeded_part} #{failed_part} #{working_part} #{pending_part}#{CLOSE}"
+          end
         end
 
         private
@@ -28,9 +32,9 @@ module CLI
           num_str == '0'
         end
 
-        def colorize_if_nonzero(num_str, glyph, color)
+        def colorize_if_nonzero(num_str, rune, color)
           color = Color::GRAY if zero?(num_str)
-          color.code + num_str + glyph
+          color.code + num_str + rune
         end
 
         def succeeded_part
