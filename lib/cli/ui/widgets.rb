@@ -5,13 +5,14 @@ module CLI
     module Widgets
       MAP = {}
 
-      def self.register(const, name, path)
-        autoload(const, path)
-        MAP[name] = const
+      autoload(:Base, 'cli/ui/widgets/base')
+
+      def self.register(name, &cb)
+        MAP[name] = cb
       end
 
-      autoload(:Base,             'cli/ui/widgets/base')
-      register(:Status, 'status', 'cli/ui/widgets/status')
+      autoload(:Status, 'cli/ui/widgets/status')
+      register('status') { Widgets::Status }
 
       # Looks up a widget by handle
       #
@@ -22,7 +23,7 @@ module CLI
       # A callable widget, to be invoked like `.call(argstring)`
       #
       def self.lookup(handle)
-        const_get(MAP.fetch(handle.to_s))
+        MAP.fetch(handle.to_s).call
       rescue KeyError, NameError
         raise(InvalidWidgetHandle, handle)
       end
