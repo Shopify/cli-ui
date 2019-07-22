@@ -1,7 +1,6 @@
 # frozen_string_literal: true
-
-require 'cli/ui'
-require 'strscan'
+require('cli/ui')
+require('strscan')
 
 module CLI
   module UI
@@ -16,7 +15,7 @@ module CLI
         'red'       => '31',
         'green'     => '32',
         'yellow'    => '33',
-         # default blue is low-contrast against black in some default terminal color scheme
+        # default blue is low-contrast against black in some default terminal color scheme
         'blue'      => '94', # 9x = high-intensity fg color x
         'magenta'   => '35',
         'cyan'      => '36',
@@ -39,14 +38,14 @@ module CLI
       SCAN_WIDGET   = %r[@widget/(?<handle>\w+):(?<args>.*?)}}]
       SCAN_FUNCNAME = /\w+:/
       SCAN_GLYPH    = /.}}/
-      SCAN_BODY     = /
+      SCAN_BODY     = %r{
         .*?
         (
           #{BEGIN_EXPR} |
           #{END_EXPR}   |
           \z
         )
-      /mx
+      }mx
 
       DISCARD_BRACES = 0..-3
 
@@ -124,7 +123,7 @@ module CLI
       end
 
       def parse_expr(sc, stack)
-        if match = sc.scan(SCAN_GLYPH)
+        if (match = sc.scan(SCAN_GLYPH))
           glyph_handle = match[0]
           begin
             glyph = Glyph.lookup(glyph_handle)
@@ -137,9 +136,8 @@ module CLI
               index
             )
           end
-        elsif match = sc.scan(SCAN_WIDGET)
-          # We could call Regexp.last_match but that wouldn't be threadsafe.
-          match_data = SCAN_WIDGET.match(match)
+        elsif (match = sc.scan(SCAN_WIDGET))
+          match_data = Regexp.last_match # surprisingly thread-safe.
           widget_handle = match_data['handle']
           begin
             widget = Widgets.lookup(widget_handle)
@@ -151,7 +149,7 @@ module CLI
               @text, index,
             ))
           end
-        elsif match = sc.scan(SCAN_FUNCNAME)
+        elsif (match = sc.scan(SCAN_FUNCNAME))
           funcname = match.chop
           stack.push(funcname)
         else

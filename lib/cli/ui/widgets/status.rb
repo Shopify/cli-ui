@@ -16,8 +16,8 @@ module CLI
         ARROW = Color::RESET.code + Color::GRAY.code + '◂' + Color::RESET.code
         COMMA = Color::RESET.code + Color::GRAY.code + ',' + Color::RESET.code
 
-        SPINNER_STOPPED = CLI::UI::Spinner::RUNES[4]
-        EMPTY_SET = "∅"
+        SPINNER_STOPPED = '⠿'
+        EMPTY_SET = '∅'
 
         def render
           if zero?(@succeeded) && zero?(@failed) && zero?(@working) && zero?(@pending)
