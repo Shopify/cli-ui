@@ -11,6 +11,7 @@ module CLI
     autoload :Truncater,          'cli/ui/truncater'
     autoload :Formatter,          'cli/ui/formatter'
     autoload :Spinner,            'cli/ui/spinner'
+    autoload :Widgets,            'cli/ui/widgets'
 
     # Convenience accessor to +CLI::UI::Spinner::SpinGroup+
     SpinGroup = Spinner::SpinGroup

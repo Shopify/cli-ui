@@ -29,7 +29,7 @@ module CLI
         @handle    = handle
         @codepoint = codepoint
         @color     = color
-        @char      = [codepoint].pack('U')
+        @char      = Array(codepoint).pack('U*')
         @to_s      = color.code + char + Color::RESET.code
         @fmt       = "{{#{color.name}:#{char}}}"
 
@@ -38,20 +38,14 @@ module CLI
 
       # Mapping of glyphs to terminal output
       MAP = {}
-      # YELLOw SMALL STAR (⭑)
-      STAR     = new('*', 0x2b51,  Color::YELLOW)
-      # BLUE MATHEMATICAL SCRIPT SMALL i (𝒾)
-      INFO     = new('i', 0x1d4be, Color::BLUE)
-      # BLUE QUESTION MARK (?)
-      QUESTION = new('?', 0x003f,  Color::BLUE)
-      # GREEN CHECK MARK (✓)
-      CHECK    = new('v', 0x2713,  Color::GREEN)
-      # RED BALLOT X (✗)
-      X        = new('x', 0x2717,  Color::RED)
-      # Bug emoji (🐛)
-      BUG      = new('b', 0x1f41b, Color::WHITE)
-      # RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK (»)
-      CHEVRON  = new('>', 0xbb,    Color::YELLOW)
+      STAR      = new('*', 0x2b51,           Color::YELLOW) # YELLOW SMALL STAR (⭑)
+      INFO      = new('i', 0x1d4be,          Color::BLUE)   # BLUE MATHEMATICAL SCRIPT SMALL i (𝒾)
+      QUESTION  = new('?', 0x003f,           Color::BLUE)   # BLUE QUESTION MARK (?)
+      CHECK     = new('v', 0x2713,           Color::GREEN)  # GREEN CHECK MARK (✓)
+      X         = new('x', 0x2717,           Color::RED)    # RED BALLOT X (✗)
+      BUG       = new('b', 0x1f41b,          Color::WHITE)  # Bug emoji (🐛)
+      CHEVRON   = new('>', 0xbb,             Color::YELLOW) # RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK (»)
+      HOURGLASS = new('H', [0x231b, 0xfe0e], Color::BLUE)   # HOURGLASS + VARIATION SELECTOR 15 (⌛︎)
 
       # Looks up a glyph by name
       #

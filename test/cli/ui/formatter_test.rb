@@ -10,6 +10,13 @@ module CLI
         assert_equal(expected, actual)
       end
 
+      def test_format_widget
+        input = "a{{@widget/status:0:0:0:0}}b"
+        expected = "a\e[0m\e[1m∅\e[0mb"
+        actual = CLI::UI::Formatter.new(input).format(enable_color: false)
+        assert_equal(expected, actual)
+      end
+
       def test_format_no_color
         input = "a{{blue:b {{*}}{{bold:c {{red:d}}}}{{bold: e}}}} f {{bold:"
         expected = "ab ⭑c d e f "

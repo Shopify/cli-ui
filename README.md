@@ -115,6 +115,19 @@ puts CLI::UI.fmt "{{*}} {{x}} {{?}} {{v}}"
 
 ---
 
+### Status Widget
+
+```ruby
+CLI::UI::Spinner.spin("building packages: {{@widget/status:1:2:3:4}}") do |spinner|
+  # spinner.update_title(...)
+  sleep(3)
+end
+```
+
+![Status Widget](https://user-images.githubusercontent.com/1284/61405142-11042580-a8a7-11e9-9885-46ba44c46358.gif)
+
+---
+
 ### Progress Bar
 
 Show progress of a process or operation.
