@@ -27,14 +27,14 @@ module CLI
           )
 
           assert_equal(
-            format(CASES["0:0:0:1"], '⠼'),
+            format(CASES["0:0:0:1"], '⠿'),
             Widgets::Status.call("0:0:0:1"),
           )
 
           Spinner.index = 1
 
           assert_equal(
-            format(CASES["0:0:0:1"], '⠼'),
+            format(CASES["0:0:0:1"], '⠿'),
             Widgets::Status.call("0:0:0:1"),
           )
 

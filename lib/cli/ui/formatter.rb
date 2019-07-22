@@ -137,7 +137,7 @@ module CLI
             )
           end
         elsif (match = sc.scan(SCAN_WIDGET))
-          match_data = Regexp.last_match # surprisingly thread-safe.
+          match_data = SCAN_WIDGET.match(match) # Regexp.last_match doesn't work here
           widget_handle = match_data['handle']
           begin
             widget = Widgets.lookup(widget_handle)
