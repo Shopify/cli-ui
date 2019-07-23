@@ -255,7 +255,7 @@ module CLI
           # is probably better in general for cases with impoverished terminal
           # emulators and no active user.
           if (is_ci = ![0, '', nil].include?(ENV['CI']))
-            linewidth = termwidth - (prefix_width + suffix_width)
+            linewidth = [0, termwidth - (prefix_width + suffix_width)].max
 
             o << color.code << prefix
             o << color.code << (CLI::UI::Box::Heavy::HORZ * linewidth)
