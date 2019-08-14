@@ -17,7 +17,11 @@ module CLI
       # * +:to+ - Target stream, like $stdout or $stderr. Can be anything with a puts method. Defaults to $stdout.
       # * +:encoding+ - Force the output to be in a certain encoding. Defaults to UTF-8.
       # * +:format+ - Whether to format the string using CLI::UI.fmt. Defaults to true.
-      # * +:graceful+ - Whether to gracefully rescue common I/O errors. Defaults to true.
+      # * +:graceful+ - Whether to gracefully ignore common I/O errors. Defaults to true.
+      #
+      # ==== Returns
+      # Returns whether the message was successfully printed,
+      # which can be useful if +:graceful+ is set to true.
       #
       # ==== Example
       #

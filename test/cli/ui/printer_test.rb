@@ -6,7 +6,7 @@ module CLI
       def test_puts_color
         out, _ = capture_io do
           CLI::UI::StdoutRouter.ensure_activated
-          Printer.puts('foo', frame_color: :red)
+          assert(Printer.puts('foo', frame_color: :red))
         end
 
         assert_equal("\e[0mfoo\n", out)
@@ -16,7 +16,7 @@ module CLI
         Frame.open('test') do
           out, _ = capture_io do
             CLI::UI::StdoutRouter.ensure_activated
-            Printer.puts('foo', frame_color: :red)
+            assert(Printer.puts('foo', frame_color: :red))
           end
 
           assert_equal("\e[31m┃ \e[0m\e[0mfoo\n", out)
@@ -25,7 +25,7 @@ module CLI
 
       def test_puts_stream
         _, err = capture_io do
-          Printer.puts('foo', to: $stderr, format: false)
+          assert(Printer.puts('foo', to: $stderr, format: false))
         end
 
         assert_equal("foo\n", err)
@@ -33,7 +33,7 @@ module CLI
 
       def test_puts_format
         out, _ = capture_io do
-          Printer.puts('{{x}} foo')
+          assert(Printer.puts('{{x}} foo'))
         end
 
         assert_equal("\e[0;31m✗\e[0m foo\n", out)
@@ -41,7 +41,7 @@ module CLI
 
       def test_puts_pipe
         IO.pipe do |r, w|
-          Printer.puts('foo', to: w, format: false)
+          assert(Printer.puts('foo', to: w, format: false))
           assert_equal("foo\n", r.gets)
         end
       end
@@ -58,7 +58,7 @@ module CLI
       def test_puts_graceful
         IO.pipe do |r, w|
           w.close
-          Printer.puts('foo', to: w, graceful: true)
+          refute(Printer.puts('foo', to: w, graceful: true))
           assert_nil(r.gets)
         end
       end
@@ -66,7 +66,7 @@ module CLI
       def test_encoding
         msg = "é".force_encoding(Encoding::ISO_8859_1)
         out, _ = capture_io do
-          Printer.puts(msg, encoding: nil, format: false)
+          assert(Printer.puts(msg, encoding: nil, format: false))
         end
         refute_equal(msg + "\n", out) # It doesn't work
         assert_equal(msg.encode(Encoding::UTF_8) + "\n", out)
@@ -75,7 +75,7 @@ module CLI
       def test_encoding_ut8
         msg = "é".force_encoding(Encoding::ISO_8859_1)
         out, _ = capture_io do
-          Printer.puts(msg, format: false)
+          assert(Printer.puts(msg, format: false))
         end
         assert_equal(msg + "\n", out)
       end
