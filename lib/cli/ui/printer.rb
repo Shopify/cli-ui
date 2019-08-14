@@ -14,7 +14,7 @@ module CLI
       # ==== Options
       #
       # * +:frame_color+ - Override the frame color. Defaults to nil.
-      # * +:stream+ - Target stream, like $stdout or $stderr. Can be anything with a puts method. Defaults to $stdout.
+      # * +:to+ - Target stream, like $stdout or $stderr. Can be anything with a puts method. Defaults to $stdout.
       # * +:encoding+ - Force the output to be in a certain encoding. Defaults to UTF-8.
       # * +:format+ - Whether to format the string using CLI::UI.fmt. Defaults to true.
       # * +:graceful+ - Whether to gracefully rescue common I/O errors. Defaults to true.
@@ -23,14 +23,14 @@ module CLI
       #
       #   CLI::UI::Printer.puts('{x} Ouch', stream: $stderr, color: :red)
       #
-      def self.puts(msg, frame_color: nil, stream: $stdout, encoding: Encoding::UTF_8, format: true, graceful: true)
+      def self.puts(msg, frame_color: nil, to: $stdout, encoding: Encoding::UTF_8, format: true, graceful: true)
         msg = (+msg).force_encoding(encoding) if encoding
         msg = CLI::UI.fmt(msg) if format
 
         if frame_color
-          CLI::UI::Frame.with_frame_color_override(frame_color) { stream.puts(msg) }
+          CLI::UI::Frame.with_frame_color_override(frame_color) { to.puts(msg) }
         else
-          stream.puts(msg)
+          to.puts(msg)
         end
 
         true

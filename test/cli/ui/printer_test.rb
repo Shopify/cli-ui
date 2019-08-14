@@ -25,7 +25,7 @@ module CLI
 
       def test_puts_stream
         _, err = capture_io do
-          Printer.puts('foo', stream: $stderr, format: false)
+          Printer.puts('foo', to: $stderr, format: false)
         end
 
         assert_equal("foo\n", err)
@@ -41,7 +41,7 @@ module CLI
 
       def test_puts_pipe
         IO.pipe do |r, w|
-          Printer.puts('foo', stream: w, format: false)
+          Printer.puts('foo', to: w, format: false)
           assert_equal("foo\n", r.gets)
         end
       end
@@ -50,7 +50,7 @@ module CLI
         IO.pipe do |r, w|
           w.close
           assert_raises(IOError) do
-            Printer.puts('foo', stream: w, graceful: false)
+            Printer.puts('foo', to: w, graceful: false)
           end
         end
       end
@@ -58,7 +58,7 @@ module CLI
       def test_puts_graceful
         IO.pipe do |r, w|
           w.close
-          Printer.puts('foo', stream: w, graceful: true)
+          Printer.puts('foo', to: w, graceful: true)
           assert_nil(r.gets)
         end
       end
