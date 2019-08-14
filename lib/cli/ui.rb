@@ -5,6 +5,7 @@ module CLI
     autoload :Color,              'cli/ui/color'
     autoload :Box,                'cli/ui/box'
     autoload :Frame,              'cli/ui/frame'
+    autoload :Printer,            'cli/ui/printer'
     autoload :Progress,           'cli/ui/progress'
     autoload :Prompt,             'cli/ui/prompt'
     autoload :Terminal,           'cli/ui/terminal'
@@ -95,6 +96,17 @@ module CLI
     #
     def self.fmt(input, enable_color: enable_color?)
       CLI::UI::Formatter.new(input).format(enable_color: enable_color)
+    end
+
+    # Convenience Method for +CLI::UI::Printer.puts+
+    #
+    # ==== Attributes
+    #
+    # * +msg+ - Message to print
+    # * +kwargs+ - keyword arguments for +Printer.puts+
+    #
+    def self.puts(msg, **kwargs)
+      CLI::UI::Printer.puts(msg, **kwargs)
     end
 
     # Convenience Method for +CLI::UI::Frame.open+
