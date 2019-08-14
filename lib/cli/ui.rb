@@ -43,7 +43,7 @@ module CLI
       end
     end
 
-    # Conviencence Method for +CLI::UI::Prompt.confirm+
+    # Convenience Method for +CLI::UI::Prompt.confirm+
     #
     # ==== Attributes
     #
@@ -53,7 +53,7 @@ module CLI
       CLI::UI::Prompt.confirm(question, **kwargs)
     end
 
-    # Conviencence Method for +CLI::UI::Prompt.ask+
+    # Convenience Method for +CLI::UI::Prompt.ask+
     #
     # ==== Attributes
     #
@@ -64,7 +64,7 @@ module CLI
       CLI::UI::Prompt.ask(question, **kwargs)
     end
 
-    # Conviencence Method to resolve text using +CLI::UI::Formatter.format+
+    # Convenience Method to resolve text using +CLI::UI::Formatter.format+
     # Check +CLI::UI::Formatter::SGR_MAP+ for available formatting options
     #
     # ==== Attributes
@@ -79,7 +79,7 @@ module CLI
       return CLI::UI::Truncater.call(formatted, truncate_to)
     end
 
-    # Conviencence Method to format text using +CLI::UI::Formatter.format+
+    # Convenience Method to format text using +CLI::UI::Formatter.format+
     # Check +CLI::UI::Formatter::SGR_MAP+ for available formatting options
     #
     # https://user-images.githubusercontent.com/3074765/33799827-6d0721a2-dd01-11e7-9ab5-c3d455264afe.png
@@ -97,7 +97,7 @@ module CLI
       CLI::UI::Formatter.new(input).format(enable_color: enable_color)
     end
 
-    # Conviencence Method for +CLI::UI::Frame.open+
+    # Convenience Method for +CLI::UI::Frame.open+
     #
     # ==== Attributes
     #
@@ -108,7 +108,7 @@ module CLI
       CLI::UI::Frame.open(*args, &block)
     end
 
-    # Conviencence Method for +CLI::UI::Spinner.spin+
+    # Convenience Method for +CLI::UI::Spinner.spin+
     #
     # ==== Attributes
     #
@@ -119,7 +119,7 @@ module CLI
       CLI::UI::Spinner.spin(*args, &block)
     end
 
-    # Conviencence Method to override frame color using +CLI::UI::Frame.with_frame_color+
+    # Convenience Method to override frame color using +CLI::UI::Frame.with_frame_color+
     #
     # ==== Attributes
     #
