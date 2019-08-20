@@ -97,7 +97,7 @@ module CLI
             width ||= text
                         .split("\n")
                         .reject(&:empty?)
-                        .map { |l| (l.length / max_width).ceil }
+                        .map { |l| (CLI::UI.fmt(l, enable_color: false).length / max_width).ceil }
                         .reduce(&:+)
 
             width
