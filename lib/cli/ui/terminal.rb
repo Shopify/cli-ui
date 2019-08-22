@@ -11,26 +11,39 @@ module CLI
       # Otherwise will return 80
       #
       def self.width
-        if (console = IO.respond_to?(:console) && IO.console)
-          width = console.winsize[1]
-          width.zero? ? DEFAULT_WIDTH : width
-        else
-          DEFAULT_WIDTH
-        end
-      rescue Errno::EIO
-        DEFAULT_WIDTH
+        @@width ||= begin
+                      if (console = IO.respond_to?(:console) && IO.console)
+                        width = console.winsize[1]
+                        width.zero? ? DEFAULT_WIDTH : width
+                      else
+                        DEFAULT_WIDTH
+                      end
+                    rescue Errno::EIO
+                      DEFAULT_WIDTH
+                    end
       end
 
       def self.height
-        if (console = IO.respond_to?(:console) && IO.console)
-          height = console.winsize[0]
-          height.zero? ? DEFAULT_HEIGHT : height
-        else
-          DEFAULT_HEIGHT
-        end
-      rescue Errno::EIO
-        DEFAULT_HEIGHT
+        @@height ||= begin
+                       if (console = IO.respond_to?(:console) && IO.console)
+                         height = console.winsize[0]
+                         height.zero? ? DEFAULT_HEIGHT : height
+                       else
+                         DEFAULT_HEIGHT
+                       end
+                     rescue Errno::EIO
+                       DEFAULT_HEIGHT
+                     end
+      end
+
+      def self.reset_cache
+        @@width = nil
+        @@height = nil
       end
     end
   end
+end
+
+Signal.trap('WINCH') do
+  CLI::UI::Terminal.reset_cache
 end
