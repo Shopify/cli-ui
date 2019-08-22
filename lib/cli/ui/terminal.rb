@@ -7,7 +7,11 @@ module CLI
       DEFAULT_WIDTH = 80
       DEFAULT_HEIGHT = 24
 
-      @@console = IO.respond_to?(:console) && IO.console
+      @@console = begin
+                    IO.respond_to?(:console) && IO.console
+                  rescue Errno::EIO
+                    false
+                  end
 
       # Returns the width of the terminal, if possible
       # Otherwise will return DEFAULT_WIDTH
