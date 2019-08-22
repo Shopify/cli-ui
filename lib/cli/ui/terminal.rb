@@ -8,7 +8,7 @@ module CLI
       DEFAULT_HEIGHT = 24
 
       # Returns the width of the terminal, if possible
-      # Otherwise will return 80
+      # Otherwise will return DEFAULT_WIDTH
       #
       def self.width
         @@width ||= begin
@@ -24,7 +24,7 @@ module CLI
       end
 
       # Returns the width of the terminal, if possible
-      # Otherwise, will return 24
+      # Otherwise, will return DEFAULT_HEIGHT
       #
       def self.height
         @@height ||= begin
