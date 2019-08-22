@@ -23,6 +23,9 @@ module CLI
                     end
       end
 
+      # Returns the width of the terminal, if possible
+      # Otherwise, will return 24
+      #
       def self.height
         @@height ||= begin
                        if (console = IO.respond_to?(:console) && IO.console)
