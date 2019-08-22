@@ -7,13 +7,15 @@ module CLI
       DEFAULT_WIDTH = 80
       DEFAULT_HEIGHT = 24
 
+      @@console = IO.respond_to?(:console) && IO.console
+
       # Returns the width of the terminal, if possible
       # Otherwise will return DEFAULT_WIDTH
       #
       def self.width
         @@width ||= begin
-                      if (console = IO.respond_to?(:console) && IO.console)
-                        width = console.winsize[1]
+                      if @@console
+                        width = @@console.winsize[1]
                         width.zero? ? DEFAULT_WIDTH : width
                       else
                         DEFAULT_WIDTH
@@ -28,8 +30,8 @@ module CLI
       #
       def self.height
         @@height ||= begin
-                       if (console = IO.respond_to?(:console) && IO.console)
-                         height = console.winsize[0]
+                       if @@console
+                         height = @@console.winsize[0]
                          height.zero? ? DEFAULT_HEIGHT : height
                        else
                          DEFAULT_HEIGHT
