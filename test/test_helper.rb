@@ -21,4 +21,4 @@ require 'bundler/setup'
 require 'byebug'
 
 require 'minitest/autorun'
-require 'mocha/minitest'
+require 'mocha/mini_test'
