@@ -1,0 +1,8 @@
+version: 1
+update_configs:
+- package_manager: "ruby:bundler"
+  directory: "/"
+  update_schedule: "weekly"
+  automerged_updates:
+  - match:
+      update_type: "semver:minor"
