@@ -240,7 +240,7 @@ module CLI
           wait_for_user_input until @redraw
         end
 
-        # rubocop:disable Style/WhenThen,Layout/SpaceBeforeSemicolon
+        # rubocop:disable Style/WhenThen,Layout/SpaceBeforeSemicolon,Style/Semicolon
         def wait_for_user_input
           char = read_char
           @last_char = char
@@ -422,7 +422,7 @@ module CLI
             filter_text = @filter
             filter_text = '{{info:Ctrl-D anytime or Backspace now to exit}}' if @filter.empty?
             "Filter: #{filter_text}"
-                          end
+          end
 
           if metadata_text
             CLI::UI.with_frame_color(:blue) do
