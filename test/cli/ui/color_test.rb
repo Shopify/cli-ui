@@ -28,8 +28,8 @@ module CLI
       def test_useful_exception
         e = begin
           Color.lookup(:foobar)
-        rescue => e
-          e
+            rescue => e
+              e
         end
         assert_match(/invalid color: :foobar/, e.message) # error
         assert_match(/Color\.available/, e.message) # where to find colors

@@ -95,16 +95,16 @@ module CLI
           @option_lengths = @options.map do |text|
             width = 1 if text.empty?
             width ||= text
-                        .split("\n")
-                        .reject(&:empty?)
-                        .map { |l| (CLI::UI.fmt(l, enable_color: false).length / max_width).ceil }
-                        .reduce(&:+)
+              .split("\n")
+              .reject(&:empty?)
+              .map { |l| (CLI::UI.fmt(l, enable_color: false).length / max_width).ceil }
+              .reduce(&:+)
 
             width
           end
         end
 
-        def reset_position(number_of_lines=num_lines)
+        def reset_position(number_of_lines = num_lines)
           # This will put us back at the beginning of the options
           # When we redraw the options, they will be overwritten
           CLI::UI.raw do
@@ -112,7 +112,7 @@ module CLI
           end
         end
 
-        def clear_output(number_of_lines=num_lines)
+        def clear_output(number_of_lines = num_lines)
           CLI::UI.raw do
             # Write over all lines with whitespace
             number_of_lines.times { puts(' ' * CLI::UI::Terminal.width) }
@@ -260,7 +260,7 @@ module CLI
             when 'f', '/'                  ; start_filter
             when ('0'..@options.size.to_s) ; select_n(char.to_i)
             when 'y', 'n'                  ; select_bool(char)
-            when " ", "\r", "\n"           ; select_current  # <enter>
+            when " ", "\r", "\n"           ; select_current # <enter>
             end
           when :filter
             case char
@@ -275,7 +275,7 @@ module CLI
             when 'j'             ; down ; @state = :root
             when 'e', ':', 'G', 'q' ; stop_line_select
             when '0'..'9'        ; build_selection(char)
-            when BACKSPACE       ; chop_selection  # Pop last input on backspace
+            when BACKSPACE       ; chop_selection # Pop last input on backspace
             when ' ', "\r", "\n" ; select_current
             end
           when :esc
@@ -415,13 +415,13 @@ module CLI
           max_num_length = (@options.size + 1).to_s.length
 
           metadata_text = if selecting?
-                            select_text = @active
-                            select_text = '{{info:e, q, or up/down anytime to exit}}' if @active == 0
-                            "Select: #{select_text}"
-                          elsif filtering? || has_filter?
-                            filter_text = @filter
-                            filter_text = '{{info:Ctrl-D anytime or Backspace now to exit}}' if @filter.empty?
-                            "Filter: #{filter_text}"
+            select_text = @active
+            select_text = '{{info:e, q, or up/down anytime to exit}}' if @active == 0
+            "Select: #{select_text}"
+          elsif filtering? || has_filter?
+            filter_text = @filter
+            filter_text = '{{info:Ctrl-D anytime or Backspace now to exit}}' if @filter.empty?
+            "Filter: #{filter_text}"
                           end
 
           if metadata_text
