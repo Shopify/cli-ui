@@ -213,7 +213,7 @@ module CLI
         assert_equal 'insufficient options', exception.message
 
         exception = assert_raises(ArgumentError) do
-          Prompt.ask('q') { |h| {} }
+          Prompt.ask('q') { |_h| {} }
         end
         assert_equal 'insufficient options', exception.message
       end
@@ -221,7 +221,7 @@ module CLI
       def test_ask_interactive_with_block
         _run('1') do
           Prompt.ask('q') do |h|
-            h.option('a') { |a| 'a was selected' }
+            h.option('a') { |_a| 'a was selected' }
           end
         end
         expected_out = strip_heredoc(<<-EOF)
@@ -321,8 +321,8 @@ module CLI
       def test_ask_interactive_with_blank_option
         _run('j', 'j', ' ') do
           Prompt.ask('q') do |h|
-            h.option('a') { |a| 'a was selected' }
-            h.option('') { |b| 'b was selected' }
+            h.option('a') { |_a| 'a was selected' }
+            h.option('') { |_b| 'b was selected' }
           end
         end
         blank = ''

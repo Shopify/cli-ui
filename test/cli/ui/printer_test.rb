@@ -47,7 +47,7 @@ module CLI
       end
 
       def test_puts_pipe_closed
-        IO.pipe do |r, w|
+        IO.pipe do |_r, w|
           w.close
           assert_raises(IOError) do
             Printer.puts('foo', to: w, graceful: false)
