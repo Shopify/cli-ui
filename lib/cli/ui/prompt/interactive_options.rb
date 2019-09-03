@@ -128,7 +128,7 @@ module CLI
         # Don't use this in place of +@displaying_metadata+, this updates too
         # quickly to be useful when drawing to the screen.
         def display_metadata?
-          filtering? or selecting? or has_filter?
+          filtering? || selecting? || has_filter?
         end
 
         def num_lines
@@ -136,7 +136,7 @@ module CLI
 
           option_length = presented_options.reduce(0) do |total_length, (_, option_number)|
             # Handle continuation markers and "Done" option when multiple is true
-            next total_length + 1 if option_number.nil? or option_number.zero?
+            next total_length + 1 if option_number.nil? || option_number.zero?
             total_length + @option_lengths[option_number - 1]
           end
 
@@ -216,7 +216,7 @@ module CLI
           @redraw = true
 
           # Control+D or Backspace on empty search closes search
-          if char == CTRL_D or (@filter.empty? and char == BACKSPACE)
+          if (char == CTRL_D) || (@filter.empty? && (char == BACKSPACE))
             @filter = ''
             @state = :root
             return
@@ -418,7 +418,7 @@ module CLI
                             select_text = @active
                             select_text = '{{info:e, q, or up/down anytime to exit}}' if @active == 0
                             "Select: #{select_text}"
-                          elsif filtering? or has_filter?
+                          elsif filtering? || has_filter?
                             filter_text = @filter
                             filter_text = '{{info:Ctrl-D anytime or Backspace now to exit}}' if @filter.empty?
                             "Filter: #{filter_text}"
@@ -447,7 +447,7 @@ module CLI
 
             if num == @active
 
-              color = (filtering? or selecting?) ? 'green' : 'blue'
+              color = (filtering? || selecting?) ? 'green' : 'blue'
               message = message.split("\n").map { |l| "{{#{color}:> #{l.strip}}}" }.join("\n")
             end
 

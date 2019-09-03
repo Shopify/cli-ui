@@ -167,7 +167,7 @@ module CLI
           raise(ArgumentError, 'insufficient options') if options.nil? || options.empty?
           instructions = (multiple ? "Toggle options. " : "") + "Choose with ↑ ↓ ⏎"
           instructions += ", filter with 'f'" if filter_ui
-          instructions += ", enter option with 'e'" if select_ui and options.size > 9
+          instructions += ", enter option with 'e'" if select_ui && (options.size > 9)
           puts_question("#{question} {{yellow:(#{instructions})}}")
           resp = interactive_prompt(options, multiple: multiple)
 
