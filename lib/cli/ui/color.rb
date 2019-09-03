@@ -35,15 +35,15 @@ module CLI
       GRAY = new('38;5;244', :grey)
 
       MAP = {
-        red:     RED,
-        green:   GREEN,
-        yellow:  YELLOW,
-        blue:    BLUE,
+        red: RED,
+        green: GREEN,
+        yellow: YELLOW,
+        blue: BLUE,
         magenta: MAGENTA,
-        cyan:    CYAN,
-        reset:   RESET,
-        bold:    BOLD,
-        gray:    GRAY,
+        cyan: CYAN,
+        reset: RESET,
+        bold: BOLD,
+        gray: GRAY,
       }.freeze
 
       class InvalidColorName < ArgumentError

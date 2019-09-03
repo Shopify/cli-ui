@@ -12,23 +12,23 @@ module CLI
       #
       SGR_MAP = {
         # presentational
-        'red'       => '31',
-        'green'     => '32',
-        'yellow'    => '33',
+        'red' => '31',
+        'green' => '32',
+        'yellow' => '33',
         # default blue is low-contrast against black in some default terminal color scheme
-        'blue'      => '94', # 9x = high-intensity fg color x
-        'magenta'   => '35',
-        'cyan'      => '36',
-        'bold'      => '1',
-        'italic'    => '3',
+        'blue' => '94', # 9x = high-intensity fg color x
+        'magenta' => '35',
+        'cyan' => '36',
+        'bold' => '1',
+        'italic' => '3',
         'underline' => '4',
-        'reset'     => '0',
+        'reset' => '0',
 
         # semantic
-        'error'   => '31', # red
+        'error' => '31', # red
         'success' => '32', # success
         'warning' => '33', # yellow
-        'info'    => '94', # bright blue
+        'info' => '94', # bright blue
         'command' => '36', # cyan
       }.freeze
 
