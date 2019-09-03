@@ -159,7 +159,7 @@ module CLI
           id = format("%05d", rand(10**5))
           Thread.current[:cliui_output_id] = {
             id: id,
-            streams: on_streams
+            streams: on_streams,
           }
           yield(id)
         ensure

@@ -80,7 +80,7 @@ module CLI
         CLI::UI.resolve_text([
           FILLED_BAR + ' ' * filled,
           UNFILLED_BAR + ' ' * unfilled,
-          CLI::UI::Color::RESET.code + suffix
+          CLI::UI::Color::RESET.code + suffix,
         ].join)
       end
     end

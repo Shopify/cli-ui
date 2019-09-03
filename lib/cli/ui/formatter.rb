@@ -166,10 +166,10 @@ module CLI
 
       def parse_body(sc, stack = [])
         match = sc.scan(SCAN_BODY)
-        if match && match.end_with?(BEGIN_EXPR)
+        if match&.end_with?(BEGIN_EXPR)
           emit(match[DISCARD_BRACES], stack)
           parse_expr(sc, stack)
-        elsif match && match.end_with?(END_EXPR)
+        elsif match&.end_with?(END_EXPR)
           emit(match[DISCARD_BRACES], stack)
           if stack.pop == LITERAL_BRACES
             emit('}}', stack)

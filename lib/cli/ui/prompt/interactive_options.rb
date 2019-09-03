@@ -442,12 +442,12 @@ module CLI
             format = "{{cyan:#{format}}}" if @multiple && is_chosen && num != @active
             format = " #{format}"
 
-            message += sprintf(format, CHECKBOX_ICON[is_chosen]) if @multiple && num && num > 0
+            message += format(format, CHECKBOX_ICON[is_chosen]) if @multiple && num && num > 0
             message += format_choice(format, choice)
 
             if num == @active
 
-              color = (filtering? || selecting?) ? 'green' : 'blue'
+              color = filtering? || selecting? ? 'green' : 'blue'
               message = message.split("\n").map { |l| "{{#{color}:> #{l.strip}}}" }.join("\n")
             end
 
@@ -463,7 +463,7 @@ module CLI
 
           return eol if lines.empty? # Handle blank options
 
-          lines.map! { |l| sprintf(format, l) + eol }
+          lines.map! { |l| format(format, l) + eol }
           lines.join("\n")
         end
       end

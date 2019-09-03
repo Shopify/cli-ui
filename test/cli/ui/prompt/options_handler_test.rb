@@ -24,7 +24,7 @@ module CLI
         def test_call
           handler = OptionsHandler.new
           procedure_called = false
-          procedure = Proc.new do |selection|
+          procedure = proc do |selection|
             procedure_called = true
             selection
           end

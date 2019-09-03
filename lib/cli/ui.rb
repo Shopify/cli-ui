@@ -77,7 +77,7 @@ module CLI
       return input if input.nil?
       formatted = CLI::UI::Formatter.new(input).format
       return formatted unless truncate_to
-      return CLI::UI::Truncater.call(formatted, truncate_to)
+      CLI::UI::Truncater.call(formatted, truncate_to)
     end
 
     # Convenience Method to format text using +CLI::UI::Formatter.format+

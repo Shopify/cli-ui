@@ -77,7 +77,7 @@ module CLI
         #   end
         #
         def ask(question, options: nil, default: nil, is_file: nil, allow_empty: true, multiple: false, filter_ui: true, select_ui: true, &options_proc)
-          if ((options || block_given?) && (default || is_file))
+          if (options || block_given?) && (default || is_file)
             raise(ArgumentError, 'conflicting arguments: options provided with default or is_file')
           end
 
@@ -132,7 +132,7 @@ module CLI
         private
 
         def ask_free_form(question, default, is_file, allow_empty)
-          raise(ArgumentError, 'conflicting arguments: default enabled but allow_empty is false') if (default && !allow_empty)
+          raise(ArgumentError, 'conflicting arguments: default enabled but allow_empty is false') if default && !allow_empty
 
           if default
             puts_question("#{question} (empty = #{default})")
