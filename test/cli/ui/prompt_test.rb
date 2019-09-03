@@ -319,7 +319,7 @@ module CLI
       end
 
       def test_ask_interactive_with_blank_option
-        _run('j','j',' ') do
+        _run('j', 'j', ' ') do
           Prompt.ask('q') do |h|
             h.option('a') { |a| 'a was selected' }
             h.option('') { |b| 'b was selected' }

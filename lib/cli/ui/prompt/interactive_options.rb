@@ -153,7 +153,7 @@ module CLI
         CTRL_D = "\u0004"
 
         def up
-          active_index = @filtered_options.index { |_,num| num == @active } || 0
+          active_index = @filtered_options.index { |_, num| num == @active } || 0
 
           previous_visible = @filtered_options[active_index - 1]
           previous_visible ||= @filtered_options.last
@@ -163,7 +163,7 @@ module CLI
         end
 
         def down
-          active_index = @filtered_options.index { |_,num| num == @active } || 0
+          active_index = @filtered_options.index { |_, num| num == @active } || 0
 
           next_visible = @filtered_options[active_index + 1]
           next_visible ||= @filtered_options.first
@@ -231,7 +231,7 @@ module CLI
 
         def select_current
           # Prevent selection of invisible options
-          return unless presented_options.any? { |_,num| num == @active }
+          return unless presented_options.any? { |_, num| num == @active }
           select_n(@active)
         end
 
@@ -273,7 +273,7 @@ module CLI
             when ESC             ; @state = :esc
             when 'k'             ; up   ; @state = :root
             when 'j'             ; down ; @state = :root
-            when 'e',':','G','q' ; stop_line_select
+            when 'e', ':', 'G', 'q' ; stop_line_select
             when '0'..'9'        ; build_selection(char)
             when BACKSPACE       ; chop_selection  # Pop last input on backspace
             when ' ', "\r", "\n" ; select_current
@@ -347,7 +347,7 @@ module CLI
 
           @presented_options = @options.zip(1..Float::INFINITY)
           if has_filter?
-            @presented_options.select! { |option,_| option.downcase.include?(@filter.downcase) }
+            @presented_options.select! { |option, _| option.downcase.include?(@filter.downcase) }
           end
 
           # Used for selection purposes
@@ -388,7 +388,7 @@ module CLI
         end
 
         def index_of_active_option
-          @presented_options.index { |_,num| num == @active }.to_i
+          @presented_options.index { |_, num| num == @active }.to_i
         end
 
         def ensure_last_item_is_continuation_marker
