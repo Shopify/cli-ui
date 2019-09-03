@@ -77,11 +77,11 @@ module CLI
         filled = [(@percent_done * workable_width.to_f).ceil, 0].max
         unfilled = [workable_width - filled, 0].max
 
-        CLI::UI.resolve_text [
+        CLI::UI.resolve_text([
           FILLED_BAR + ' ' * filled,
           UNFILLED_BAR + ' ' * unfilled,
           CLI::UI::Color::RESET.code + suffix
-        ].join
+        ].join)
       end
     end
   end

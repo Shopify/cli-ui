@@ -4,7 +4,7 @@ module CLI
   module UI
     class TerminalTest < MiniTest::Test
       def test_width
-        skip 'flaky'
+        skip('flaky')
 
         obj = Object.new
         class << obj
