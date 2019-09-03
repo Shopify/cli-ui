@@ -180,7 +180,7 @@ module CLI
           items[0..-2].each do |item|
             pfx << CLI::UI.resolve_color(item).code << CLI::UI::Box::Heavy::VERT
           end
-          if item = items.last
+          if (item = items.last)
             c = Thread.current[:cliui_frame_color_override] || color || item
             pfx << CLI::UI.resolve_color(c).code \
               << CLI::UI::Box::Heavy::VERT << ' ' << CLI::UI::Color::RESET.code

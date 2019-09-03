@@ -155,7 +155,7 @@ module CLI
       CLI::UI::StdoutRouter.duplicate_output_to = File.open(path, 'w')
       yield
     ensure
-      if file_descriptor = CLI::UI::StdoutRouter.duplicate_output_to
+      if (file_descriptor = CLI::UI::StdoutRouter.duplicate_output_to)
         file_descriptor.close
         CLI::UI::StdoutRouter.duplicate_output_to = nil
       end

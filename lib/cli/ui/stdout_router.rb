@@ -30,7 +30,7 @@ module CLI
           # hook return of false suppresses output.
           if !hook || hook.call(args.first, @name) != false
             @stream.write_without_cli_ui(*prepend_id(@stream, args))
-            if dup = StdoutRouter.duplicate_output_to
+            if (dup = StdoutRouter.duplicate_output_to)
               dup.write(*prepend_id(dup, args))
             end
           end

@@ -11,7 +11,7 @@ module CLI
       # Otherwise will return 80
       #
       def self.width
-        if console = IO.respond_to?(:console) && IO.console
+        if (console = IO.respond_to?(:console) && IO.console)
           width = console.winsize[1]
           width.zero? ? DEFAULT_WIDTH : width
         else
@@ -22,7 +22,7 @@ module CLI
       end
 
       def self.height
-        if console = IO.respond_to?(:console) && IO.console
+        if (console = IO.respond_to?(:console) && IO.console)
           height = console.winsize[0]
           height.zero? ? DEFAULT_HEIGHT : height
         else
