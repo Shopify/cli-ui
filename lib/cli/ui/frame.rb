@@ -180,7 +180,7 @@ module CLI
           items[0..-2].each do |item|
             pfx << CLI::UI.resolve_color(item).code << CLI::UI::Box::Heavy::VERT
           end
-          if item = items.last
+          if (item = items.last)
             c = Thread.current[:cliui_frame_color_override] || color || item
             pfx << CLI::UI.resolve_color(c).code \
               << CLI::UI::Box::Heavy::VERT << ' ' << CLI::UI::Color::RESET.code
@@ -254,7 +254,7 @@ module CLI
           # extra-reliably, so we fall back to a less foolproof strategy. This
           # is probably better in general for cases with impoverished terminal
           # emulators and no active user.
-          if (is_ci = ![0, '', nil].include?(ENV['CI']))
+          unless [0, '', nil].include?(ENV['CI'])
             linewidth = [0, termwidth - (prefix_width + suffix_width)].max
 
             o << color.code << prefix

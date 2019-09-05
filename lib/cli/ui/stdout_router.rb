@@ -30,7 +30,7 @@ module CLI
           # hook return of false suppresses output.
           if !hook || hook.call(args.first, @name) != false
             @stream.write_without_cli_ui(*prepend_id(@stream, args))
-            if dup = StdoutRouter.duplicate_output_to
+            if (dup = StdoutRouter.duplicate_output_to)
               dup.write(*prepend_id(dup, args))
             end
           end
@@ -159,7 +159,7 @@ module CLI
           id = format("%05d", rand(10**5))
           Thread.current[:cliui_output_id] = {
             id: id,
-            streams: on_streams
+            streams: on_streams,
           }
           yield(id)
         ensure

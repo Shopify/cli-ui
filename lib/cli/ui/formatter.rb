@@ -12,23 +12,23 @@ module CLI
       #
       SGR_MAP = {
         # presentational
-        'red'       => '31',
-        'green'     => '32',
-        'yellow'    => '33',
+        'red' => '31',
+        'green' => '32',
+        'yellow' => '33',
         # default blue is low-contrast against black in some default terminal color scheme
-        'blue'      => '94', # 9x = high-intensity fg color x
-        'magenta'   => '35',
-        'cyan'      => '36',
-        'bold'      => '1',
-        'italic'    => '3',
+        'blue' => '94', # 9x = high-intensity fg color x
+        'magenta' => '35',
+        'cyan' => '36',
+        'bold' => '1',
+        'italic' => '3',
         'underline' => '4',
-        'reset'     => '0',
+        'reset' => '0',
 
         # semantic
-        'error'   => '31', # red
+        'error' => '31', # red
         'success' => '32', # success
         'warning' => '33', # yellow
-        'info'    => '94', # bright blue
+        'info' => '94', # bright blue
         'command' => '36', # cyan
       }.freeze
 
@@ -166,10 +166,10 @@ module CLI
 
       def parse_body(sc, stack = [])
         match = sc.scan(SCAN_BODY)
-        if match && match.end_with?(BEGIN_EXPR)
+        if match&.end_with?(BEGIN_EXPR)
           emit(match[DISCARD_BRACES], stack)
           parse_expr(sc, stack)
-        elsif match && match.end_with?(END_EXPR)
+        elsif match&.end_with?(END_EXPR)
           emit(match[DISCARD_BRACES], stack)
           if stack.pop == LITERAL_BRACES
             emit('}}', stack)

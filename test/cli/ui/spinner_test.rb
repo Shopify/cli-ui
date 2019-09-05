@@ -46,9 +46,9 @@ module CLI
             assert task
             assert_respond_to task, :update_title
             sleep CLI::UI::Spinner::PERIOD * 2.5
-            task.update_title '今日'
+            task.update_title('今日')
             sleep CLI::UI::Spinner::PERIOD * 2.5
-            task.update_title '疲れたんだ'
+            task.update_title('疲れたんだ')
             sleep CLI::UI::Spinner::PERIOD * 2.5
           end
         end

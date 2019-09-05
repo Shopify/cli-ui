@@ -36,7 +36,8 @@ module CLI
         # * +:select_ui+ - Enable long-form option selection (default: true)
         #
         # Note:
-        # * +:options+ or providing a +Block+ conflicts with +:default+ and +:is_file+, you cannot set options with either of these keywords
+        # * +:options+ or providing a +Block+ conflicts with +:default+ and +:is_file+,
+        #              you cannot set options with either of these keywords
         # * +:default+ conflicts with +:allow_empty:, you cannot set these together
         # * +:options+ conflicts with providing a +Block+ , you may only set one
         # * +:multiple+ can only be used with +:options+ or a +Block+; it is ignored, otherwise.
@@ -76,13 +77,30 @@ module CLI
         #     handler.option('python') { |selection| selection }
         #   end
         #
-        def ask(question, options: nil, default: nil, is_file: nil, allow_empty: true, multiple: false, filter_ui: true, select_ui: true, &options_proc)
-          if ((options || block_given?) && (default || is_file))
+        def ask(
+          question,
+          options: nil,
+          default: nil,
+          is_file: nil,
+          allow_empty: true,
+          multiple: false,
+          filter_ui: true,
+          select_ui: true,
+          &options_proc
+        )
+          if (options || block_given?) && (default || is_file)
             raise(ArgumentError, 'conflicting arguments: options provided with default or is_file')
           end
 
           if options || block_given?
-            ask_interactive(question, options, multiple: multiple, filter_ui: filter_ui, select_ui: select_ui, &options_proc)
+            ask_interactive(
+              question,
+              options,
+              multiple: multiple,
+              filter_ui: filter_ui,
+              select_ui: select_ui,
+              &options_proc
+            )
           else
             ask_free_form(question, default, is_file, allow_empty)
           end
@@ -132,7 +150,9 @@ module CLI
         private
 
         def ask_free_form(question, default, is_file, allow_empty)
-          raise(ArgumentError, 'conflicting arguments: default enabled but allow_empty is false') if (default && !allow_empty)
+          if default && !allow_empty
+            raise(ArgumentError, 'conflicting arguments: default enabled but allow_empty is false')
+          end
 
           if default
             puts_question("#{question} (empty = #{default})")
@@ -167,7 +187,7 @@ module CLI
           raise(ArgumentError, 'insufficient options') if options.nil? || options.empty?
           instructions = (multiple ? "Toggle options. " : "") + "Choose with ↑ ↓ ⏎"
           instructions += ", filter with 'f'" if filter_ui
-          instructions += ", enter option with 'e'" if select_ui and options.size > 9
+          instructions += ", enter option with 'e'" if select_ui && (options.size > 9)
           puts_question("#{question} {{yellow:(#{instructions})}}")
           resp = interactive_prompt(options, multiple: multiple)
 

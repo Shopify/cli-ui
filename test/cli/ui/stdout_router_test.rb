@@ -11,7 +11,7 @@ module CLI
             end
           end
         end
-        assert_match /\[\d{5}\] hello/, out
+        assert_match(/\[\d{5}\] hello/, out)
       end
 
       def test_with_id_with_argument_errors

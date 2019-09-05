@@ -28,8 +28,8 @@ module CLI
       def test_useful_exception
         e = begin
           Glyph.lookup('$')
-        rescue => e
-          e
+            rescue => e
+              e
         end
         assert_match(/invalid glyph handle: \$/, e.message) # error
         assert_match(/Glyph\.available/, e.message) # where to find colors

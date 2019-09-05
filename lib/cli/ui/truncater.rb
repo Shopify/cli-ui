@@ -52,11 +52,11 @@ module CLI
                 end
               end
             when PARSE_ESC
-              case cp
+              mode = case cp
               when LEFT_SQUARE_BRACKET
-                mode = PARSE_ANSI
+                PARSE_ANSI
               else
-                mode = PARSE_ROOT
+                PARSE_ROOT
               end
             when PARSE_ANSI
               # ANSI escape codes preeeetty much have the format of:

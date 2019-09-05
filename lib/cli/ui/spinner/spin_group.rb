@@ -52,7 +52,7 @@ module CLI
             end
 
             @force_full_render = false
-            @done      = false
+            @done = false
             @exception = nil
             @success   = false
           end
@@ -197,7 +197,7 @@ module CLI
                     @consumed_lines += 1
                   else
                     offset = @consumed_lines - int_index
-                    move_to   = CLI::UI::ANSI.cursor_up(offset) + "\r"
+                    move_to = CLI::UI::ANSI.cursor_up(offset) + "\r"
                     move_from = "\r" + CLI::UI::ANSI.cursor_down(offset)
 
                     print(move_to + task.render(idx, idx.zero?, width: width) + move_from)

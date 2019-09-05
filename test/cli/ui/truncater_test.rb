@@ -3,7 +3,6 @@ require 'test_helper'
 module CLI
   module UI
     class TruncaterTest < MiniTest::Test
-
       MAN     = "\u{1f468}" # width=2
       COOKING = "\u{1f373}" # width=2
       ZWJ     = "\u{200d}"  # width=complicated
@@ -25,7 +24,7 @@ module CLI
 
       def assert_example(width, from, to)
         truncated = CLI::UI::Truncater.call(from, width)
-        assert_equal(to.codepoints.map{|c|c.to_s(16)}, truncated.codepoints.map{|c|c.to_s(16)})
+        assert_equal(to.codepoints.map { |c| c.to_s(16) }, truncated.codepoints.map { |c| c.to_s(16) })
       end
     end
   end

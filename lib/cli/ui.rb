@@ -77,7 +77,7 @@ module CLI
       return input if input.nil?
       formatted = CLI::UI::Formatter.new(input).format
       return formatted unless truncate_to
-      return CLI::UI::Truncater.call(formatted, truncate_to)
+      CLI::UI::Truncater.call(formatted, truncate_to)
     end
 
     # Convenience Method to format text using +CLI::UI::Formatter.format+
@@ -155,7 +155,7 @@ module CLI
       CLI::UI::StdoutRouter.duplicate_output_to = File.open(path, 'w')
       yield
     ensure
-      if file_descriptor = CLI::UI::StdoutRouter.duplicate_output_to
+      if (file_descriptor = CLI::UI::StdoutRouter.duplicate_output_to)
         file_descriptor.close
         CLI::UI::StdoutRouter.duplicate_output_to = nil
       end
