@@ -194,6 +194,19 @@ module CLI
     end
 
     self.enable_color = $stdout.tty?
+
+    # Set the global frame style.
+    # Convenience method for setting the default frame style with +CLI::UI::Frame.frame_style=+
+    #
+    # Raises ArgumentError if +frame_style+ is not valid
+    #
+    # ==== Attributes
+    #
+    # * +symbol+ - the default frame style to use for frames
+    #
+    def self.frame_style=(frame_style)
+      Frame.frame_style = frame_style.to_sym
+    end
   end
 end
 
