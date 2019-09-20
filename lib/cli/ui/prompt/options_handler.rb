@@ -15,8 +15,16 @@ module CLI
           @options[option] = handler
         end
 
-        def call(option)
-          @options[option].call(option)
+        def call(options)
+          case options
+          when Array
+            # Slice out the handlers and call each with the option they're for
+            @options.values_at(*options).each_with_index.map do |handler, index|
+              handler.call(options[index])
+            end
+          else
+            @options[options].call(options)
+          end
         end
       end
     end

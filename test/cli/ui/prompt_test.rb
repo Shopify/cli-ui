@@ -1,3 +1,4 @@
+# coding: utf-8
 require 'test_helper'
 require 'readline'
 require 'timeout'
@@ -436,6 +437,26 @@ module CLI
         assert_result(expected_out, '', '10')
       end
 
+      def test_ask_multiple
+        _run('1', '3', '5', '0') do
+          Prompt.ask('q', options: ('1'..'10').to_a, multiple: true)
+        end
+
+        assert_result(nil, nil, ['1', '3', '5'])
+      end
+
+      def test_ask_multiple_with_handler
+        _run('1', '3', '5', '0') do
+          Prompt.ask('q', multiple: true) do |handler|
+            ('1'..'10').each do |i|
+              handler.option(i) { i }
+            end
+          end
+        end
+
+        assert_result(nil, nil, ['1', '3', '5'])
+      end
+
       private
 
       def _run(*lines)
@@ -468,7 +489,7 @@ module CLI
         actual_err = CLI::UI::ANSI.strip_codes(File.read(@err_file))
         actual_ret = Marshal.load(File.read(@ret_file))
 
-        assert_equal(out.strip, actual_out.strip)
+        assert_equal(out.strip, actual_out.strip) if out
         assert_equal(err.strip, actual_err.strip) if err
         assert_equal(ret, actual_ret)
       end
