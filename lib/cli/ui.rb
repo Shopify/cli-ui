@@ -195,7 +195,7 @@ module CLI
 
     self.enable_color = $stdout.tty?
 
-    # Set the global frame style.
+    # Set the default frame style.
     # Convenience method for setting the default frame style with +CLI::UI::Frame.frame_style=+
     #
     # Raises ArgumentError if +frame_style+ is not valid

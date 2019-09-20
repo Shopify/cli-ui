@@ -148,13 +148,13 @@ end
 
 Modify the appearance of CLI::UI both globally and on an individual frame level.
 
-To set the global style:
+To set the default style:
 
 ```ruby
 CLI::UI.frame_style = :box
 ```
 
-To set an individual frame:
+To style an individual frame:
 
 ```ruby
 CLI::UI.frame('New Style!', frame_style: :bracket) { puts 'It's pretty cool!' }
