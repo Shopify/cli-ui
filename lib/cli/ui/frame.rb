@@ -341,7 +341,9 @@ module CLI
         end
 
         def validate_frame_style(frame_style)
-          raise ArgumentError, "Invalid frame style: #{frame_style}.  Expecting one of: :#{VALID_FRAME_SYLES.join(', :')}" unless VALID_FRAME_SYLES.include?(frame_style)
+          unless VALID_FRAME_SYLES.include?(frame_style)
+            raise ArgumentError, "Invalid frame style: #{frame_style}.  Expecting one of: :#{VALID_FRAME_SYLES.join(', :')}" # rubocop:disable LineLength
+          end
         end
 
         module FrameStack
