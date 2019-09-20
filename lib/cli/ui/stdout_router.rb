@@ -117,6 +117,10 @@ module CLI
           prev_frame_inset = Thread.current[:no_cliui_frame_inset]
           prev_hook = Thread.current[:cliui_output_hook]
 
+          if Thread.current.respond_to?(:report_on_exception)
+            Thread.current.report_on_exception = false
+          end
+
           self.class.with_stdin_masked do
             Thread.current[:no_cliui_frame_inset] = !@with_frame_inset
             Thread.current[:cliui_output_hook] = ->(data, stream) do
