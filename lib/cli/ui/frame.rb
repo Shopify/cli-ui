@@ -15,7 +15,7 @@ module CLI
           @frame_style ||= DEFAULT_FRAME_STYLE
         end
 
-        # Set the global frame style.
+        # Set the default frame style.
         #
         # Raises ArgumentError if +frame_style+ is not valid
         #
@@ -24,6 +24,8 @@ module CLI
         # * +symbol+ - the default frame style to use for frames
         #
         def frame_style=(frame_style)
+          validate_frame_style(frame_style)
+
           @frame_style = frame_style
         end
 
