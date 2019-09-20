@@ -72,6 +72,7 @@ module CLI
         out, err = capture_io do
           CLI::UI::StdoutRouter.ensure_activated
           CLI::UI::Spinner.spin('broken') do
+            sleep CLI::UI::Spinner::PERIOD * 0.5
             $stderr.puts 'not empty'
             raise 'some error'
           end
