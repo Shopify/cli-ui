@@ -11,14 +11,14 @@ module CLI
       # Otherwise will return DEFAULT_WIDTH
       #
       def self.width
-        @winsize[1]
+        winsize[1]
       end
 
       # Returns the width of the terminal, if possible
       # Otherwise, will return DEFAULT_HEIGHT
       #
       def self.height
-        @winsize[0]
+        winsize[0]
       end
 
       def self.winsize
