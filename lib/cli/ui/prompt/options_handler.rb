@@ -15,8 +15,13 @@ module CLI
           @options[option] = handler
         end
 
-        def call(option)
-          @options[option].call(option)
+        def call(options)
+          case options
+          when Array
+            options.map { |option| @options[option].call(options) }
+          else
+            @options[options].call(options)
+          end
         end
       end
     end
