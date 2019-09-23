@@ -37,7 +37,7 @@ module CLI
       end
 
       def self.setup_winsize_trap
-        @_winsize_trap ||= Signal.trap('WINCH') do
+        @winsize_trap ||= Signal.trap('WINCH') do
           @winsize = nil
         end
       end
