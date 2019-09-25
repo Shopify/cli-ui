@@ -8,28 +8,38 @@ module CLI
       DEFAULT_HEIGHT = 24
 
       # Returns the width of the terminal, if possible
-      # Otherwise will return 80
+      # Otherwise will return DEFAULT_WIDTH
       #
       def self.width
-        if (console = IO.respond_to?(:console) && IO.console)
-          width = console.winsize[1]
-          width.zero? ? DEFAULT_WIDTH : width
-        else
-          DEFAULT_WIDTH
-        end
-      rescue Errno::EIO
-        DEFAULT_WIDTH
+        winsize[1]
       end
 
+      # Returns the width of the terminal, if possible
+      # Otherwise, will return DEFAULT_HEIGHT
+      #
       def self.height
-        if (console = IO.respond_to?(:console) && IO.console)
-          height = console.winsize[0]
-          height.zero? ? DEFAULT_HEIGHT : height
-        else
-          DEFAULT_HEIGHT
+        winsize[0]
+      end
+
+      def self.winsize
+        @winsize ||= begin
+                       winsize = IO.console.winsize
+                       setup_winsize_trap
+
+                       if winsize.any?(&:zero?)
+                         [DEFAULT_HEIGHT, DEFAULT_WIDTH]
+                       else
+                         winsize
+                       end
+                     rescue
+                       [DEFAULT_HEIGHT, DEFAULT_WIDTH]
+                     end
+      end
+
+      def self.setup_winsize_trap
+        @winsize_trap ||= Signal.trap('WINCH') do
+          @winsize = nil
         end
-      rescue Errno::EIO
-        DEFAULT_HEIGHT
       end
     end
   end
