@@ -26,13 +26,14 @@ module CLI
             end
           end
 
-          hook = Thread.current[:cliui_output_hook]
           # hook return of false suppresses output.
-          if !hook || hook.call(args.first, @name) != false
-            @stream.write_without_cli_ui(*prepend_id(@stream, args))
-            if (dup = StdoutRouter.duplicate_output_to)
-              dup.write(*prepend_id(dup, args))
-            end
+          if (hook = Thread.current[:cliui_output_hook])
+            return if hook.call(args.map(&:to_s).join, @name) == false
+          end
+
+          @stream.write_without_cli_ui(*prepend_id(@stream, args))
+          if (dup = StdoutRouter.duplicate_output_to)
+            dup.write(*prepend_id(dup, args))
           end
         end
 
