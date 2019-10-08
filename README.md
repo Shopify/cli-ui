@@ -108,7 +108,7 @@ puts CLI::UI.fmt "{{red:Red}} {{green:Green}}"
 e.g. `{{*}}` => a yellow ⭑
 
 ```ruby
-puts CLI::UI.fmt "{{*}} {{x}} {{?}} {{v}}"
+puts CLI::UI.fmt "{{*}} {{v}} {{?}} {{x}}"
 ```
 
 ![Symbol Formatting](https://user-images.githubusercontent.com/3074765/33799847-9ec03fd0-dd01-11e7-93f7-5f5cc540e61e.png)
