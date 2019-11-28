@@ -21,6 +21,35 @@ module CLI
         )
       end
 
+      def test_spinner_delay_no_show
+        out, err = capture_io do
+          CLI::UI::StdoutRouter.ensure_activated
+          CLI::UI::Spinner.spin('sleeping', delay: CLI::UI::Spinner::PERIOD * 2.5) do
+            sleep CLI::UI::Spinner::PERIOD
+          end
+        end
+
+        assert_equal('', err)
+        assert_equal('', out)
+      end
+
+      def test_spinner_delay_show
+        out, err = capture_io do
+          CLI::UI::StdoutRouter.ensure_activated
+          CLI::UI::Spinner.spin('sleeping', delay: CLI::UI::Spinner::PERIOD) do
+            sleep CLI::UI::Spinner::PERIOD * 2.5
+          end
+        end
+
+        assert_equal('', err)
+        match_lines(
+          out,
+          /⠙ sleeping/, # Skips the first glyph
+          /⠹/,
+          /✓/
+        )
+      end
+
       def test_async
         out, err = capture_io do
           CLI::UI::StdoutRouter.ensure_activated

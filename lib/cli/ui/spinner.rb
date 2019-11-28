@@ -58,8 +58,8 @@ module CLI
       #
       #   CLI::UI::Spinner.spin('Title') { sleep 1.0 }
       #
-      def self.spin(title, auto_debrief: true, &block)
-        sg = SpinGroup.new(auto_debrief: auto_debrief)
+      def self.spin(title, auto_debrief: true, delay: nil, &block)
+        sg = SpinGroup.new(auto_debrief: auto_debrief, delay: delay)
         sg.add(title, &block)
         sg.wait
       end

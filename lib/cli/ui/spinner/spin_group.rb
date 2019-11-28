@@ -20,11 +20,12 @@ module CLI
         #
         # https://user-images.githubusercontent.com/3074765/33798558-c452fa26-dce8-11e7-9e90-b4b34df21a46.gif
         #
-        def initialize(auto_debrief: true)
+        def initialize(auto_debrief: true, delay: nil)
           @m = Mutex.new
           @consumed_lines = 0
           @tasks = []
           @auto_debrief = auto_debrief
+          @delay = delay
           @start = Time.new
         end
 
@@ -180,6 +181,7 @@ module CLI
         #
         def wait
           idx = 0
+          print = @delay.nil?
 
           loop do
             all_done = true
@@ -193,15 +195,17 @@ module CLI
                   task_done = task.check
                   all_done = false unless task_done
 
-                  if nat_index > @consumed_lines
-                    print(task.render(idx, true, width: width) + "\n")
-                    @consumed_lines += 1
-                  else
-                    offset = @consumed_lines - int_index
-                    move_to = CLI::UI::ANSI.cursor_up(offset) + "\r"
-                    move_from = "\r" + CLI::UI::ANSI.cursor_down(offset)
+                  if print || (print = Time.new - @start > @delay)
+                    if nat_index > @consumed_lines
+                      print(task.render(idx, true, width: width) + "\n")
+                      @consumed_lines += 1
+                    else
+                      offset = @consumed_lines - int_index
+                      move_to = CLI::UI::ANSI.cursor_up(offset) + "\r"
+                      move_from = "\r" + CLI::UI::ANSI.cursor_down(offset)
 
-                    print(move_to + task.render(idx, idx.zero?, width: width) + move_from)
+                      print(move_to + task.render(idx, idx.zero?, width: width) + move_from)
+                    end
                   end
                 end
               end
