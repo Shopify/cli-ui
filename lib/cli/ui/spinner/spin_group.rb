@@ -25,6 +25,7 @@ module CLI
           @consumed_lines = 0
           @tasks = []
           @auto_debrief = auto_debrief
+          @start = Time.new
         end
 
         class Task
@@ -233,7 +234,7 @@ module CLI
               out = task.stdout
               err = task.stderr
 
-              CLI::UI::Frame.open('Task Failed: ' + task.title, color: :red) do
+              CLI::UI::Frame.open('Task Failed: ' + task.title, color: :red, timing: Time.new - @start) do
                 if e
                   puts "#{e.class}: #{e.message}"
                   puts "\tfrom #{e.backtrace.join("\n\tfrom ")}"
