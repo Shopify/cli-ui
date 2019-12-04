@@ -94,7 +94,7 @@ module CLI
           /┃ \(empty\)/,
           /┣━━ STDERR/,
           /┃ not empty/,
-          /┗━━/
+          /┗━━+ \(\d\.\d+s\)/
         )
       end
 
@@ -117,7 +117,7 @@ module CLI
           /┃ \(empty\)/,
           /┣━━ STDERR/,
           /┃ not empty/,
-          /┗━━/,
+          /┗━━+ \(\d\.\d+s\)/
         )
       end
 

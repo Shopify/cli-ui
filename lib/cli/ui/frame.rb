@@ -66,9 +66,7 @@ module CLI
             end
           end
 
-          timing = true if timing.nil?
-
-          t_start = Time.now.to_f
+          t_start = Time.now
           CLI::UI.raw do
             puts edge(text, color: color, first: CLI::UI::Box::Heavy::TL)
           end
@@ -82,14 +80,14 @@ module CLI
             success = yield
           rescue
             closed = true
-            t_diff = timing ? (Time.now.to_f - t_start) : nil
+            t_diff = elasped(t_start, timing)
             close(failure_text, color: :red, elapsed: t_diff)
             raise
           else
             success
           ensure
             unless closed
-              t_diff = timing ? (Time.now.to_f - t_start) : nil
+              t_diff = elasped(t_start, timing)
               if success != false
                 close(success_text, color: color, elapsed: t_diff)
               else
@@ -210,6 +208,19 @@ module CLI
         end
 
         private
+
+        # If timing is:
+        #   Numeric: return it
+        #   false: return nil
+        #   true or nil: defaults to Time.new
+        #   Time: return the difference with start
+        def elasped(start, timing)
+          return timing if timing.is_a?(Numeric)
+          return if timing.is_a?(FalseClass)
+
+          timing = Time.new if timing.is_a?(TrueClass) || timing.nil?
+          timing - start
+        end
 
         def edge(text, color: raise, first: raise, right_text: nil)
           color = CLI::UI.resolve_color(color)
