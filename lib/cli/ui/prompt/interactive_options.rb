@@ -117,7 +117,7 @@ module CLI
             # Write over all lines with whitespace
             number_of_lines.times { puts(' ' * CLI::UI::Terminal.width) }
           end
-          reset_position number_of_lines
+          reset_position(number_of_lines)
 
           # Update if metadata is being displayed
           # This must be done _after_ the output is cleared or it won't draw over
