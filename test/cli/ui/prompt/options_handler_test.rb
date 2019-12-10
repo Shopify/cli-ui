@@ -8,7 +8,7 @@ module CLI
         def test_initialize
           handler = OptionsHandler.new
 
-          assert_empty handler.options
+          assert_empty(handler.options)
         end
 
         def test_option
@@ -18,7 +18,7 @@ module CLI
           handler.option('b') {}
           handler.option('c') {}
 
-          assert_equal ['a', 'b', 'c'], handler.options
+          assert_equal(['a', 'b', 'c'], handler.options)
         end
 
         def test_call
@@ -30,8 +30,8 @@ module CLI
           end
 
           handler.option('a', &procedure)
-          assert_equal 'a', handler.call('a')
-          assert procedure_called
+          assert_equal('a', handler.call('a'))
+          assert(procedure_called)
         end
       end
     end

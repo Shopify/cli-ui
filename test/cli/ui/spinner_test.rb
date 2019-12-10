@@ -53,7 +53,7 @@ module CLI
           end
         end
 
-        assert_empty err
+        assert_empty(err)
         match_lines(
           out,
           /⠋ 私/,

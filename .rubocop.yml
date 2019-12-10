@@ -10,11 +10,11 @@ Style/FrozenStringLiteralComment:
   Enabled: false
 
 # This doesn't understand that <<~ doesn't exist in 2.0
-Layout/IndentHeredoc:
+Layout/HeredocIndentation:
   Enabled: false
 
 # This doesn't take into account retrying from an exception
-Lint/HandleExceptions:
+Lint/SuppressedException:
   Enabled: false
 
 # allow String.new to create mutable strings

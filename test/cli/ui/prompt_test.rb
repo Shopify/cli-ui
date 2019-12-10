@@ -192,31 +192,31 @@ module CLI
         error = assert_raises(ArgumentError) do
           Prompt.ask('q', default: 'a', allow_empty: false)
         end
-        assert_equal 'conflicting arguments: default enabled but allow_empty is false', error.message
+        assert_equal('conflicting arguments: default enabled but allow_empty is false', error.message)
 
         error = assert_raises(ArgumentError) do
           Prompt.ask('q', default: 'b') {}
         end
-        assert_equal 'conflicting arguments: options provided with default or is_file', error.message
+        assert_equal('conflicting arguments: options provided with default or is_file', error.message)
       end
 
       def test_ask_interactive_conflicting_arguments
         error = assert_raises(ArgumentError) do
           Prompt.ask('q', options: %w(a b)) { |h| h.option('a') }
         end
-        assert_equal 'conflicting arguments: options and block given', error.message
+        assert_equal('conflicting arguments: options and block given', error.message)
       end
 
       def test_ask_interactive_insufficient_options
         exception = assert_raises(ArgumentError) do
           Prompt.ask('q', options: %w())
         end
-        assert_equal 'insufficient options', exception.message
+        assert_equal('insufficient options', exception.message)
 
         exception = assert_raises(ArgumentError) do
           Prompt.ask('q') { |_h| {} }
         end
-        assert_equal 'insufficient options', exception.message
+        assert_equal('insufficient options', exception.message)
       end
 
       def test_ask_interactive_with_block

@@ -192,9 +192,9 @@ module CLI
           resp = interactive_prompt(options, multiple: multiple)
 
           # Clear the line
-          print ANSI.previous_line + ANSI.clear_to_end_of_line
+          print(ANSI.previous_line + ANSI.clear_to_end_of_line)
           # Force StdoutRouter to prefix
-          print ANSI.previous_line + "\n"
+          print(ANSI.previous_line + "\n")
 
           # reset the question to include the answer
           resp_text = resp
@@ -255,7 +255,7 @@ module CLI
 
           begin
             line = Readline.readline(prompt, true)
-            print CLI::UI::Color::RESET.code
+            print(CLI::UI::Color::RESET.code)
             line.to_s.chomp
           rescue Interrupt
             CLI::UI.raw { STDERR.puts('^C' + CLI::UI::Color::RESET.code) }

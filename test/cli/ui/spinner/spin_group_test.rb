@@ -57,7 +57,7 @@ module CLI
           lines = out.split(/\n|\x1b\[\d*B/)
 
           # Assert all patterns are matched
-          assert_equal patterns.size, lines.size
+          assert_equal(patterns.size, lines.size)
           patterns.each_with_index do |pattern, index|
             line = CLI::UI::ANSI.strip_codes(lines[index])
             assert_match(pattern, line, "pattern number #{index} doesn't match line number #{index} in the output")
