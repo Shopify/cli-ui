@@ -18,7 +18,7 @@ GEM
       builder
       minitest (>= 5.0)
       ruby-progressbar
-    mocha (1.10.1)
+    mocha (1.10.2)
     parallel (1.19.1)
     parser (2.6.5.0)
       ast (~> 2.4.0)
