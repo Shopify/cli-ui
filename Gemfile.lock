@@ -8,7 +8,7 @@ GEM
   specs:
     ansi (1.5.0)
     ast (2.4.0)
-    builder (3.2.3)
+    builder (3.2.4)
     byebug (11.0.1)
     jaro_winkler (1.5.4)
     method_source (0.9.2)
@@ -18,7 +18,7 @@ GEM
       builder
       minitest (>= 5.0)
       ruby-progressbar
-    mocha (1.10.1)
+    mocha (1.10.2)
     parallel (1.19.1)
     parser (2.6.5.0)
       ast (~> 2.4.0)
@@ -48,4 +48,4 @@ DEPENDENCIES
   rubocop
 
 BUNDLED WITH
-   1.17.3
+   2.1.0
