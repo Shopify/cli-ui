@@ -19,14 +19,14 @@ module CLI
       #     bar.tick(set_percent: percent)
       #   end
       #
-      # Increase the percent by 1 percent
+      # Increase the percent by 0.01 percent
       #   CLI::UI::Progress.progress do |bar|
       #     bar.tick
       #   end
       #
       # Increase the percent by X
       #   CLI::UI::Progress.progress do |bar|
-      #     bar.tick(percent: 5)
+      #     bar.tick(percent: 0.05)
       #   end
       def self.progress(width: Terminal.width)
         bar = Progress.new(width: width)
@@ -58,6 +58,8 @@ module CLI
       #
       # * +:percent+ - Increment progress by a specific percent amount
       # * +:set_percent+ - Set progress to a specific percent
+      #
+      # *Obs:* The +:percent+ and +:set_percent must be between 0.00 and 1.0
       #
       def tick(percent: 0.01, set_percent: nil)
         raise ArgumentError, 'percent and set_percent cannot both be specified' if percent != 0.01 && set_percent
