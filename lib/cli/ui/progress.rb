@@ -59,7 +59,7 @@ module CLI
       # * +:percent+ - Increment progress by a specific percent amount
       # * +:set_percent+ - Set progress to a specific percent
       #
-      # *Obs:* The +:percent+ and +:set_percent must be between 0.00 and 1.0
+      # *Note:* The +:percent+ and +:set_percent must be between 0.00 and 1.0
       #
       def tick(percent: 0.01, set_percent: nil)
         raise ArgumentError, 'percent and set_percent cannot both be specified' if percent != 0.01 && set_percent
