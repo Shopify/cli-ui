@@ -19,7 +19,7 @@ module CLI
       #     bar.tick(set_percent: percent)
       #   end
       #
-      # Increase the percent by 0.01 percent
+      # Increase the percent by 1 percent
       #   CLI::UI::Progress.progress do |bar|
       #     bar.tick
       #   end
