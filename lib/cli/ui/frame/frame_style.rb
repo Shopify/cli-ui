@@ -148,3 +148,4 @@ module CLI
 end
 
 require 'cli/ui/frame/frame_style/box'
+require 'cli/ui/frame/frame_style/bracket'
