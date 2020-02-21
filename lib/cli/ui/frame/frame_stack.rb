@@ -21,7 +21,7 @@ module CLI
             styles = ENV.fetch(STYLE_ENVVAR, '').split(':').map(&:to_sym)
 
             colors.length.times.map do |i|
-              StackItem.new(colors[i], styles[i])
+              StackItem.new(colors[i], styles[i] || Frame.frame_style)
             end
           end
 
