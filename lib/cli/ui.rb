@@ -44,6 +44,15 @@ module CLI
       end
     end
 
+    def self.resolve_style(input)
+      case input
+      when Symbol
+        CLI::UI::Frame::FrameStyle.lookup(input)
+      else
+        input
+      end
+    end
+
     # Convenience Method for +CLI::UI::Prompt.confirm+
     #
     # ==== Attributes

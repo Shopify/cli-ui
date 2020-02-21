@@ -1,5 +1,7 @@
 # coding: utf-8
 require 'cli/ui'
+require 'cli/ui/frame/frame_stack'
+require 'cli/ui/frame/frame_style'
 
 module CLI
   module UI
@@ -7,12 +9,10 @@ module CLI
       class UnnestedFrameException < StandardError; end
       class << self
         DEFAULT_FRAME_COLOR = CLI::UI.resolve_color(:cyan)
-        DEFAULT_FRAME_STYLE = :box
-        VALID_FRAME_SYLES = [:box, :bracket].freeze
 
         #
         def frame_style
-          @frame_style ||= DEFAULT_FRAME_STYLE
+          @frame_style ||= :box
         end
 
         # Set the default frame style.
@@ -78,8 +78,7 @@ module CLI
           timing:       nil,
           frame_style:  self.frame_style
         )
-          validate_frame_style(frame_style)
-
+          frame_style = CLI::UI.resolve_style(frame_style)
           color = CLI::UI.resolve_color(color)
 
           unless block_given?
@@ -94,9 +93,10 @@ module CLI
 
           t_start = Time.now
           CLI::UI.raw do
-            puts edge(text, color: color, first: CLI::UI::Box::Heavy::TL, frame_style: frame_style)
+            print prefix
+            puts frame_style.open(text, color: color)
           end
-          FrameStack.push(color)
+          FrameStack.push(color: color, style: frame_style)
 
           return unless block_given?
 
@@ -108,7 +108,6 @@ module CLI
             closed = true
             t_diff = elasped(t_start, timing)
             close(failure_text, color: :red, elapsed: t_diff)
-            close(failure_text, color: :red, elapsed: t_diff, frame_style: frame_style)
             raise
           else
             success
@@ -116,47 +115,11 @@ module CLI
             unless closed
               t_diff = elasped(t_start, timing)
               if success != false
-                close(success_text, color: color, elapsed: t_diff, frame_style: frame_style)
+                close(success_text, color: color, elapsed: t_diff)
               else
-                close(failure_text, color: :red, elapsed: t_diff, frame_style: frame_style)
+                close(failure_text, color: :red, elapsed: t_diff)
               end
             end
-          end
-        end
-
-        # Closes a frame
-        # Automatically called for a block-form +open+
-        #
-        # ==== Attributes
-        #
-        # * +text+ - (required) the text/title to output in the frame
-        #
-        # ==== Options
-        #
-        # * +:color+ - The color of the frame. Defaults to +DEFAULT_FRAME_COLOR+
-        # * +:elapsed+ - How long did the frame take? Defaults to nil
-        # * +frame_style+ - The frame style to use for this frame
-        #
-        # ==== Example
-        #
-        #   CLI::UI::Frame.close('Close')
-        #
-        # Output:
-        #   ┗━━ Close ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        #
-        #
-        def close(text, color: DEFAULT_FRAME_COLOR, elapsed: nil, frame_style: self.frame_style)
-          validate_frame_style(frame_style)
-
-          color = CLI::UI.resolve_color(color)
-
-          FrameStack.pop
-          kwargs = {}
-          if elapsed
-            kwargs[:right_text] = "(#{elapsed.round(2)}s)"
-          end
-          CLI::UI.raw do
-            puts edge(text, color: color, first: CLI::UI::Box::Heavy::BL, frame_style: frame_style, **kwargs)
           end
         end
 
@@ -185,38 +148,89 @@ module CLI
         #
         # MUST be inside an open frame or it raises a +UnnestedFrameException+
         #
-        def divider(text, color: nil, frame_style: self.frame_style)
-          validate_frame_style(frame_style)
-
+        def divider(text, color: nil, frame_style: nil)
           fs_item = FrameStack.pop
-          raise UnnestedFrameException, "no frame nesting to unnest" unless fs_item
-          color = CLI::UI.resolve_color(color)
-          item  = CLI::UI.resolve_color(fs_item)
+          raise UnnestedFrameException, "No frame nesting to unnest" unless fs_item
+
+          color = CLI::UI.resolve_color(color) || fs_item.color
+          frame_style = CLI::UI.resolve_style(frame_style) || fs_item.frame_style
 
           CLI::UI.raw do
-            puts edge(text, color: (color || item), first: CLI::UI::Box::Heavy::DIV, frame_style: frame_style)
+            print prefix
+            puts frame_style.divider(text, color: color)
           end
+
           FrameStack.push(item)
+        end
+
+        # Closes a frame
+        # Automatically called for a block-form +open+
+        #
+        # ==== Attributes
+        #
+        # * +text+ - (required) the text/title to output in the frame
+        #
+        # ==== Options
+        #
+        # * +:color+ - The color of the frame. Defaults to nil
+        # * +:elapsed+ - How long did the frame take? Defaults to nil
+        # * +frame_style+ - The frame style to use for this frame.  Defaults to nil
+        #
+        # ==== Example
+        #
+        #   CLI::UI::Frame.close('Close')
+        #
+        # Output:
+        #   ┗━━ Close ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        #
+        #
+        def close(text, color: nil, elapsed: nil, frame_style: nil)
+          fs_item = FrameStack.pop
+          raise UnnestedFrameException, "No frame nesting to unnest" unless fs_item
+
+          color = CLI::UI.resolve_color(color) || fs_item.color_code
+          frame_style = CLI::UI.resolve_style(frame_style) || fs_item.frame_style
+
+          kwargs = {}
+          if elapsed
+            kwargs[:right_text] = "(#{elapsed.round(2)}s)"
+          end
+
+          CLI::UI.raw do
+            print prefix
+            puts frame_style.close(text, color: color, **kwargs)
+          end
         end
 
         # Determines the prefix of a frame entry taking multi-nested frames into account
         #
         # ==== Options
         #
-        # * +:color+ - The color of the prefix. Defaults to +Thread.current[:cliui_frame_color_override]+ or nil
+        # * +:color+ - The color of the prefix. Defaults to +Thread.current[:cliui_frame_color_override]+
         #
-        def prefix(color: nil)
-          pfx = +''
-          items = FrameStack.items
-          items[0..-2].each do |item|
-            pfx << CLI::UI.resolve_color(item).code << CLI::UI::Box::Heavy::VERT
+        def prefix(color: Thread.current[:cliui_frame_color_override])
+          +''.tap do |output|
+            items = FrameStack.items
+
+            items[0..-2].each do |item|
+              output << item.color.code << item.frame_style.prefix
+            end
+
+            if (item = items.last)
+              final_color = color || item.color
+              output << CLI::UI.resolve_color(final_color).code \
+                << item.frame_style.prefix \
+                << CLI::UI::Color::RESET.code
+            end
           end
-          if (item = items.last)
-            c = Thread.current[:cliui_frame_color_override] || color || item
-            pfx << CLI::UI.resolve_color(c).code \
-              << CLI::UI::Box::Heavy::VERT << ' ' << CLI::UI::Color::RESET.code
+        end
+
+        # The width of a prefix given the number of Frames in the stack
+        # Does _not_ account for the space at the end of the final prefix
+        def prefix_width
+          width = FrameStack.items.reduce(0) do |width, item|
+            width + item.frame_style.prefix_width
           end
-          pfx
         end
 
         # Override a color for a given thread.
@@ -231,13 +245,6 @@ module CLI
           yield
         ensure
           Thread.current[:cliui_frame_color_override] = prev
-        end
-
-        # The width of a prefix given the number of Frames in the stack
-        #
-        def prefix_width
-          w = FrameStack.items.size
-          w.zero? ? 0 : w + 1
         end
 
         private
@@ -255,115 +262,9 @@ module CLI
           timing - start
         end
 
-        def edge(text, color: raise, first: raise, right_text: nil, frame_style: self.frame_style)
-          color = CLI::UI.resolve_color(color)
-          text  = CLI::UI.resolve_text("{{#{color.name}:#{text}}}")
-
-          prefix = +''
-          FrameStack.items.each do |item|
-            prefix << CLI::UI.resolve_color(item).code << CLI::UI::Box::Heavy::VERT
-          end
-          prefix << color.code << first << (CLI::UI::Box::Heavy::HORZ * 2)
-          text ||= ''
-          unless text.empty?
-            prefix << ' ' << text << ' '
-          end
-
-          termwidth = CLI::UI::Terminal.width if frame_style == :box
-
-          suffix = +''
-
-          if right_text
-            case frame_style
-            when :box
-              suffix << ' ' << right_text << ' '
-            when :bracket
-              prefix << ' ' << right_text << ' '
-            end
-
-          end
-
-          prefix_width = CLI::UI::ANSI.printing_width(prefix)
-          prefix_start = 0
-          prefix_end   = prefix_start + prefix_width
-
-          # Artificially shrink the calculated width of the terminal to just the length of the prefix
-          termwidth = prefix_end if frame_style == :bracket
-
-          suffix_width = CLI::UI::ANSI.printing_width(suffix)
-          suffix_end   = termwidth - 2
-          suffix_start = suffix_end - suffix_width
-
-          if prefix_end > suffix_start
-            suffix = ''
-            # if prefix_end > termwidth
-            # we *could* truncate it, but let's just let it overflow to the
-            # next line and call it poor usage of this API.
-          end
-
-          o = +''
-
-          # Shopify's CI system supports terminal emulation, but not some of
-          # the fancier features that we normally use to draw frames
-          # extra-reliably, so we fall back to a less foolproof strategy. This
-          # is probably better in general for cases with impoverished terminal
-          # emulators and no active user.
-          unless [0, '', nil].include?(ENV['CI'])
-            linewidth = [0, termwidth - (prefix_width + suffix_width)].max
-
-            o << color.code << prefix
-            o << color.code << (CLI::UI::Box::Heavy::HORZ * linewidth)
-            o << color.code << suffix
-            o << CLI::UI::Color::RESET.code << "\n"
-            return o
-          end
-
-          # Jumping around the line can cause some unwanted flashes
-          o << CLI::UI::ANSI.hide_cursor
-
-          # reset to column 1 so that things like ^C don't ruin formatting
-          o << "\r"
-
-          o << color.code
-          o << CLI::UI::Box::Heavy::HORZ * termwidth # draw a full line
-          o << print_at_x(prefix_start, prefix)
-          o << color.code
-          o << print_at_x(suffix_start, suffix)
-          o << CLI::UI::Color::RESET.code
-          o << CLI::UI::ANSI.show_cursor
-          o << "\n"
-
-          o
-        end
-
-        def print_at_x(x, str)
-          CLI::UI::ANSI.cursor_horizontal_absolute(1 + x) + str
-        end
-
         def validate_frame_style(frame_style)
-          unless VALID_FRAME_SYLES.include?(frame_style)
-            raise ArgumentError, "Invalid frame style: #{frame_style}.  Expecting one of: :#{VALID_FRAME_SYLES.join(', :')}" # rubocop:disable LineLength
-          end
-        end
-
-        module FrameStack
-          ENVVAR = 'CLI_FRAME_STACK'
-
-          def self.items
-            ENV.fetch(ENVVAR, '').split(':').map(&:to_sym)
-          end
-
-          def self.push(item)
-            curr = items
-            curr << item.name
-            ENV[ENVVAR] = curr.join(':')
-          end
-
-          def self.pop
-            curr = items
-            ret = curr.pop
-            ENV[ENVVAR] = curr.join(':')
-            ret.nil? ? nil : ret.to_sym
+          unless FrameStyle.lookup(frame_style)
+            raise ArgumentError, "Invalid frame style: #{frame_style}.  Expecting one of: :#{FrameStyle.loaded_styles.join(', :')}" # rubocop:disable LineLength
           end
         end
       end
