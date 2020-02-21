@@ -12,7 +12,7 @@ module CLI
           end
 
           def lookup(input)
-            @@loaded_styles.find { |style| style.to_s == input.to_s }
+            @@loaded_styles.find { |style| style.name.to_sym == input }
           end
 
           def extended(base)

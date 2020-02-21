@@ -11,7 +11,7 @@ module CLI
         DEFAULT_FRAME_COLOR = CLI::UI.resolve_color(:cyan)
 
         def frame_style
-          @frame_style ||= :box
+          @frame_style ||= FrameStyle::Box
         end
 
         # Set the default frame style.
@@ -23,9 +23,11 @@ module CLI
         # * +symbol+ - the default frame style to use for frames
         #
         def frame_style=(frame_style)
-          validate_frame_style(frame_style)
+          unless FrameStyle.lookup(frame_style)
+            raise ArgumentError, "Invalid frame style: #{frame_style}.  Expecting one of: :#{FrameStyle.loaded_styles.join(', :')}" # rubocop:disable Layout/LineLength
+          end
 
-          @frame_style = frame_style
+          @frame_style = CLI::UI.resolve_style(frame_style)
         end
 
         # Opens a new frame. Can be nested
@@ -262,12 +264,6 @@ module CLI
 
           timing = Time.new if timing.is_a?(TrueClass) || timing.nil?
           timing - start
-        end
-
-        def validate_frame_style(frame_style)
-          unless FrameStyle.lookup(frame_style)
-            raise ArgumentError, "Invalid frame style: #{frame_style}.  Expecting one of: :#{FrameStyle.loaded_styles.join(', :')}" # rubocop:disable LineLength
-          end
         end
       end
     end
