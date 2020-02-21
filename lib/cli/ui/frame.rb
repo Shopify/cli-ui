@@ -86,7 +86,7 @@ module CLI
               raise ArgumentError, "failure_text is not compatible with blockless invocation"
             elsif success_text
               raise ArgumentError, "success_text is not compatible with blockless invocation"
-            elsif !timing.nil?
+            elsif timing
               raise ArgumentError, "timing is not compatible with blockless invocation"
             end
           end
