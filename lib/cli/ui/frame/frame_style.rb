@@ -5,20 +5,22 @@ module CLI
     module Frame
       module FrameStyle
         class << self
-          @loaded_styles = []
+          # rubocop:disable Style/ClassVars
+          @@loaded_styles = []
 
           def loaded_styles
-            @loaded_styles.map(&:to_s)
+            @@loaded_styles.map(&:to_s)
           end
 
           def lookup(input)
-            @loaded_styles.find { |style| style.name.to_sym == input }
+            @@loaded_styles.find { |style| style.name.to_sym == input }
           end
 
           def extended(base)
-            @loaded_styles << base
+            @@loaded_styles << base
             base.extend(Interface)
           end
+          # rubocop:enable Style/ClassVars
         end
 
         # Public interface for FrameStyles
