@@ -3,7 +3,6 @@ module CLI
     autoload :ANSI,               'cli/ui/ansi'
     autoload :Glyph,              'cli/ui/glyph'
     autoload :Color,              'cli/ui/color'
-    autoload :Box,                'cli/ui/box'
     autoload :Frame,              'cli/ui/frame'
     autoload :Printer,            'cli/ui/printer'
     autoload :Progress,           'cli/ui/progress'

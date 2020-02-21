@@ -146,3 +146,5 @@ module CLI
     end
   end
 end
+
+require 'cli/ui/frame/frame_style/box'
