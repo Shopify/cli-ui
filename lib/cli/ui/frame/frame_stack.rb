@@ -44,13 +44,13 @@ module CLI
           # If both an item and a color/style pair are given, raises an +ArgumentError+
           # If the given item is not a +StackItem+, raises an +ArgumentError+
           #
-          def push(item=nil, color: nil, style: nil)
+          def push(item = nil, color: nil, style: nil)
             unless item.nil?
-              unless item.is_a? StackItem
+              unless item.is_a?(StackItem)
                 raise ArgumentError, "item must be a StackItem"
               end
 
-              unless color.nil? and style.nil?
+              unless color.nil? && style.nil?
                 raise ArgumentError, "Must give one of item or color: and style:"
               end
             end

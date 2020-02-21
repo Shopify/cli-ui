@@ -5,23 +5,21 @@ module CLI
     module Frame
       module FrameStyle
         class << self
-          @@loaded_styles = []
+          @loaded_styles = []
 
           def loaded_styles
-            @@loaded_styles.map(&:to_s)
+            @loaded_styles.map(&:to_s)
           end
 
           def lookup(input)
-            @@loaded_styles.find { |style| style.name.to_sym == input }
+            @loaded_styles.find { |style| style.name.to_sym == input }
           end
 
           def extended(base)
-            @@loaded_styles << base
+            @loaded_styles << base
             base.extend(Interface)
           end
         end
-
-        private
 
         # Public interface for FrameStyles
         # Applied by extending FrameStyle
@@ -44,6 +42,8 @@ module CLI
           def prefix_width
             CLI::UI::ANSI.printing_width(prefix)
           end
+
+          # rubocop:disable Lint/UnusedMethodArgument
 
           # Draws the "Open" line for this frame style
           #
@@ -87,6 +87,8 @@ module CLI
           def divider(text, color: nil)
             raise NotImplementedError
           end
+
+          # rubocop:enable Lint/UnusedMethodArgument
 
           private
 
