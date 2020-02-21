@@ -34,19 +34,18 @@ module CLI
             to_s
           end
 
+          # Returns the character(s) that should be printed at the beginning
+          # of lines inside this frame
           def prefix
             raise NotImplementedError
           end
 
-          # Opens a new frame. Can be nested
-          # Can be invoked in two ways: block and blockless
-          # * In block form, the frame is closed automatically when the block returns
-          # * In blockless form, caller MUST call +Frame.close+ when the frame is logically done
-          # * Blockless form is strongly discouraged in cases where block form can be made to work
-          #
-          # https://user-images.githubusercontent.com/3074765/33799861-cb5dcb5c-dd01-11e7-977e-6fad38cee08c.png
-          #
-          # The return value of the block determines if the block is a "success" or a "failure"
+          # Returns the printing width of the prefix
+          def prefix_width
+            CLI::UI::ANSI.printing_width(prefix)
+          end
+
+          # Draws the "Open" line for this frame style
           #
           # ==== Attributes
           #
@@ -54,37 +53,13 @@ module CLI
           #
           # ==== Options
           #
-          # * +:color+ - The color of the frame. Defaults to +DEFAULT_FRAME_COLOR+
-          # * +:failure_text+ - If the block failed, what do we output? Defaults to nil
-          # * +:success_text+ - If the block succeeds, what do we output? Defaults to nil
-          # * +:timing+ - How long did the frame content take? Invalid for blockless. Defaults to true for the block form
-          # * +frame_style+ - The frame style to use for this frame
+          # * +:color+ - (required) The color of the frame.
           #
-          # ==== Example
-          #
-          # ===== Block Form (Assumes +CLI::UI::StdoutRouter.enable+ has been called)
-          #
-          #   CLI::UI::Frame.open('Open') { puts 'hi' }
-          #
-          # Output:
-          #   ┏━━ Open ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          #   ┃ hi
-          #   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ (0.0s) ━━
-          #
-          # ===== Blockless Form
-          #
-          #   CLI::UI::Frame.open('Open')
-          #
-          # Output:
-          #   ┏━━ Open ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          #
-          #
-          def open(text, color: nil)
+          def open(text, color:)
             raise NotImplementedError
           end
 
-          # Closes a frame
-          # Automatically called for a block-form +open+
+          # Draws the "Close" line for this frame style
           #
           # ==== Attributes
           #
@@ -92,23 +67,14 @@ module CLI
           #
           # ==== Options
           #
-          # * +:color+ - The color of the frame. Defaults to +DEFAULT_FRAME_COLOR+
-          # * +:elapsed+ - How long did the frame take? Defaults to nil
-          # * +frame_style+ - The frame style to use for this frame
+          # * +:color+ - (required) The color of the frame.
+          # * +:right_text+ - Text to print at the right of the line. Defaults to nil
           #
-          # ==== Example
-          #
-          #   CLI::UI::Frame.close('Close')
-          #
-          # Output:
-          #   ┗━━ Close ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          #
-          def close(text, color: nil, elapsed: nil)
+          def close(text, color:, right_text: nil)
             raise NotImplementedError
           end
 
-          # Adds a divider in a frame
-          # Used to separate information within a single frame
+          # Draws a "divider" line for the current frame style
           #
           # ==== Attributes
           #
@@ -116,21 +82,7 @@ module CLI
           #
           # ==== Options
           #
-          # * +:color+ - The color of the frame. Defaults to +DEFAULT_FRAME_COLOR+
-          # * +frame_style+ - The frame style to use for this frame
-          #
-          # ==== Example
-          #
-          #   CLI::UI::Frame.open('Open') { CLI::UI::Frame.divider('Divider') }
-          #
-          # Output:
-          #   ┏━━ Open ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          #   ┣━━ Divider ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          #   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          #
-          # ==== Raises
-          #
-          # MUST be inside an open frame or it raises a +UnnestedFrameException+
+          # * +:color+ - (required) The color of the frame.
           #
           def divider(text, color: nil)
             raise NotImplementedError

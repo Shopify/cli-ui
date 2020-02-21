@@ -10,7 +10,6 @@ module CLI
       class << self
         DEFAULT_FRAME_COLOR = CLI::UI.resolve_color(:cyan)
 
-        #
         def frame_style
           @frame_style ||= :box
         end
@@ -57,7 +56,7 @@ module CLI
         #
         #   CLI::UI::Frame.open('Open') { puts 'hi' }
         #
-        # Output:
+        # Default Output:
         #   ┏━━ Open ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         #   ┃ hi
         #   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ (0.0s) ━━
@@ -66,7 +65,7 @@ module CLI
         #
         #   CLI::UI::Frame.open('Open')
         #
-        # Output:
+        # Default Output:
         #   ┏━━ Open ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         #
         #
@@ -139,7 +138,7 @@ module CLI
         #
         #   CLI::UI::Frame.open('Open') { CLI::UI::Frame.divider('Divider') }
         #
-        # Output:
+        # Default Output:
         #   ┏━━ Open ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         #   ┣━━ Divider ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         #   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -160,7 +159,7 @@ module CLI
             puts frame_style.divider(text, color: color)
           end
 
-          FrameStack.push(item)
+          FrameStack.push(fs_item)
         end
 
         # Closes a frame
@@ -180,9 +179,12 @@ module CLI
         #
         #   CLI::UI::Frame.close('Close')
         #
-        # Output:
+        # Default Output:
         #   ┗━━ Close ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         #
+        # ==== Raises
+        #
+        # MUST be inside an open frame or it raises a +UnnestedFrameException+
         #
         def close(text, color: nil, elapsed: nil, frame_style: nil)
           fs_item = FrameStack.pop

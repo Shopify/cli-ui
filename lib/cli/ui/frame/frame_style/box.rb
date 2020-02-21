@@ -24,14 +24,57 @@ module CLI
               CLI::UI::ANSI.printing_width(prefix)
             end
 
+            # Draws the "Open" line for this frame style
+            #
+            # ==== Attributes
+            #
+            # * +text+ - (required) the text/title to output in the frame
+            #
+            # ==== Options
+            #
+            # * +:color+ - (required) The color of the frame.
+            #
+            # ==== Output:
+            #
+            #   ┏━━ Open ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            #
             def open(text, color:)
               edge(text, color: color, first: TOP_LEFT)
             end
 
+            # Draws a "divider" line for the current frame style
+            #
+            # ==== Attributes
+            #
+            # * +text+ - (required) the text/title to output in the frame
+            #
+            # ==== Options
+            #
+            # * +:color+ - (required) The color of the frame.
+            #
+            # ==== Output:
+            #
+            #   ┣━━ Divider ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            #
             def divider(text, color:)
               edge(text, color: color, first: DIVIDER)
             end
 
+            # Draws the "Close" line for this frame style
+            #
+            # ==== Attributes
+            #
+            # * +text+ - (required) the text/title to output in the frame
+            #
+            # ==== Options
+            #
+            # * +:color+ - (required) The color of the frame.
+            # * +:right_text+ - Text to print at the right of the line. Defaults to nil
+            #
+            # ==== Output:
+            #
+            #   ┗━━ Close ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            #
             def close(text, color:, right_text: nil)
               edge(text, color: color, right_text: right_text, first: BOTTOM_LEFT)
             end
