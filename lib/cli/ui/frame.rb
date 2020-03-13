@@ -20,14 +20,21 @@ module CLI
         #
         # ==== Attributes
         #
-        # * +symbol+ - the default frame style to use for frames
+        # * +symbol+ or +FrameStyle+ - the default frame style to use for frames
         #
         def frame_style=(frame_style)
-          unless FrameStyle.lookup(frame_style)
-            raise ArgumentError, "Invalid frame style: #{frame_style}.  Expecting one of: :#{FrameStyle.loaded_styles.join(', :')}" # rubocop:disable Layout/LineLength
-          end
+          case frame_style
+          when FrameStyle
+            @frame_style = frame_style
+          else
+            style = FrameStyle.lookup(frame_style)
 
-          @frame_style = CLI::UI.resolve_style(frame_style)
+            unless style
+              raise ArgumentError, "Invalid frame style: #{frame_style}.  Expecting one of: :#{FrameStyle.loaded_styles.join(', :')}" # rubocop:disable Layout/LineLength
+            end
+
+            @frame_style = style
+          end
         end
 
         # Opens a new frame. Can be nested
