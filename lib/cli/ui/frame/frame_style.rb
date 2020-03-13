@@ -12,6 +12,11 @@ module CLI
             @@loaded_styles.map(&:to_s)
           end
 
+          # Lookup a frame style via its name
+          #
+          # ==== Attributes
+          #
+          # * +symbol+ - frame style name to lookup
           def lookup(input)
             @@loaded_styles.find { |style| style.name.to_sym == input }
           end

@@ -43,6 +43,13 @@ module CLI
       end
     end
 
+    # Frame style resolution using +CLI::UI::Frame::FrameStyle.lookup+.
+    # Will lookup using +FrameStyle.lookup+ if the input is a symbol.  Otherwise,
+    # we assume it's a valid FrameStyle
+    #
+    # ==== Attributes
+    #
+    # * +input+ - frame style to resolve
     def self.resolve_style(input)
       case input
       when Symbol
