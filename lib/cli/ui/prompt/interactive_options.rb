@@ -351,9 +351,8 @@ module CLI
           end
 
           # Used for selection purposes
+          @presented_options.push([DONE, 0]) if @multiple
           @filtered_options = @presented_options.dup
-
-          @presented_options.unshift([DONE, 0]) if @multiple
 
           ensure_visible_is_active if has_filter?
 
@@ -431,7 +430,7 @@ module CLI
           end
 
           options.each do |choice, num|
-            is_chosen = @multiple && num && @chosen[num - 1]
+            is_chosen = @multiple && num && @chosen[num - 1] && num != 0
 
             padding = ' ' * (max_num_length - num.to_s.length)
             message = "  #{num}#{num ? '.' : ' '}#{padding}"
