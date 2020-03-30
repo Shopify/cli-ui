@@ -9,7 +9,7 @@ module CLI
           @@loaded_styles = []
 
           def loaded_styles
-            @@loaded_styles.map(&:to_s)
+            @@loaded_styles.map(&:name)
           end
 
           # Lookup a frame style via its name
@@ -46,12 +46,8 @@ module CLI
         # Public interface for FrameStyles
         # Applied by extending FrameStyle
         module Interface
-          def to_s
-            raise NotImplementedError
-          end
-
           def name
-            to_s
+            raise NotImplementedError
           end
 
           # Returns the character(s) that should be printed at the beginning

@@ -12,7 +12,7 @@ module CLI
           BOTTOM_LEFT = '┗'
 
           class << self
-            def to_s
+            def name
               'box'
             end
 
