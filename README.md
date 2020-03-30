@@ -144,6 +144,37 @@ end
 
 ---
 
+### Frame Styles
+
+Modify the appearance of CLI::UI both globally and on an individual frame level.
+
+To set the default style:
+
+```ruby
+CLI::UI.frame_style = :box
+```
+
+To style an individual frame:
+
+```ruby
+CLI::UI.frame('New Style!', frame_style: :bracket) { puts 'It's pretty cool!' }
+```
+
+The default style - `:box` - is what has been used up until now.  The other style - `:bracket` - looks like this:
+
+```ruby
+CLI::UI.frame_style = :bracket
+CLI::UI::StdoutRouter.enable
+CLI::UI::Frame.open('Frame 1') do
+  CLI::UI::Frame.open('Frame 2') { puts "inside frame 2" }
+  puts "inside frame 1"
+end
+```
+
+![Frame Style](https://user-images.githubusercontent.com/315948/65287373-9a82de80-db08-11e9-94fb-20f4b7561c07.png)
+
+---
+
 ## Example Usage
 
 The following code makes use of nested-framing, multi-threaded spinners, formatted text, and more.
