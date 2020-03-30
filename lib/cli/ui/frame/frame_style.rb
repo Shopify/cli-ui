@@ -17,8 +17,10 @@ module CLI
           # ==== Attributes
           #
           # * +symbol+ - frame style name to lookup
-          def lookup(input)
-            @@loaded_styles.find { |style| style.name.to_sym == input }
+          def lookup(name)
+            @@loaded_styles
+              .find { |style| style.name.to_sym == name }
+              .tap  { |style| raise InvalidFrameStyleName, name if style.nil? }
           end
 
           def extended(base)
@@ -26,6 +28,19 @@ module CLI
             base.extend(Interface)
           end
           # rubocop:enable Style/ClassVars
+        end
+
+        class InvalidFrameStyleName < ArgumentError
+          def initialize(name)
+            @name = name
+          end
+
+          def message
+            keys = FrameStyle.loaded_styles.map(&:inspect).join(',')
+            "invalid frame style: #{@name.inspect}" \
+              "-- must be one of CLI::UI::Frame::FrameStyle.loaded_styles " \
+              "(#{keys})"
+          end
         end
 
         # Public interface for FrameStyles
