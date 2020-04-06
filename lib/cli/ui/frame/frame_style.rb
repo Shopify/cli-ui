@@ -61,8 +61,6 @@ module CLI
             CLI::UI::ANSI.printing_width(prefix)
           end
 
-          # rubocop:disable Lint/UnusedMethodArgument
-
           # Draws the "Open" line for this frame style
           #
           # ==== Attributes
@@ -105,8 +103,6 @@ module CLI
           def divider(text, color: nil)
             raise NotImplementedError
           end
-
-          # rubocop:enable Lint/UnusedMethodArgument
 
           private
 
