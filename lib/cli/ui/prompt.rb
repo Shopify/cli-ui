@@ -50,7 +50,7 @@ module CLI
         # ==== Return Value
         #
         # * If a +Block+ was not provided, the selected option or response to the free form question will be returned
-        # * If a +Block+ was provided, the evaluted value of the +Block+ will be returned
+        # * If a +Block+ was provided, the evaluated value of the +Block+ will be returned
         #
         # ==== Example Usage:
         #

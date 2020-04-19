@@ -74,7 +74,7 @@ module CLI
     # ==== Attributes
     #
     # * +question+ - question to ask
-    # * +kwargs+ - arugments for +Prompt.ask+
+    # * +kwargs+ - arguments for +Prompt.ask+
     #
     def self.ask(question, **kwargs)
       CLI::UI::Prompt.ask(question, **kwargs)
