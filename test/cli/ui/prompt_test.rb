@@ -26,11 +26,9 @@ module CLI
       # ^C is not handled; raises Interrupt, which may be handled by caller.
       def test_confirm_sigint
         start_process do
-          begin
-            Prompt.confirm('q')
-          rescue Interrupt
-            @ret.write(Marshal.dump(:SIGINT))
-          end
+          Prompt.confirm('q')
+        rescue Interrupt
+          @ret.write(Marshal.dump(:SIGINT))
         end
 
         sleep(0.05)
@@ -48,11 +46,9 @@ module CLI
       # ^C is not handled; raises Interrupt, which may be handled by caller.
       def test_ask_free_form_sigint
         start_process do
-          begin
-            Prompt.ask('q')
-          rescue Interrupt
-            @ret.write(Marshal.dump(:SIGINT))
-          end
+          Prompt.ask('q')
+        rescue Interrupt
+          @ret.write(Marshal.dump(:SIGINT))
         end
 
         sleep(0.05)
@@ -63,11 +59,9 @@ module CLI
 
       def test_ask_interactive_sigint
         start_process do
-          begin
-            Prompt.ask('q', options: %w(a b))
-          rescue Interrupt
-            @ret.write(Marshal.dump(:SIGINT))
-          end
+          Prompt.ask('q', options: %w(a b))
+        rescue Interrupt
+          @ret.write(Marshal.dump(:SIGINT))
         end
 
         sleep(0.05)
@@ -287,11 +281,9 @@ module CLI
 
       def test_ask_interactive_escape
         _run("\e") do
-          begin
-            Prompt.ask('q', options: %w(a b))
-          rescue Interrupt
-            @ret.write(Marshal.dump(:SIGINT))
-          end
+          Prompt.ask('q', options: %w(a b))
+        rescue Interrupt
+          @ret.write(Marshal.dump(:SIGINT))
         end
 
         expected_out = strip_heredoc(<<-EOF)
