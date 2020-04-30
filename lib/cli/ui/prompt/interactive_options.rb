@@ -250,17 +250,18 @@ module CLI
           when CTRL_C   ; raise Interrupt
           end
 
+          max_digit = [@options.size, 9].min.to_s
           case @state
           when :root
             case char
-            when ESC                       ; @state = :esc
-            when 'k'                       ; up
-            when 'j'                       ; down
-            when 'e', ':', 'G'             ; start_line_select
-            when 'f', '/'                  ; start_filter
-            when ('0'..@options.size.to_s) ; select_n(char.to_i)
-            when 'y', 'n'                  ; select_bool(char)
-            when " ", "\r", "\n"           ; select_current # <enter>
+            when ESC              ; @state = :esc
+            when 'k'              ; up
+            when 'j'              ; down
+            when 'e', ':', 'G'    ; start_line_select
+            when 'f', '/'         ; start_filter
+            when ('0'..max_digit) ; select_n(char.to_i)
+            when 'y', 'n'         ; select_bool(char)
+            when " ", "\r", "\n"  ; select_current # <enter>
             end
           when :filter
             case char
