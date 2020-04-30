@@ -88,8 +88,12 @@ module CLI
           select_ui: true,
           &options_proc
         )
-          if (options || block_given?) && (default || is_file)
+          if (options || block_given?) && ((default && !multiple) || is_file)
             raise(ArgumentError, 'conflicting arguments: options provided with default or is_file')
+          end
+
+          if options && multiple && default && !(default - options).empty?
+            raise(ArgumentError, 'conflicting arguments: default should only include elements present in options')
           end
 
           if options || block_given?
@@ -97,6 +101,7 @@ module CLI
               question,
               options,
               multiple: multiple,
+              default: default,
               filter_ui: filter_ui,
               select_ui: select_ui,
               &options_proc
@@ -175,7 +180,7 @@ module CLI
           end
         end
 
-        def ask_interactive(question, options = nil, multiple: false, filter_ui: true, select_ui: true)
+        def ask_interactive(question, options = nil, multiple: false, default: nil, filter_ui: true, select_ui: true)
           raise(ArgumentError, 'conflicting arguments: options and block given') if options && block_given?
 
           options ||= if block_given?
@@ -189,7 +194,7 @@ module CLI
           instructions += ", filter with 'f'" if filter_ui
           instructions += ", enter option with 'e'" if select_ui && (options.size > 9)
           puts_question("#{question} {{yellow:(#{instructions})}}")
-          resp = interactive_prompt(options, multiple: multiple)
+          resp = interactive_prompt(options, multiple: multiple, default: default)
 
           # Clear the line
           print(ANSI.previous_line + ANSI.clear_to_end_of_line)
@@ -215,8 +220,8 @@ module CLI
         end
 
         # Useful for stubbing in tests
-        def interactive_prompt(options, multiple: false)
-          InteractiveOptions.call(options, multiple: multiple)
+        def interactive_prompt(options, multiple: false, default: nil)
+          InteractiveOptions.call(options, multiple: multiple, default: default)
         end
 
         def write_default_over_empty_input(default)

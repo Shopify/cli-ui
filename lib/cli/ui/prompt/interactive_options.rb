@@ -22,8 +22,8 @@ module CLI
         # Ask an interactive question
         #   CLI::UI::Prompt::InteractiveOptions.call(%w(rails go python))
         #
-        def self.call(options, multiple: false)
-          list = new(options, multiple: multiple)
+        def self.call(options, multiple: false, default: nil)
+          list = new(options, multiple: multiple, default: default)
           selected = list.call
           if multiple
             selected.map { |s| options[s - 1] }
@@ -39,7 +39,7 @@ module CLI
         #
         #   CLI::UI::Prompt::InteractiveOptions.new(%w(rails go python))
         #
-        def initialize(options, multiple: false)
+        def initialize(options, multiple: false, default: nil)
           @options = options
           @active = 1
           @marker = '>'
@@ -52,7 +52,13 @@ module CLI
           @filter = ''
           # 0-indexed array representing if selected
           # @options[0] is selected if @chosen[0]
-          @chosen = Array.new(@options.size) { false } if multiple
+          if multiple
+            @chosen = if default
+              @options.map { |option| default.include?(option) }
+            else
+              Array.new(@options.size) { false }
+            end
+          end
           @redraw = true
           @presented_options = []
         end

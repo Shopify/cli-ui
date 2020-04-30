@@ -199,6 +199,11 @@ module CLI
           Prompt.ask('q', options: %w(a b)) { |h| h.option('a') }
         end
         assert_equal('conflicting arguments: options and block given', error.message)
+
+        error = assert_raises(ArgumentError) do
+          Prompt.ask('q', options: %w(a b), multiple: true, default: %w(b c)) { |h| h.option('a') }
+        end
+        assert_equal('conflicting arguments: default should only include elements present in options', error.message)
       end
 
       def test_ask_interactive_insufficient_options
@@ -447,6 +452,14 @@ module CLI
         end
 
         assert_result(nil, nil, ['1', '3', '5'])
+      end
+
+      def test_ask_multiple_with_default_values
+        _run('1', '0') do
+          Prompt.ask('q', options: ('1'..'10').to_a, multiple: true, default: %w(2 3))
+        end
+
+        assert_result(nil, nil, ['1', '2', '3'])
       end
 
       private
