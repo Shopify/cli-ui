@@ -145,7 +145,7 @@ module CLI
           end
 
           def inset
-            @inset ||= CLI::UI::Frame.prefix + ' '
+            @inset ||= CLI::UI::Frame.prefix
           end
 
           def inset_width

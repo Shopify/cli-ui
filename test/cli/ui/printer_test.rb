@@ -19,7 +19,7 @@ module CLI
             assert(Printer.puts('foo', frame_color: :red))
           end
 
-          assert_equal("\e[31m┃\e[0m \e[0mfoo\n", out)
+          assert_equal("\e[31m┃ \e[0m\e[0mfoo\n", out)
         end
       end
 
