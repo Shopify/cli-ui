@@ -3,6 +3,7 @@ module CLI
     autoload :ANSI,               'cli/ui/ansi'
     autoload :Glyph,              'cli/ui/glyph'
     autoload :Color,              'cli/ui/color'
+    autoload :Box,                'cli/ui/box'
     autoload :Frame,              'cli/ui/frame'
     autoload :Printer,            'cli/ui/printer'
     autoload :Progress,           'cli/ui/progress'
@@ -38,22 +39,6 @@ module CLI
       case input
       when Symbol
         CLI::UI::Color.lookup(input)
-      else
-        input
-      end
-    end
-
-    # Frame style resolution using +CLI::UI::Frame::FrameStyle.lookup+.
-    # Will lookup using +FrameStyle.lookup+ if the input is a symbol.  Otherwise,
-    # we assume it's a valid FrameStyle
-    #
-    # ==== Attributes
-    #
-    # * +input+ - frame style to resolve
-    def self.resolve_style(input)
-      case input
-      when Symbol
-        CLI::UI::Frame::FrameStyle.lookup(input)
       else
         input
       end
@@ -209,19 +194,6 @@ module CLI
     end
 
     self.enable_color = $stdout.tty?
-
-    # Set the default frame style.
-    # Convenience method for setting the default frame style with +CLI::UI::Frame.frame_style=+
-    #
-    # Raises ArgumentError if +frame_style+ is not valid
-    #
-    # ==== Attributes
-    #
-    # * +symbol+ - the default frame style to use for frames
-    #
-    def self.frame_style=(frame_style)
-      Frame.frame_style = frame_style.to_sym
-    end
   end
 end
 
