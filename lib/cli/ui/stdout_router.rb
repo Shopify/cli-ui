@@ -19,7 +19,9 @@ module CLI
             if auto_frame_inset?
               str = str.dup # unfreeze
               str = str.force_encoding(Encoding::UTF_8)
-              apply_line_prefix(str, CLI::UI::Frame.prefix)
+              prefix = CLI::UI::Frame.prefix
+              prefix += ' ' unless prefix.empty?
+              apply_line_prefix(str, prefix)
             else
               @pending_newline = false
               str
