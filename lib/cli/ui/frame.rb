@@ -188,7 +188,7 @@ module CLI
           fs_item = FrameStack.pop
           raise UnnestedFrameException, "No frame nesting to unnest" unless fs_item
 
-          color = CLI::UI.resolve_color(color) || fs_item.color_code
+          color = CLI::UI.resolve_color(color) || fs_item.color
           frame_style = CLI::UI.resolve_style(frame_style) || fs_item.frame_style
 
           kwargs = {}
