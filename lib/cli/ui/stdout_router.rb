@@ -20,7 +20,7 @@ module CLI
               str = str.dup # unfreeze
               str = str.force_encoding(Encoding::UTF_8)
               prefix = CLI::UI::Frame.prefix
-              prefix += ' ' unless prefix.empty?
+              prefix << ' ' unless prefix.empty?
               apply_line_prefix(str, prefix)
             else
               @pending_newline = false
