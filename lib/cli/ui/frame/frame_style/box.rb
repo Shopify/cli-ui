@@ -7,7 +7,7 @@ module CLI
 
           VERTICAL    = '┃'
           HORIZONTAL  = '━'
-          DIVIDER     = "┣"
+          DIVIDER     = '┣'
           TOP_LEFT    = '┏'
           BOTTOM_LEFT = '┗'
 
