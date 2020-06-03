@@ -90,7 +90,7 @@ module CLI
 
           t_start = Time.now
           CLI::UI.raw do
-            print prefix
+            print prefix.chop
             puts frame_style.open(text, color: color)
           end
           FrameStack.push(color: color, style: frame_style)
@@ -153,7 +153,7 @@ module CLI
           frame_style = CLI::UI.resolve_style(frame_style) || fs_item.frame_style
 
           CLI::UI.raw do
-            print prefix
+            print prefix.chop
             puts frame_style.divider(text, color: color)
           end
 
@@ -197,7 +197,7 @@ module CLI
           end
 
           CLI::UI.raw do
-            print prefix
+            print prefix.chop
             puts frame_style.close(text, color: color, **kwargs)
           end
         end
@@ -220,6 +220,7 @@ module CLI
               final_color = color || item.color
               output << CLI::UI.resolve_color(final_color).code \
                 << item.frame_style.prefix \
+                << ' ' \
                 << CLI::UI::Color::RESET.code
             end
           end
