@@ -12,6 +12,8 @@ module CLI
         assert_equal("\e[0mfoo\n", out)
       end
 
+      # NOTE: The spacing in the assertion of this test is important for
+      #       downstream projects and should be maintained.
       def test_puts_color_frame
         Frame.open('test') do
           out, _ = capture_io do
