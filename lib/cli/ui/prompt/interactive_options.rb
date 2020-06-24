@@ -358,7 +358,7 @@ module CLI
           end
 
           # Used for selection purposes
-          @presented_options.push([DONE, 0]) if @multiple
+          @presented_options.unshift([DONE, 0]) if @multiple
           @filtered_options = @presented_options.dup
 
           ensure_visible_is_active if has_filter?
