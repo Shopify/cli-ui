@@ -363,6 +363,18 @@ module CLI
 
           ensure_visible_is_active if has_filter?
 
+          # Must have more lines before the selection than we can display
+          if distance_from_start_to_selection > max_lines
+            @presented_options.shift(distance_from_start_to_selection - max_lines)
+            ensure_first_item_is_continuation_marker
+          end
+
+          # Must have more lines after the selection than we can display
+          if distance_from_selection_to_end > max_lines
+            @presented_options.pop(distance_from_selection_to_end - max_lines)
+            ensure_last_item_is_continuation_marker
+          end
+
           while num_lines > max_lines
             # try to keep the selection centered in the window:
             if distance_from_selection_to_end > distance_from_start_to_selection
