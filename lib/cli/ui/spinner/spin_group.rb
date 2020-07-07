@@ -52,6 +52,7 @@ module CLI
               end
             end
 
+            @m = Mutex.new
             @force_full_render = false
             @done = false
             @exception = nil
@@ -96,13 +97,15 @@ module CLI
           # * +width+ - current terminal width to format for
           #
           def render(index, force = true, width: CLI::UI::Terminal.width)
-            if force || @always_full_render || @force_full_render
-              full_render(index, width)
-            else
-              partial_render(index)
+            @m.synchronize do
+              if force || @always_full_render || @force_full_render
+                full_render(index, width)
+              else
+                partial_render(index)
+              end
+            ensure
+              @force_full_render = false
             end
-          ensure
-            @force_full_render = false
           end
 
           # Update the spinner title
@@ -112,9 +115,11 @@ module CLI
           # * +title+ - title to change the spinner to
           #
           def update_title(new_title)
-            @always_full_render = new_title =~ Formatter::SCAN_WIDGET
-            @title = new_title
-            @force_full_render = true
+            @m.synchronize do
+              @always_full_render = new_title =~ Formatter::SCAN_WIDGET
+              @title = new_title
+              @force_full_render = true
+            end
           end
 
           private
