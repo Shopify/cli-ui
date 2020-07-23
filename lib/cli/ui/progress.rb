@@ -75,7 +75,7 @@ module CLI
       #
       def to_s
         suffix = " #{(@percent_done * 100).floor}%".ljust(5)
-        workable_width = @max_width - Frame.prefix_width - suffix.size
+        workable_width = @max_width - Frame.prefix_width - suffix.size - 1
         filled = [(@percent_done * workable_width.to_f).ceil, 0].max
         unfilled = [workable_width - filled, 0].max
 
