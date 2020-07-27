@@ -97,8 +97,35 @@ module CLI
 
               o = +''
 
-              o << color.code << preamble
-              o << color.code << suffix
+              # Shopify's CI system supports terminal emulation, but not some of
+              # the fancier features that we normally use to draw frames
+              # extra-reliably, so we fall back to a less foolproof strategy. This
+              # is probably better in general for cases with impoverished terminal
+              # emulators and no active user.
+              unless [0, '', nil].include?(ENV['CI'])
+                o << color.code << preamble
+                o << color.code << suffix
+                o << CLI::UI::Color::RESET.code
+                o << "\n"
+
+                return o
+              end
+
+              preamble_start = Frame.prefix_width
+
+              # If prefix_width is non-zero, we need to subtract the width of
+              # the final space, since we're going to write over it.
+              preamble_start -= 1 unless preamble_start.zero?
+
+              # Prefix_width includes the width of the terminal space, which we
+              # want to remove.  The clamping is done to avoid a negative
+              # preamble start which can occur for the first frame.
+              o << CLI::UI::ANSI.hide_cursor
+
+              # reset to column 1 so that things like ^C don't ruin formatting
+              o << "\r"
+              o << color.code
+              o << print_at_x(preamble_start, preamble + color.code + suffix)
               o << CLI::UI::Color::RESET.code
               o << "\n"
 
