@@ -4,14 +4,16 @@ module CLI
       # Determines which OS is currently running the UI, to make it easier to
       # adapt its behaviour to the features of the OS.
       def self.current
-        return @current_os unless @current_os.nil?
-
-        @current_os = Mac if /darwin/.match(RUBY_PLATFORM)
-        @current_os = Linux if /linux/.match(RUBY_PLATFORM)
-        @current_os = Windows if /mingw32/.match(RUBY_PLATFORM)
-
-        raise "Could not determine OS from platform #{RUBY_PLATFORM}" if @current_os.nil?
-        @current_os
+        @current_os ||= case RUBY_PLATFORM
+        when /darwin/
+          Mac
+        when /linux/
+          Linux
+        when /mingw32/
+          Windows
+        else
+          raise "Could not determine OS from platform #{RUBY_PLATFORM}"
+        end
       end
 
       class Mac

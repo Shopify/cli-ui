@@ -190,23 +190,16 @@ module CLI
           end
 
           raise(ArgumentError, 'insufficient options') if options.nil? || options.empty?
-          # Windows doesn't capture the up/down arrow keys with getc, so we simply don't mention that possibility
-          instructions = []
-          instructions << (multiple ? "Toggle options. " : "") + "Choose with ↑ ↓ ⏎" if
-            CLI::UI::OS.current.supports_arrow_keys?
-          instructions << "filter with 'f'" if filter_ui
-          instructions << "enter option with 'e'" if select_ui && (options.size > 9)
-
-          if instructions.empty?
-            instructions = ''
+          navigate_text = if CLI::UI::OS.current.supports_arrow_keys?
+            "Choose with ↑ ↓ ⏎"
           else
-            instructions = instructions.join(', ')
-            # Make sure the first entry is capitalized
-            instructions[0] = instructions[0].upcase
-            instructions = "(#{instructions})"
+            "Navigate up with 'j' and down with 'k'"
           end
 
-          puts_question("#{question} {{yellow:#{instructions}}}")
+          instructions = (multiple ? "Toggle options. " : "") + navigate_text
+          instructions += ", filter with 'f'" if filter_ui
+          instructions += ", enter option with 'e'" if select_ui && (options.size > 9)
+          puts_question("#{question} {{yellow:(#{instructions})}}")
           resp = interactive_prompt(options, multiple: multiple, default: default)
 
           # Clear the line

@@ -15,7 +15,6 @@ module CLI
       begin
         colors = [CLI::UI::Color::CYAN.code] * (RUNES.size / 2).ceil +
           [CLI::UI::Color::MAGENTA.code] * (RUNES.size / 2).to_i
-        raise unless RUNES.size == colors.size
         GLYPHS = colors.zip(RUNES).map(&:join)
       end
 
