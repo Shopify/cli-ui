@@ -4,6 +4,7 @@ module CLI
     autoload :Glyph,              'cli/ui/glyph'
     autoload :Color,              'cli/ui/color'
     autoload :Frame,              'cli/ui/frame'
+    autoload :OS,                 'cli/ui/os'
     autoload :Printer,            'cli/ui/printer'
     autoload :Progress,           'cli/ui/progress'
     autoload :Prompt,             'cli/ui/prompt'

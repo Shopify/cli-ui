@@ -134,6 +134,24 @@ module CLI
         assert_result(expected_out, "", false)
       end
 
+      def test_confirm_no_arrow_keys
+        # Windows doesn't detect presses on the arrow keys when picking an option, so we don't show the instruction text
+        # for them.
+        with_os_mock_and_reload(CLI::UI::OS::Windows) do
+          _run('x', 'n') { Prompt.confirm('q') }
+          expected_out = strip_heredoc(<<-EOF) + ' '
+            ? q 
+            \e[?25l> 1. yes\e[K
+              2. no\e[K
+            #{' ' * CLI::UI::Terminal.width}
+            #{' ' * CLI::UI::Terminal.width}
+            \e[?25h\e[K
+            ? q (You chose: no)
+          EOF
+          assert_result(expected_out, "", false)
+        end
+      end
+
       def test_ask_free_form_happy_path
         _run('asdf') { Prompt.ask('q') }
         assert_result("? q\n> asdf\n", "", "asdf")

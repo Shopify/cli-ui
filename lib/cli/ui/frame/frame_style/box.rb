@@ -139,10 +139,12 @@ module CLI
               o << "\r"
 
               o << color.code
-              o << print_at_x(preamble_start, HORIZONTAL * (termwidth - preamble_start)) # draw a full line
-              o << print_at_x(preamble_start, preamble)
+              o << preamble
               o << color.code
-              o << print_at_x(suffix_start, suffix)
+              o << HORIZONTAL * (suffix_start - preamble_end) # draw a full line
+              o << suffix
+              o << HORIZONTAL * (termwidth - suffix_end)
+              o << color.code
               o << CLI::UI::Color::RESET.code
               o << CLI::UI::ANSI.show_cursor
               o << "\n"
