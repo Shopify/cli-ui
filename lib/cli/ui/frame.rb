@@ -227,11 +227,12 @@ module CLI
         end
 
         # The width of a prefix given the number of Frames in the stack
-        # Does _not_ account for the space at the end of the final prefix
         def prefix_width
-          FrameStack.items.reduce(0) do |width, item|
+          w = FrameStack.items.reduce(0) do |width, item|
             width + item.frame_style.prefix_width
           end
+
+          w.zero? ? w : w + 1
         end
 
         # Override a color for a given thread.
