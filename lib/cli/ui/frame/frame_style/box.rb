@@ -20,10 +20,6 @@ module CLI
               VERTICAL
             end
 
-            def prefix_width
-              CLI::UI::ANSI.printing_width(prefix)
-            end
-
             # Draws the "Open" line for this frame style
             #
             # ==== Attributes
