@@ -102,7 +102,7 @@ module CLI
               # If prefix_width is non-zero, we need to subtract the width of
               # the final space, since we're going to write over it.
               preamble_start -= 1 unless preamble_start.zero?
-              preamble_end   = preamble_start + preamble_width
+              preamble_end = preamble_start + preamble_width
 
               suffix_width = CLI::UI::ANSI.printing_width(suffix)
               suffix_end   = termwidth - 2
