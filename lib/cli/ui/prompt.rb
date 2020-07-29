@@ -193,7 +193,7 @@ module CLI
           navigate_text = if CLI::UI::OS.current.supports_arrow_keys?
             "Choose with ↑ ↓ ⏎"
           else
-            "Navigate up with 'j' and down with 'k'"
+            "Navigate up with 'k' and down with 'j', press Enter to select"
           end
 
           instructions = (multiple ? "Toggle options. " : "") + navigate_text

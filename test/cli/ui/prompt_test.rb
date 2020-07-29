@@ -140,7 +140,7 @@ module CLI
         with_os_mock_and_reload(CLI::UI::OS::Windows) do
           _run('x', 'n') { Prompt.confirm('q') }
           expected_out = strip_heredoc(<<-EOF) + ' '
-            ? q (Navigate up with 'j' and down with 'k')
+            ? q (Navigate up with 'k' and down with 'j', press Enter to select)
             \e[?25l> 1. yes\e[K
               2. no\e[K
             #{' ' * CLI::UI::Terminal.width}
