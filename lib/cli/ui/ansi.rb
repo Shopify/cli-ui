@@ -106,7 +106,9 @@ module CLI
       # * +n+ - The column to move to
       #
       def self.cursor_horizontal_absolute(n = 1)
-        control(n.to_s, 'G')
+        cmd = control(n.to_s, 'G')
+        cmd += control('1', 'D') if CLI::UI::OS.current.shift_cursor_on_line_reset?
+        cmd
       end
 
       # Show the cursor

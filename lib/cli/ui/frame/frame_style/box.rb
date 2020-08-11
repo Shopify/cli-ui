@@ -148,12 +148,10 @@ module CLI
               # V                 V                    V            V V
               # --- Preamble text --------------------- suffix text --
               o << color.code
-              o << preamble
+              o << print_at_x(preamble_start, HORIZONTAL * (termwidth - preamble_start)) # draw a full line
+              o << print_at_x(preamble_start, preamble)
               o << color.code
-              o << HORIZONTAL * (suffix_start - preamble_end)
-              o << suffix
-              o << HORIZONTAL * (termwidth - suffix_end)
-              o << color.code
+              o << print_at_x(suffix_start, suffix)
               o << CLI::UI::Color::RESET.code
               o << CLI::UI::ANSI.show_cursor
               o << "\n"
