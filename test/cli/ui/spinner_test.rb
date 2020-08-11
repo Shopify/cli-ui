@@ -68,77 +68,6 @@ module CLI
         )
       end
 
-      def test_spinner_without_emojis
-        with_os_mock_test do
-          out, err = capture_io do
-            CLI::UI::StdoutRouter.ensure_activated
-            CLI::UI::Spinner.spin('sleeping') do
-              sleep CLI::UI::Spinner::PERIOD * 2.5
-            end
-          end
-
-          assert_equal('', err)
-          match_lines(
-            out,
-            /\\ sleeping/,
-            /\|/,
-            /\//,
-            /√/
-          )
-        end
-      end
-
-      def test_async_without_emojis
-        with_os_mock_test do
-          out, err = capture_io do
-            CLI::UI::StdoutRouter.ensure_activated
-            spinner = CLI::UI::Spinner::Async.start('sleeping')
-            sleep CLI::UI::Spinner::PERIOD * 2.5
-            spinner.stop
-          end
-
-          assert_equal('', err)
-          match_lines(
-            out,
-            /\\ sleeping/,
-            /\|/,
-            /\//,
-            /√/
-          )
-        end
-      end
-
-      def test_updating_title_without_emojis
-        with_os_mock_test do
-          out, err = capture_io do
-            CLI::UI::StdoutRouter.ensure_activated
-            CLI::UI::Spinner.spin('私') do |task|
-              assert task
-              assert_respond_to task, :update_title
-              sleep CLI::UI::Spinner::PERIOD * 2.5
-              task.update_title('今日')
-              sleep CLI::UI::Spinner::PERIOD * 2.5
-              task.update_title('疲れたんだ')
-              sleep CLI::UI::Spinner::PERIOD * 2.5
-            end
-          end
-
-          assert_empty(err)
-          match_lines(
-            out,
-            /\\ 私/,
-            /\|/,
-            /\//,
-            /- 今日/,
-            /\\/,
-            /\| 疲れたんだ/,
-            /\//,
-            /-/,
-            /√/,
-          )
-        end
-      end
-
       def test_spinner_task_error_through_raising_exception
         out, err = capture_io do
           CLI::UI::StdoutRouter.ensure_activated
@@ -193,22 +122,6 @@ module CLI
       end
 
       private
-
-      def with_os_mock_test
-        classes = [:Spinner, :Glyph]
-
-        root_path = File.join(File.dirname(__FILE__), '../../../lib/cli/ui')
-        files = [
-          File.join(root_path, 'spinner.rb'),
-          File.join(root_path, 'glyph.rb'),
-        ]
-
-        Dir.glob(File.join(root_path, 'spinner', '*')).each do |file|
-          files << file
-        end
-
-        with_os_mock_and_reload(CLI::UI::OS::Windows, classes, files) { yield }
-      end
 
       def printable(str)
         str.gsub(/\x1b\[[\d;]+\w/, '')

@@ -273,7 +273,6 @@ module CLI
             case char
             when ESC        ; @state = :esc
             when "\r", "\n" ; select_current
-            when "\b"       ; update_search(BACKSPACE) # Happens on Windows
             else            ; update_search(char)
             end
           when :line_select
