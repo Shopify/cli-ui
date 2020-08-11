@@ -32,6 +32,7 @@ module CLI
 
         class InvalidFrameStyleName < ArgumentError
           def initialize(name)
+            super
             @name = name
           end
 

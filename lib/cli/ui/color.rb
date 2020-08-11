@@ -48,6 +48,7 @@ module CLI
 
       class InvalidColorName < ArgumentError
         def initialize(name)
+          super
           @name = name
         end
 
