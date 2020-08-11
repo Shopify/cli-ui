@@ -10,11 +10,11 @@ module CLI
       PERIOD = 0.1 # seconds
       TASK_FAILED = :task_failed
 
-      RUNES = CLI::UI::OS.current.supports_emoji? ? %w(⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏).freeze : %w(\\ | / - \\ | / -).freeze
+      RUNES = %w(⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏).freeze
 
       begin
-        colors = [CLI::UI::Color::CYAN.code] * (RUNES.size / 2).ceil +
-          [CLI::UI::Color::MAGENTA.code] * (RUNES.size / 2).to_i
+        colors = [CLI::UI::Color::CYAN.code] * 5 + [CLI::UI::Color::MAGENTA.code] * 5
+        raise unless RUNES.size == colors.size
         GLYPHS = colors.zip(RUNES).map(&:join)
       end
 

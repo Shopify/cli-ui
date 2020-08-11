@@ -138,22 +138,11 @@ module CLI
               # reset to column 1 so that things like ^C don't ruin formatting
               o << "\r"
 
-              # This code will print out a full line with the given preamble and
-              # suffix, as exemplified below.
-              #
-              # preamble_start                         suffix_start
-              # |                 preamble_end         |            suffix_end
-              # |                 |                    |            | termwidth
-              # |                 |                    |            | |
-              # V                 V                    V            V V
-              # --- Preamble text --------------------- suffix text --
               o << color.code
-              o << preamble
+              o << print_at_x(preamble_start, HORIZONTAL * (termwidth - preamble_start)) # draw a full line
+              o << print_at_x(preamble_start, preamble)
               o << color.code
-              o << HORIZONTAL * (suffix_start - preamble_end)
-              o << suffix
-              o << HORIZONTAL * (termwidth - suffix_end)
-              o << color.code
+              o << print_at_x(suffix_start, suffix)
               o << CLI::UI::Color::RESET.code
               o << CLI::UI::ANSI.show_cursor
               o << "\n"
