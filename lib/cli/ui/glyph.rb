@@ -5,6 +5,7 @@ module CLI
     class Glyph
       class InvalidGlyphHandle < ArgumentError
         def initialize(handle)
+          super
           @handle = handle
         end
 

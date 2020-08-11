@@ -49,6 +49,7 @@ module CLI
 
       class InvalidWidgetHandle < ArgumentError
         def initialize(handle)
+          super
           @handle = handle
         end
 
@@ -61,6 +62,7 @@ module CLI
 
       class InvalidWidgetArguments < ArgumentError
         def initialize(argstring, pattern)
+          super
           @argstring = argstring
           @pattern   = pattern
         end
