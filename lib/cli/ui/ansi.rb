@@ -136,13 +136,17 @@ module CLI
       # Move to the next line
       #
       def self.next_line
-        cursor_down + control('1', 'G')
+        cmd = cursor_down + control('1', 'G')
+        cmd += control('1', 'D') if CLI::UI::OS.current.shift_cursor_on_line_reset?
+        cmd
       end
 
       # Move to the previous line
       #
       def self.previous_line
-        cursor_up + control('1', 'G')
+        cmd = cursor_up + control('1', 'G')
+        cmd += control('1', 'D') if CLI::UI::OS.current.shift_cursor_on_line_reset?
+        cmd
       end
 
       def self.clear_to_end_of_line
