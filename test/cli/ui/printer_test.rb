@@ -25,6 +25,23 @@ module CLI
         end
       end
 
+      def test_frame_with_long_texts
+        overlong_preamble = 'This is a long preamble! '
+        overlong_preamble *= (CLI::UI::Terminal.width / overlong_preamble.length).floor + 1
+
+        overlong_suffix = 'This overlaps the suffix! '
+        overlong_suffix *= (CLI::UI::Terminal.width / overlong_suffix.length).floor + 1
+
+        Frame.open(overlong_preamble, success_text: overlong_suffix) do
+          out, _ = capture_io do
+            CLI::UI::StdoutRouter.ensure_activated
+            assert(Printer.puts('foo', frame_color: :red))
+          end
+
+          assert_equal("\e[31m┃ \e[0m\e[0mfoo\n", out)
+        end
+      end
+
       def test_puts_stream
         _, err = capture_io do
           assert(Printer.puts('foo', to: $stderr, format: false))

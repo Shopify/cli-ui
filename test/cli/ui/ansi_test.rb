@@ -14,6 +14,19 @@ module CLI
         assert_equal(3, ANSI.printing_width(">🔧<"))
         assert_equal(1, ANSI.printing_width("👩‍💻"))
       end
+
+      def test_line_skip_with_shift
+        next_line_expected = "\e[1B\e[1G"
+        previous_line_expected = "\e[1A\e[1G"
+
+        assert_equal(next_line_expected, ANSI.next_line)
+        assert_equal(previous_line_expected, ANSI.previous_line)
+
+        CLI::UI::OS.stubs(:current).returns(CLI::UI::OS::Windows)
+
+        assert_equal("#{next_line_expected}\e[1D", ANSI.next_line)
+        assert_equal("#{previous_line_expected}\e[1D", ANSI.previous_line)
+      end
     end
   end
 end

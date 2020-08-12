@@ -190,7 +190,13 @@ module CLI
           end
 
           raise(ArgumentError, 'insufficient options') if options.nil? || options.empty?
-          instructions = (multiple ? "Toggle options. " : "") + "Choose with ↑ ↓ ⏎"
+          navigate_text = if CLI::UI::OS.current.supports_arrow_keys?
+            "Choose with ↑ ↓ ⏎"
+          else
+            "Navigate up with 'k' and down with 'j', press Enter to select"
+          end
+
+          instructions = (multiple ? "Toggle options. " : "") + navigate_text
           instructions += ", filter with 'f'" if filter_ui
           instructions += ", enter option with 'e'" if select_ui && (options.size > 9)
           puts_question("#{question} {{yellow:(#{instructions})}}")
@@ -256,7 +262,10 @@ module CLI
           # thread to manage output, but the current strategy feels like a
           # better tradeoff.
           prefix = CLI::UI.with_frame_color(:blue) { CLI::UI::Frame.prefix }
-          prompt = prefix + CLI::UI.fmt('{{blue:> }}') + CLI::UI::Color::YELLOW.code
+          # If a prompt is interrupted on Windows it locks the colour of the terminal from that point on, so we should
+          # not change the colour here.
+          prompt = prefix + CLI::UI.fmt('{{blue:> }}')
+          prompt += CLI::UI::Color::YELLOW.code if CLI::UI::OS.current.supports_color_prompt?
 
           begin
             line = Readline.readline(prompt, true)
