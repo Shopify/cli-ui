@@ -5,13 +5,12 @@ module CLI
         COLOR_ENVVAR = 'CLI_FRAME_STACK'
         STYLE_ENVVAR = 'CLI_STYLE_STACK'
 
-        StackItem = Struct.new(:color_name, :style_name) do
-          def color
-            @color ||= CLI::UI.resolve_color(color_name)
-          end
+        class StackItem
+          attr_reader :color, :frame_style
 
-          def frame_style
-            @frame_style ||= CLI::UI.resolve_style(style_name)
+          def initialize(color_name, style_name)
+            @color = CLI::UI.resolve_color(color_name)
+            @frame_style = CLI::UI.resolve_style(style_name)
           end
         end
 
@@ -55,7 +54,7 @@ module CLI
               end
             end
 
-            item ||= StackItem.new(color.name, style.name)
+            item ||= StackItem.new(color, style)
 
             curr = items
             curr << item
@@ -85,8 +84,8 @@ module CLI
             styles = []
 
             items.each do |item|
-              colors << item.color_name
-              styles << item.style_name
+              colors << item.color.name
+              styles << item.frame_style.name
             end
 
             ENV[COLOR_ENVVAR] = colors.join(':')

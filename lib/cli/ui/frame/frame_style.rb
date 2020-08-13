@@ -39,7 +39,7 @@ module CLI
           def message
             keys = FrameStyle.loaded_styles.map(&:inspect).join(',')
             "invalid frame style: #{@name.inspect}" \
-              "-- must be one of CLI::UI::Frame::FrameStyle.loaded_styles " \
+              " -- must be one of CLI::UI::Frame::FrameStyle.loaded_styles " \
               "(#{keys})"
           end
         end
