@@ -23,17 +23,17 @@ module CLI
 
       def self.winsize
         @winsize ||= begin
-                       winsize = IO.console.winsize
-                       setup_winsize_trap
+          winsize = IO.console.winsize
+          setup_winsize_trap
 
-                       if winsize.any?(&:zero?)
-                         [DEFAULT_HEIGHT, DEFAULT_WIDTH]
-                       else
-                         winsize
-                       end
-                     rescue
-                       [DEFAULT_HEIGHT, DEFAULT_WIDTH]
-                     end
+          if winsize.any?(&:zero?)
+            [DEFAULT_HEIGHT, DEFAULT_WIDTH]
+          else
+            winsize
+          end
+        rescue
+          [DEFAULT_HEIGHT, DEFAULT_WIDTH]
+        end
       end
 
       def self.setup_winsize_trap
