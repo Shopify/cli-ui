@@ -77,7 +77,7 @@ module CLI
       end
 
       def test_confirm_happy_path
-        _run('y') { assert Prompt.confirm('q') }
+        _run('y') { assert(Prompt.confirm('q')) }
         expected_out = strip_heredoc(<<-EOF) + ' '
           ? q (Choose with ↑ ↓ ⏎)
           \e[?25l> 1. yes\e[K
@@ -198,7 +198,7 @@ module CLI
 
         kwargsets.each do |kwargs|
           error = assert_raises(ArgumentError) { Prompt.ask('q', **kwargs) }
-          assert_equal 'conflicting arguments: options provided with default or is_file', error.message
+          assert_equal('conflicting arguments: options provided with default or is_file', error.message)
         end
 
         error = assert_raises(ArgumentError) do

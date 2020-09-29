@@ -20,7 +20,7 @@ module CLI
       end
 
       def test_tick_with_set_percent_and_percent_raises
-        assert_raises ArgumentError do
+        assert_raises(ArgumentError) do
           bar = Progress.new(width: 10)
           bar.tick(percent: 0.5, set_percent: 0.9)
         end
@@ -36,7 +36,7 @@ module CLI
         out, = capture_io do
           bar = Progress.new(width: 10 + suffix.size) # each 10% is one box with this width
           bar.tick(params)
-          assert_equal expected_bar, bar.to_s
+          assert_equal(expected_bar, bar.to_s)
         end
 
         assert_equal(expected_bar + "\e[1A\e[1G\n", out)

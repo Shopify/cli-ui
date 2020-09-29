@@ -32,3 +32,7 @@ Style/RegexpLiteral:
 # allow readable Dev::Util.begin formatting
 Style/MultilineBlockChain:
   Enabled: false
+
+# we prefer rescue to align with the beginning of the line containing begin, not begin itself
+Layout/RescueEnsureAlignment:
+  Enabled: false
