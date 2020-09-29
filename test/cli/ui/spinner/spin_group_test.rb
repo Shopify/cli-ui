@@ -10,11 +10,11 @@ module CLI
 
             sg = SpinGroup.new
             sg.add('sleeping') do
-              sleep CLI::UI::Spinner::PERIOD * 2.5
+              sleep(CLI::UI::Spinner::PERIOD * 2.5)
               true
             end
 
-            assert sg.wait
+            assert(sg.wait)
           end
 
           assert_equal('', err)
@@ -33,11 +33,11 @@ module CLI
 
             sg = SpinGroup.new(auto_debrief: false)
             sg.add('sleeping') do
-              sleep CLI::UI::Spinner::PERIOD * 2.5
+              sleep(CLI::UI::Spinner::PERIOD * 2.5)
               true
             end
 
-            assert sg.wait
+            assert(sg.wait)
           end
 
           assert_equal('', err)

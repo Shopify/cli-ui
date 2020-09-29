@@ -7,7 +7,7 @@ module CLI
         out, err = capture_io do
           CLI::UI::StdoutRouter.ensure_activated
           CLI::UI::Spinner.spin('sleeping') do
-            sleep CLI::UI::Spinner::PERIOD * 2.5
+            sleep(CLI::UI::Spinner::PERIOD * 2.5)
           end
         end
 
@@ -25,7 +25,7 @@ module CLI
         out, err = capture_io do
           CLI::UI::StdoutRouter.ensure_activated
           spinner = CLI::UI::Spinner::Async.start('sleeping')
-          sleep CLI::UI::Spinner::PERIOD * 2.5
+          sleep(CLI::UI::Spinner::PERIOD * 2.5)
           spinner.stop
         end
 
@@ -43,13 +43,13 @@ module CLI
         out, err = capture_io do
           CLI::UI::StdoutRouter.ensure_activated
           CLI::UI::Spinner.spin('私') do |task|
-            assert task
-            assert_respond_to task, :update_title
-            sleep CLI::UI::Spinner::PERIOD * 2.5
+            assert(task)
+            assert_respond_to(task, :update_title)
+            sleep(CLI::UI::Spinner::PERIOD * 2.5)
             task.update_title('今日')
-            sleep CLI::UI::Spinner::PERIOD * 2.5
+            sleep(CLI::UI::Spinner::PERIOD * 2.5)
             task.update_title('疲れたんだ')
-            sleep CLI::UI::Spinner::PERIOD * 2.5
+            sleep(CLI::UI::Spinner::PERIOD * 2.5)
           end
         end
 
@@ -73,7 +73,7 @@ module CLI
           out, err = capture_io do
             CLI::UI::StdoutRouter.ensure_activated
             CLI::UI::Spinner.spin('sleeping') do
-              sleep CLI::UI::Spinner::PERIOD * 2.5
+              sleep(CLI::UI::Spinner::PERIOD * 2.5)
             end
           end
 
@@ -93,7 +93,7 @@ module CLI
           out, err = capture_io do
             CLI::UI::StdoutRouter.ensure_activated
             spinner = CLI::UI::Spinner::Async.start('sleeping')
-            sleep CLI::UI::Spinner::PERIOD * 2.5
+            sleep(CLI::UI::Spinner::PERIOD * 2.5)
             spinner.stop
           end
 
@@ -113,13 +113,13 @@ module CLI
           out, err = capture_io do
             CLI::UI::StdoutRouter.ensure_activated
             CLI::UI::Spinner.spin('私') do |task|
-              assert task
-              assert_respond_to task, :update_title
-              sleep CLI::UI::Spinner::PERIOD * 2.5
+              assert(task)
+              assert_respond_to(task, :update_title)
+              sleep(CLI::UI::Spinner::PERIOD * 2.5)
               task.update_title('今日')
-              sleep CLI::UI::Spinner::PERIOD * 2.5
+              sleep(CLI::UI::Spinner::PERIOD * 2.5)
               task.update_title('疲れたんだ')
-              sleep CLI::UI::Spinner::PERIOD * 2.5
+              sleep(CLI::UI::Spinner::PERIOD * 2.5)
             end
           end
 
@@ -143,7 +143,7 @@ module CLI
         out, err = capture_io do
           CLI::UI::StdoutRouter.ensure_activated
           CLI::UI::Spinner.spin('broken') do
-            sleep CLI::UI::Spinner::PERIOD * 0.5
+            sleep(CLI::UI::Spinner::PERIOD * 0.5)
             $stderr.puts 'not empty'
             raise 'some error'
           end
@@ -174,7 +174,7 @@ module CLI
           CLI::UI::StdoutRouter.ensure_activated
           CLI::UI::Spinner.spin('broken') do
             $stderr.puts 'not empty'
-            sleep CLI::UI::Spinner::PERIOD * 0.5
+            sleep(CLI::UI::Spinner::PERIOD * 0.5)
             CLI::UI::Spinner::TASK_FAILED
           end
         end
