@@ -12,11 +12,9 @@ module CLI
 
       RUNES = CLI::UI::OS.current.supports_emoji? ? %w(⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏).freeze : %w(\\ | / - \\ | / -).freeze
 
-      begin
-        colors = [CLI::UI::Color::CYAN.code] * (RUNES.size / 2).ceil +
-          [CLI::UI::Color::MAGENTA.code] * (RUNES.size / 2).to_i
-        GLYPHS = colors.zip(RUNES).map(&:join)
-      end
+      colors = [CLI::UI::Color::CYAN.code] * (RUNES.size / 2).ceil +
+        [CLI::UI::Color::MAGENTA.code] * (RUNES.size / 2).to_i
+      GLYPHS = colors.zip(RUNES).map(&:join)
 
       class << self
         attr_accessor(:index)
