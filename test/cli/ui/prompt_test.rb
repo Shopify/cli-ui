@@ -489,7 +489,7 @@ module CLI
       end
 
       def start_process
-        @pid = fork do
+        test_proc = proc do
           @ret = File.open(@ret_file, 'w')
           @ret.sync = true
           @in_w.close
@@ -502,15 +502,32 @@ module CLI
           yield
           @ret.close
         end
+
+        @pid = case RUBY_ENGINE
+        when /jruby/
+          Thread.new(&test_proc)
+        else
+          fork(&test_proc)
+        end
         @in_r.close
       end
 
       def kill_process
-        Process.kill('INT', @pid)
+        if @pid.is_a?(Thread)
+          @pid.kill
+        else
+          Process.kill('INT', @pid)
+        end
       end
 
       def assert_result(out, err, ret)
-        Timeout.timeout(0.25) { Process.wait(@pid) }
+        Timeout.timeout(0.25) do
+          if @pid.is_a?(Thread)
+            @pid.join
+          else
+            Process.wait(@pid)
+          end
+        end
 
         actual_out = CLI::UI::ANSI.strip_codes(File.read(@out_file))
         actual_err = CLI::UI::ANSI.strip_codes(File.read(@err_file))
