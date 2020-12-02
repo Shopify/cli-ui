@@ -18,6 +18,7 @@ module CLI
       # * +:encoding+ - Force the output to be in a certain encoding. Defaults to UTF-8.
       # * +:format+ - Whether to format the string using CLI::UI.fmt. Defaults to true.
       # * +:graceful+ - Whether to gracefully ignore common I/O errors. Defaults to true.
+      # * +:wrap+ - Whether to wrap text at word boundaries to terminal width. Defaults to true.
       #
       # ==== Returns
       # Returns whether the message was successfully printed,
@@ -27,9 +28,20 @@ module CLI
       #
       #   CLI::UI::Printer.puts('{{x}} Ouch', to: $stderr)
       #
-      def self.puts(msg, frame_color: nil, to: $stdout, encoding: Encoding::UTF_8, format: true, graceful: true)
+      def self.puts(
+        msg,
+        frame_color:
+        nil,
+        to:
+        $stdout,
+        encoding: Encoding::UTF_8,
+        format: true,
+        graceful: true,
+        wrap: true
+      )
         msg = (+msg).force_encoding(encoding) if encoding
         msg = CLI::UI.fmt(msg) if format
+        msg = CLI::UI.wrap(msg) if wrap
 
         if frame_color
           CLI::UI::Frame.with_frame_color_override(frame_color) { to.puts(msg) }
