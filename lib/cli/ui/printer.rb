@@ -25,7 +25,7 @@ module CLI
       #
       # ==== Example
       #
-      #   CLI::UI::Printer.puts('{x} Ouch', stream: $stderr, color: :red)
+      #   CLI::UI::Printer.puts('{{x}} Ouch', to: $stderr)
       #
       def self.puts(msg, frame_color: nil, to: $stdout, encoding: Encoding::UTF_8, format: true, graceful: true)
         msg = (+msg).force_encoding(encoding) if encoding
