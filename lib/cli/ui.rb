@@ -1,18 +1,19 @@
 module CLI
   module UI
-    autoload :ANSI,               'cli/ui/ansi'
-    autoload :Glyph,              'cli/ui/glyph'
-    autoload :Color,              'cli/ui/color'
-    autoload :Frame,              'cli/ui/frame'
-    autoload :OS,                 'cli/ui/os'
-    autoload :Printer,            'cli/ui/printer'
-    autoload :Progress,           'cli/ui/progress'
-    autoload :Prompt,             'cli/ui/prompt'
-    autoload :Terminal,           'cli/ui/terminal'
-    autoload :Truncater,          'cli/ui/truncater'
-    autoload :Formatter,          'cli/ui/formatter'
-    autoload :Spinner,            'cli/ui/spinner'
-    autoload :Widgets,            'cli/ui/widgets'
+    autoload :ANSI,      'cli/ui/ansi'
+    autoload :Glyph,     'cli/ui/glyph'
+    autoload :Color,     'cli/ui/color'
+    autoload :Frame,     'cli/ui/frame'
+    autoload :OS,        'cli/ui/os'
+    autoload :Printer,   'cli/ui/printer'
+    autoload :Progress,  'cli/ui/progress'
+    autoload :Prompt,    'cli/ui/prompt'
+    autoload :Terminal,  'cli/ui/terminal'
+    autoload :Truncater, 'cli/ui/truncater'
+    autoload :Formatter, 'cli/ui/formatter'
+    autoload :Spinner,   'cli/ui/spinner'
+    autoload :Widgets,   'cli/ui/widgets'
+    autoload :Wrap,      'cli/ui/wrap'
 
     # Convenience accessor to +CLI::UI::Spinner::SpinGroup+
     SpinGroup = Spinner::SpinGroup
@@ -111,6 +112,10 @@ module CLI
     #
     def self.fmt(input, enable_color: enable_color?)
       CLI::UI::Formatter.new(input).format(enable_color: enable_color)
+    end
+
+    def self.wrap(input)
+      CLI::UI::Wrap.new(input).wrap
     end
 
     # Convenience Method for +CLI::UI::Printer.puts+

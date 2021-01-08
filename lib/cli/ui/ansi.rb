@@ -21,6 +21,8 @@ module CLI
           when 0x200d # zero-width joiner
             zwj = true
             acc
+          when "\n"
+            acc
           else
             acc + 1
           end
