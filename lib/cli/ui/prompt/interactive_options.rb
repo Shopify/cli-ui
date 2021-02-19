@@ -334,20 +334,13 @@ module CLI
         end
 
         def read_char
-          raw_tty! do
-            getc = $stdin.getc
-            getc ? getc.chr : :timeout
+          if $stdin.tty? && !ENV['TEST']
+            $stdin.getch # raw mode for tty
+          else
+            $stdin.getc
           end
         rescue IOError
           "\e"
-        end
-
-        def raw_tty!
-          if ENV['TEST'] || !$stdin.tty?
-            yield
-          else
-            $stdin.raw { yield }
-          end
         end
 
         def presented_options(recalculate: false)
