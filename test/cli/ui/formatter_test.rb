@@ -4,46 +4,46 @@ module CLI
   module UI
     class FormatterTest < MiniTest::Test
       def test_format
-        input = "a{{blue:b {{*}}{{bold:c {{red:d}}}}{{bold: e}}}} f"
+        input = 'a{{blue:b {{*}}{{bold:c {{red:d}}}}{{bold: e}}}} f'
         expected = "\e[0ma\e[0;94mb \e[0;33m⭑\e[0;94;1mc \e[0;94;1;31md\e[0;94;1m e\e[0m f"
         actual = CLI::UI::Formatter.new(input).format
         assert_equal(expected, actual)
       end
 
       def test_format_widget
-        input = "a{{@widget/status:0:0:0:0}}b"
+        input = 'a{{@widget/status:0:0:0:0}}b'
         expected = "a\e[0m\e[1m∅\e[0mb"
         actual = CLI::UI::Formatter.new(input).format(enable_color: false)
         assert_equal(expected, actual)
       end
 
       def test_format_no_color
-        input = "a{{blue:b {{*}}{{bold:c {{red:d}}}}{{bold: e}}}} f {{bold:"
-        expected = "ab ⭑c d e f "
+        input = 'a{{blue:b {{*}}{{bold:c {{red:d}}}}{{bold: e}}}} f {{bold:'
+        expected = 'ab ⭑c d e f '
         actual = CLI::UI::Formatter.new(input).format(enable_color: false)
         assert_equal(expected, actual)
       end
 
       def test_format_trailing
-        input = "a{{bold:a {{blue:"
+        input = 'a{{bold:a {{blue:'
         expected = "\e[0ma\e[0;1ma \e[0;1;94m"
         actual = CLI::UI::Formatter.new(input).format
         assert_equal(expected, actual)
       end
 
       def test_invalid_funcname
-        input = "{{nope:text}}"
+        input = '{{nope:text}}'
         ex = assert_raises(CLI::UI::Formatter::FormatError) do
           CLI::UI::Formatter.new(input).format
         end
-        expected = "invalid format specifier: nope"
+        expected = 'invalid format specifier: nope'
         assert_equal(input, ex.input)
         assert_equal(-1, ex.index)
         assert_equal(expected, ex.message)
       end
 
       def test_invalid_glyph
-        input = "{{&}}"
+        input = '{{&}}'
         ex = assert_raises(CLI::UI::Formatter::FormatError) do
           CLI::UI::Formatter.new(input).format
         end
@@ -54,21 +54,21 @@ module CLI
       end
 
       def test_mixed_non_syntax
-        input = "{{bold:{{foo {{green:bar}} }}}}"
+        input = '{{bold:{{foo {{green:bar}} }}}}'
         expected = "\e[0;1m{{foo \e[0;1;32mbar\e[0;1m }}\e[0m"
         actual = CLI::UI::Formatter.new(input).format
         assert_equal(expected, actual)
       end
 
       def test_incomplete_non_syntax
-        input = "{{foo"
+        input = '{{foo'
         expected = "\e[0m{{foo"
         actual = CLI::UI::Formatter.new(input).format
         assert_equal(expected, actual)
       end
 
       def test_reset_after_glyph
-        input = "{{*}} foobar"
+        input = '{{*}} foobar'
         expected = "\e[0;33m⭑\e[0m foobar"
 
         actual = CLI::UI::Formatter.new(input).format

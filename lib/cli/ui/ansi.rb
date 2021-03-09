@@ -47,7 +47,7 @@ module CLI
       # - +cmd+ - ANSI control sequence Command
       #
       def self.control(args, cmd)
-        ESC + "[" + args + cmd
+        ESC + '[' + args + cmd
       end
 
       # https://en.wikipedia.org/wiki/ANSI_escape_code#graphics
@@ -116,13 +116,13 @@ module CLI
       # Show the cursor
       #
       def self.show_cursor
-        control('', "?25h")
+        control('', '?25h')
       end
 
       # Hide the cursor
       #
       def self.hide_cursor
-        control('', "?25l")
+        control('', '?25l')
       end
 
       # Save the cursor position

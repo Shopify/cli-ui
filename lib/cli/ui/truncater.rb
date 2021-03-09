@@ -83,7 +83,7 @@ module CLI
           # the end of the string.
           return text if !truncation_index || width <= printing_width
 
-          codepoints[0...truncation_index].pack("U*") + TRUNCATED
+          codepoints[0...truncation_index].pack('U*') + TRUNCATED
         end
 
         private

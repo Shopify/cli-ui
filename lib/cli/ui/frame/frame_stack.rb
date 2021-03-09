@@ -46,11 +46,11 @@ module CLI
           def push(item = nil, color: nil, style: nil)
             unless item.nil?
               unless item.is_a?(StackItem)
-                raise ArgumentError, "item must be a StackItem"
+                raise ArgumentError, 'item must be a StackItem'
               end
 
               unless color.nil? && style.nil?
-                raise ArgumentError, "Must give one of item or color: and style:"
+                raise ArgumentError, 'Must give one of item or color: and style:'
               end
             end
 

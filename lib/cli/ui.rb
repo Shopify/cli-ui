@@ -170,7 +170,7 @@ module CLI
     #
     def self.log_output_to(path)
       if CLI::UI::StdoutRouter.duplicate_output_to
-        raise "multiple logs not allowed"
+        raise 'multiple logs not allowed'
       end
       CLI::UI::StdoutRouter.duplicate_output_to = File.open(path, 'w')
       yield

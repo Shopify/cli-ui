@@ -10,14 +10,14 @@ module CLI
       MAN_COOKING = MAN + ZWJ + COOKING # width=2
 
       def test_truncate
-        assert_example(3, "foobar", "fo\x1b[0m…")
-        assert_example(5, "foobar", "foob\x1b[0m…")
-        assert_example(6, "foobar", "foobar")
+        assert_example(3, 'foobar', "fo\x1b[0m…")
+        assert_example(5, 'foobar', "foob\x1b[0m…")
+        assert_example(6, 'foobar', 'foobar')
         assert_example(6, "foo\x1b[31mbar\x1b[0m", "foo\x1b[31mbar\x1b[0m")
         assert_example(6, "\x1b[31mfoobar", "\x1b[31mfoobar")
         assert_example(3, MAN_COOKING * 2, MAN_COOKING + Truncater::TRUNCATED)
-        assert_example(3, "A" + MAN_COOKING, "A" + MAN_COOKING)
-        assert_example(3, "AB" + MAN_COOKING, "AB" + Truncater::TRUNCATED)
+        assert_example(3, 'A' + MAN_COOKING, 'A' + MAN_COOKING)
+        assert_example(3, 'AB' + MAN_COOKING, 'AB' + Truncater::TRUNCATED)
       end
 
       private

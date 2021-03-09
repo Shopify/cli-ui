@@ -191,12 +191,12 @@ module CLI
 
           raise(ArgumentError, 'insufficient options') if options.nil? || options.empty?
           navigate_text = if CLI::UI::OS.current.supports_arrow_keys?
-            "Choose with ↑ ↓ ⏎"
+            'Choose with ↑ ↓ ⏎'
           else
             "Navigate up with 'k' and down with 'j', press Enter to select"
           end
 
-          instructions = (multiple ? "Toggle options. " : "") + navigate_text
+          instructions = (multiple ? 'Toggle options. ' : '') + navigate_text
           instructions += ", filter with 'f'" if filter_ui
           instructions += ", enter option with 'e'" if select_ui && (options.size > 9)
           puts_question("#{question} {{yellow:(#{instructions})}}")
@@ -212,9 +212,9 @@ module CLI
           if multiple
             resp_text = case resp.size
             when 0
-              "<nothing>"
+              '<nothing>'
             when 1..2
-              resp.join(" and ")
+              resp.join(' and ')
             else
               "#{resp.size} items"
             end
@@ -251,10 +251,10 @@ module CLI
         def readline(is_file: false)
           if is_file
             Readline.completion_proc = Readline::FILENAME_COMPLETION_PROC
-            Readline.completion_append_character = ""
+            Readline.completion_append_character = ''
           else
             Readline.completion_proc = proc { |*| nil }
-            Readline.completion_append_character = " "
+            Readline.completion_append_character = ' '
           end
 
           # because Readline is a C library, CLI::UI's hooks into $stdout don't
