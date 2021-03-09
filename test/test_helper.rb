@@ -2,7 +2,7 @@ addpath = lambda do |p|
   path = File.expand_path("../../#{p}", __FILE__)
   $LOAD_PATH.unshift(path) unless $LOAD_PATH.include?(path)
 end
-addpath.call("lib")
+addpath.call('lib')
 
 require 'cli/ui'
 

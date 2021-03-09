@@ -246,11 +246,11 @@ module CLI
                 end
 
                 CLI::UI::Frame.divider('STDOUT')
-                out = "(empty)" if out.nil? || out.strip.empty?
+                out = '(empty)' if out.nil? || out.strip.empty?
                 puts out
 
                 CLI::UI::Frame.divider('STDERR')
-                err = "(empty)" if err.nil? || err.strip.empty?
+                err = '(empty)' if err.nil? || err.strip.empty?
                 puts err
               end
             end

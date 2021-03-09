@@ -5,8 +5,8 @@ module CLI
   module UI
     module Prompt
       class InteractiveOptions
-        DONE = "Done"
-        CHECKBOX_ICON = { false => "☐", true => "☑" }
+        DONE = 'Done'
+        CHECKBOX_ICON = { false => '☐', true => '☑' }
 
         # Prompts the user with options
         # Uses an interactive session to allow the user to pick an answer
@@ -267,7 +267,7 @@ module CLI
             when 'f', '/'         ; start_filter
             when ('0'..max_digit) ; select_n(char.to_i)
             when 'y', 'n'         ; select_bool(char)
-            when " ", "\r", "\n"  ; select_current # <enter>
+            when ' ', "\r", "\n"  ; select_current # <enter>
             end
           when :filter
             case char
@@ -404,11 +404,11 @@ module CLI
         end
 
         def ensure_last_item_is_continuation_marker
-          @presented_options.push(["...", nil]) if @presented_options.last.last
+          @presented_options.push(['...', nil]) if @presented_options.last.last
         end
 
         def ensure_first_item_is_continuation_marker
-          @presented_options.unshift(["...", nil]) if @presented_options.first.last
+          @presented_options.unshift(['...', nil]) if @presented_options.first.last
         end
 
         def max_lines
@@ -446,9 +446,9 @@ module CLI
             is_chosen = @multiple && num && @chosen[num - 1] && num != 0
 
             padding = ' ' * (max_num_length - num.to_s.length)
-            message = "  #{num}#{num ? '.' : ' '}#{padding}"
+            message = "  #{num}#{num ? "." : " "}#{padding}"
 
-            format = "%s"
+            format = '%s'
             # If multiple, bold only selected. If not multiple, bold everything
             format = "{{bold:#{format}}}" if !@multiple || is_chosen
             format = "{{cyan:#{format}}}" if @multiple && is_chosen && num != @active

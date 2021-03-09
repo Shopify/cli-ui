@@ -7,7 +7,7 @@ module CLI
         out, _ = capture_io do
           StdoutRouter.with_enabled do
             StdoutRouter.with_id(on_streams: [$stdout]) do
-              $stdout.puts "hello"
+              $stdout.puts 'hello'
             end
           end
         end
@@ -17,7 +17,7 @@ module CLI
       def test_with_id_with_argument_errors
         assert_raises(ArgumentError) do
           StdoutRouter.with_id(on_streams: ['a']) do
-            $stdout.puts "hello"
+            $stdout.puts 'hello'
           end
         end
       end

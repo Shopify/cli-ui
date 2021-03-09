@@ -1,5 +1,5 @@
 # NOTE: These are development-only dependencies
-source "https://rubygems.org"
+source 'https://rubygems.org'
 
 gemspec
 

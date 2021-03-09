@@ -80,11 +80,11 @@ module CLI
 
           unless block_given?
             if failure_text
-              raise ArgumentError, "failure_text is not compatible with blockless invocation"
+              raise ArgumentError, 'failure_text is not compatible with blockless invocation'
             elsif success_text
-              raise ArgumentError, "success_text is not compatible with blockless invocation"
+              raise ArgumentError, 'success_text is not compatible with blockless invocation'
             elsif timing
-              raise ArgumentError, "timing is not compatible with blockless invocation"
+              raise ArgumentError, 'timing is not compatible with blockless invocation'
             end
           end
 
@@ -147,7 +147,7 @@ module CLI
         #
         def divider(text, color: nil, frame_style: nil)
           fs_item = FrameStack.pop
-          raise UnnestedFrameException, "No frame nesting to unnest" unless fs_item
+          raise UnnestedFrameException, 'No frame nesting to unnest' unless fs_item
 
           color = CLI::UI.resolve_color(color) || fs_item.color
           frame_style = CLI::UI.resolve_style(frame_style) || fs_item.frame_style
@@ -186,7 +186,7 @@ module CLI
         #
         def close(text, color: nil, elapsed: nil, frame_style: nil)
           fs_item = FrameStack.pop
-          raise UnnestedFrameException, "No frame nesting to unnest" unless fs_item
+          raise UnnestedFrameException, 'No frame nesting to unnest' unless fs_item
 
           color = CLI::UI.resolve_color(color) || fs_item.color
           frame_style = CLI::UI.resolve_style(frame_style) || fs_item.frame_style

@@ -161,7 +161,7 @@ module CLI
           end
 
           require 'securerandom'
-          id = format("%05d", rand(10**5))
+          id = format('%05d', rand(10**5))
           Thread.current[:cliui_output_id] = {
             id: id,
             streams: on_streams,

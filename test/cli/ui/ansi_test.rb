@@ -9,10 +9,10 @@ module CLI
 
       def test_printing_width
         assert_equal(4, ANSI.printing_width("\x1b[38;2;100;100;100mtest\x1b[0m"))
-        assert_equal(0, ANSI.printing_width(""))
+        assert_equal(0, ANSI.printing_width(''))
 
-        assert_equal(3, ANSI.printing_width(">🔧<"))
-        assert_equal(1, ANSI.printing_width("👩‍💻"))
+        assert_equal(3, ANSI.printing_width('>🔧<'))
+        assert_equal(1, ANSI.printing_width('👩‍💻'))
       end
 
       def test_line_skip_with_shift
