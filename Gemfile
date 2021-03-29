@@ -5,6 +5,7 @@ gemspec
 
 group :development, :test do
   gem 'rubocop'
+  gem 'rubocop-shopify'
   gem 'byebug'
   gem 'method_source'
 end
