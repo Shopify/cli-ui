@@ -42,6 +42,7 @@ GEM
     unicode-display_width (2.0.0)
 
 PLATFORMS
+  java
   ruby
 
 DEPENDENCIES
