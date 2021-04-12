@@ -32,7 +32,7 @@ module CLI
         end
 
         sleep(0.05)
-        Process.kill('INT', @pid)
+        kill_process
 
         expected_out = strip_heredoc(<<-EOF) + ' '
           ? q (Choose with ↑ ↓ ⏎)
@@ -52,7 +52,7 @@ module CLI
         end
 
         sleep(0.05)
-        Process.kill('INT', @pid)
+        kill_process
 
         assert_result("? q\n> ", "^C\n", :SIGINT)
       end
@@ -65,7 +65,7 @@ module CLI
         end
 
         sleep(0.05)
-        Process.kill('INT', @pid)
+        kill_process
 
         expected_out = strip_heredoc(<<-EOF) + ' '
           ? q (Choose with ↑ ↓ ⏎, filter with 'f')
@@ -503,6 +503,10 @@ module CLI
           @ret.close
         end
         @in_r.close
+      end
+
+      def kill_process
+        Process.kill('INT', @pid)
       end
 
       def assert_result(out, err, ret)
