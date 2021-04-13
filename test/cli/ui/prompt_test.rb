@@ -20,7 +20,8 @@ module CLI
         wait_for_output_to_include('question')
         kill_process
 
-        assert_output_includes('sentinel')
+        # in JRuby, SIGINT shuts down the JVM instead of raising Interrupt.
+        assert_output_includes('sentinel', refute: RUBY_ENGINE =~ /jruby/)
       end
 
       # ^C is not handled; raises Interrupt, which may be handled by caller.
@@ -36,7 +37,8 @@ module CLI
         wait_for_output_to_include('question')
         kill_process
 
-        assert_output_includes('sentinel')
+        # in JRuby, SIGINT shuts down the JVM instead of raising Interrupt.
+        assert_output_includes('sentinel', refute: RUBY_ENGINE =~ /jruby/)
       end
 
       # ^C is not handled; raises Interrupt, which may be handled by caller.
@@ -52,7 +54,8 @@ module CLI
         wait_for_output_to_include('question')
         kill_process
 
-        assert_output_includes('sentinel')
+        # in JRuby, SIGINT shuts down the JVM instead of raising Interrupt.
+        assert_output_includes('sentinel', refute: RUBY_ENGINE =~ /jruby/)
       end
 
       def test_confirm_happy_path
@@ -212,9 +215,25 @@ module CLI
       end
 
       def test_ask_interactive_escape
-        run_in_process('puts "--#{CLI::UI::Prompt.ask("q", options: %w(a b))}--"')
+        run_in_process(<<~RUBY)
+          begin
+            puts "--\#{CLI::UI::Prompt.ask("q", options: %w(a b))}--"
+          rescue Interrupt
+            puts 'sentinel'
+            raise
+          end
+        RUBY
+
         write("\e;")
-        assert_error_includes('Interrupt')
+        clean_up do
+          assert_includes(@stdout.read, 'sentinel')
+
+          if RUBY_ENGINE =~ /jruby/
+            refute_includes(@stderr.read, 'Interrupt')
+          else
+            assert_includes(@stderr.read, 'Interrupt')
+          end
+        end
       end
 
       def test_ask_interactive_invalid_input
@@ -315,9 +334,13 @@ module CLI
         @stdout.close
       end
 
-      def assert_output_includes(text)
+      def assert_output_includes(text, refute: false)
         clean_up do
-          assert_includes(@stdout.read, text)
+          if !refute
+            assert_includes(@stdout.read, text)
+          else
+            refute_includes(@stdout.read, text)
+          end
         end
       end
 
