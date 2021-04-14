@@ -2,6 +2,21 @@
 require 'cli/ui'
 require 'readline'
 
+module Readline
+  unless const_defined?(:FILENAME_COMPLETION_PROC)
+    FILENAME_COMPLETION_PROC = proc do |input|
+      directory = input[-1] == '/' ? input : File.dirname(input)
+      filename = input[-1] == '/' ? '' : File.basename(input)
+
+      (Dir.entries(directory).select do |fp|
+        fp.start_with?(filename)
+      end - (input[-1] == '.' ? [] : ['.', '..'])).map do |fp|
+        File.join(directory, fp).gsub(/\A\.\//, '')
+      end
+    end
+  end
+end
+
 module CLI
   module UI
     module Prompt

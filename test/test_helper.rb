@@ -45,7 +45,9 @@ require 'tempfile'
 require 'rubygems'
 require 'bundler/setup'
 
-require 'byebug'
+if RUBY_ENGINE !~ /jruby/
+  require 'byebug'
+end
 
 require 'minitest/autorun'
 require 'mocha/minitest'
