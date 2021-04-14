@@ -9,6 +9,8 @@ module CLI
     class PromptTest < MiniTest::Test
       # ^C is not handled; raises Interrupt, which may be handled by caller.
       def test_confirm_sigint
+        jruby_skip('SIGINT shuts down the JVM instead of raising Interrupt')
+
         run_in_process(<<~RUBY)
           begin
             CLI::UI::Prompt.confirm('question')
@@ -20,12 +22,13 @@ module CLI
         wait_for_output_to_include('question')
         kill_process
 
-        # in JRuby, SIGINT shuts down the JVM instead of raising Interrupt.
-        assert_output_includes('sentinel', refute: RUBY_ENGINE =~ /jruby/)
+        assert_output_includes('sentinel')
       end
 
       # ^C is not handled; raises Interrupt, which may be handled by caller.
       def test_ask_free_form_sigint
+        jruby_skip('SIGINT shuts down the JVM instead of raising Interrupt')
+
         run_in_process(<<~RUBY)
           begin
             CLI::UI::Prompt.ask('question')
@@ -37,12 +40,13 @@ module CLI
         wait_for_output_to_include('question')
         kill_process
 
-        # in JRuby, SIGINT shuts down the JVM instead of raising Interrupt.
-        assert_output_includes('sentinel', refute: RUBY_ENGINE =~ /jruby/)
+        assert_output_includes('sentinel')
       end
 
       # ^C is not handled; raises Interrupt, which may be handled by caller.
       def test_ask_interactive_sigint
+        jruby_skip('SIGINT shuts down the JVM instead of raising Interrupt')
+
         run_in_process(<<~RUBY)
           begin
             CLI::UI::Prompt.ask('question', options: %w(a b))
@@ -54,8 +58,7 @@ module CLI
         wait_for_output_to_include('question')
         kill_process
 
-        # in JRuby, SIGINT shuts down the JVM instead of raising Interrupt.
-        assert_output_includes('sentinel', refute: RUBY_ENGINE =~ /jruby/)
+        assert_output_includes('sentinel')
       end
 
       def test_confirm_happy_path
@@ -217,23 +220,14 @@ module CLI
       def test_ask_interactive_escape
         run_in_process(<<~RUBY)
           begin
-            puts "--\#{CLI::UI::Prompt.ask("q", options: %w(a b))}--"
-          rescue Interrupt
+            CLI::UI::Prompt.ask("q", options: %w(a b))
+          rescue Interrupt # jruby can rescue this one since we raise it rather than receiving it as a signal
             puts 'sentinel'
-            raise
           end
         RUBY
 
         write("\e;")
-        clean_up do
-          assert_includes(@stdout.read, 'sentinel')
-
-          if RUBY_ENGINE =~ /jruby/
-            refute_includes(@stderr.read, 'Interrupt')
-          else
-            assert_includes(@stderr.read, 'Interrupt')
-          end
-        end
+        assert_output_includes('sentinel')
       end
 
       def test_ask_interactive_invalid_input
@@ -334,13 +328,9 @@ module CLI
         @stdout.close
       end
 
-      def assert_output_includes(text, refute: false)
+      def assert_output_includes(text)
         clean_up do
-          if !refute
-            assert_includes(@stdout.read, text)
-          else
-            refute_includes(@stdout.read, text)
-          end
+          assert_includes(@stdout.read, text)
         end
       end
 
@@ -348,6 +338,10 @@ module CLI
         clean_up do
           assert_includes(@stderr.read, text)
         end
+      end
+
+      def jruby_skip(message)
+        skip(message) if RUBY_ENGINE.include?('jruby')
       end
     end
   end
