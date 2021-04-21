@@ -35,7 +35,7 @@ module CLI
 
         out, = capture_io do
           bar = Progress.new(width: 10 + suffix.size) # each 10% is one box with this width
-          bar.tick(params)
+          bar.tick(**params)
           assert_equal(expected_bar, bar.to_s)
         end
 
