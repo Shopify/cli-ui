@@ -201,7 +201,7 @@ module CLI
         end
 
         def select_bool(char)
-          return unless (@options - %w(yes no)).empty?
+          return unless (@options - ['yes', 'no']).empty?
           opt = @options.detect { |o| o.start_with?(char) }
           @active = @options.index(opt) + 1
           @answer = @options.index(opt) + 1

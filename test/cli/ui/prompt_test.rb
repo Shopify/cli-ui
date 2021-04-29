@@ -177,19 +177,19 @@ module CLI
 
       def test_ask_interactive_conflicting_arguments
         error = assert_raises(ArgumentError) do
-          Prompt.ask('q', options: %w(a b)) { |h| h.option('a') }
+          Prompt.ask('q', options: ['a', 'b']) { |h| h.option('a') }
         end
         assert_equal('conflicting arguments: options and block given', error.message)
 
         error = assert_raises(ArgumentError) do
-          Prompt.ask('q', options: %w(a b), multiple: true, default: %w(b c)) { |h| h.option('a') }
+          Prompt.ask('q', options: ['a', 'b'], multiple: true, default: ['b', 'c']) { |h| h.option('a') }
         end
         assert_equal('conflicting arguments: default should only include elements present in options', error.message)
       end
 
       def test_ask_interactive_insufficient_options
         exception = assert_raises(ArgumentError) do
-          Prompt.ask('q', options: %w())
+          Prompt.ask('q', options: [])
         end
         assert_equal('insufficient options', exception.message)
 
