@@ -1,0 +1,18 @@
+version: 2
+registries:
+  rubygems-server-pkgs-shopify-io:
+    type: rubygems-server
+    url: https://pkgs.shopify.io
+    username: "${{secrets.RUBYGEMS_SERVER_PKGS_SHOPIFY_IO_USERNAME}}"
+    password: "${{secrets.RUBYGEMS_SERVER_PKGS_SHOPIFY_IO_PASSWORD}}"
+
+updates:
+- package-ecosystem: bundler
+  directory: "/"
+  schedule:
+    interval: weekly
+    time: "10:00"
+    timezone: America/Toronto
+  open-pull-requests-limit: 99
+  registries:
+  - rubygems-server-pkgs-shopify-io
