@@ -36,8 +36,8 @@ GEM
       unicode-display_width (>= 1.4.0, < 3.0)
     rubocop-ast (1.4.1)
       parser (>= 2.7.1.5)
-    rubocop-shopify (2.0.1)
-      rubocop (~> 1.11)
+    rubocop-shopify (2.1.0)
+      rubocop (~> 1.13)
     ruby-progressbar (1.11.0)
     unicode-display_width (2.0.0)
 
