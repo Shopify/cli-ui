@@ -164,7 +164,7 @@ module CLI
         #   CLI::UI::Prompt.confirm('Do a dangerous thing?', default: false)
         #
         def confirm(question, default: true)
-          ask_interactive(question, default ? %w(yes no) : %w(no yes), filter_ui: false) == 'yes'
+          ask_interactive(question, default ? ['yes', 'no'] : ['no', 'yes'], filter_ui: false) == 'yes'
         end
 
         private
