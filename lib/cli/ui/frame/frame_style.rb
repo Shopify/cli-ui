@@ -47,6 +47,10 @@ module CLI
         # Public interface for FrameStyles
         # Applied by extending FrameStyle
         module Interface
+          # Because these are interface methods, we want to be explicit about their signatures,
+          # even if we don't use the arguments.
+          # rubocop:disable Lint/UnusedMethodArgument
+
           def name
             raise NotImplementedError
           end
@@ -110,6 +114,8 @@ module CLI
           def print_at_x(x, str)
             CLI::UI::ANSI.cursor_horizontal_absolute(1 + x) + str
           end
+
+          # rubocop:enable Lint/UnusedMethodArgument
         end
       end
     end
