@@ -52,13 +52,13 @@ module CLI
           # rubocop:disable Lint/UnusedMethodArgument
 
           def name
-            raise NotImplementedError
+            raise NotImplementedError, "#{self.class.name} must implement #{__method__}"
           end
 
           # Returns the character(s) that should be printed at the beginning
           # of lines inside this frame
           def prefix
-            raise NotImplementedError
+            raise NotImplementedError, "#{self.class.name} must implement #{__method__}"
           end
 
           # Returns the printing width of the prefix
@@ -77,7 +77,7 @@ module CLI
           # * +:color+ - (required) The color of the frame.
           #
           def open(text, color:)
-            raise NotImplementedError
+            raise NotImplementedError, "#{self.class.name} must implement #{__method__}"
           end
 
           # Draws the "Close" line for this frame style
@@ -92,7 +92,7 @@ module CLI
           # * +:right_text+ - Text to print at the right of the line. Defaults to nil
           #
           def close(text, color:, right_text: nil)
-            raise NotImplementedError
+            raise NotImplementedError, "#{self.class.name} must implement #{__method__}"
           end
 
           # Draws a "divider" line for the current frame style
@@ -106,7 +106,7 @@ module CLI
           # * +:color+ - (required) The color of the frame.
           #
           def divider(text, color: nil)
-            raise NotImplementedError
+            raise NotImplementedError, "#{self.class.name} must implement #{__method__}"
           end
 
           private
