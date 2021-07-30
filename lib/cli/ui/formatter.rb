@@ -11,7 +11,7 @@ module CLI
       # and semantic (error, info, command) formatters available
       #
       # TODO: deprecate SGR_MAP since Color::MAP has all the relevant values
-      SGR_MAP = Color::MAP.map{|key,value| [key.to_s, value.sgr] }.to_h.freeze
+      SGR_MAP = Color::MAP.map { |key, value| [key.to_s, value.sgr] }.to_h.freeze
 
       BEGIN_EXPR = '{{'
       END_EXPR   = '}}'

@@ -62,7 +62,7 @@ module CLI
         success: GREEN,
         warning: YELLOW,
         info: BLUE,
-        command: CYAN
+        command: CYAN,
       }.freeze
 
       class InvalidColorName < ArgumentError
