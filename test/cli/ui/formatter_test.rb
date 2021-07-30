@@ -32,14 +32,18 @@ module CLI
       end
 
       def test_invalid_funcname
+        old_env = ENV['TEST']
+        ENV.delete('TEST') if old_env
         input = '{{nope:text}}'
         expected = "\e[0;mtext\e[0m"
         actual = CLI::UI::Formatter.new(input).format
         assert_equal(expected, actual)
+        ENV['TEST'] = old_env if old_env
       end
 
       def test_invalid_funcname_testenv
-        ENV['TEST'] = '1'
+        old_env = ENV['TEST']
+        ENV['TEST'] ||= '1'
         input = '{{nope:text}}'
         ex = assert_raises(CLI::UI::Formatter::FormatError) do
           CLI::UI::Formatter.new(input).format
@@ -48,6 +52,7 @@ module CLI
         assert_equal(input, ex.input)
         assert_equal(-1, ex.index)
         assert_equal(expected, ex.message)
+        ENV['TEST'] = old_env if old_env
       end
 
       def test_invalid_glyph
