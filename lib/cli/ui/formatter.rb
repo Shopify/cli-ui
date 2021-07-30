@@ -116,7 +116,7 @@ module CLI
               "invalid format specifier: #{name}",
               @text,
               -1
-            )
+            ) if ENV['TEST']
           end
         end
         CLI::UI::ANSI.sgr(sgr) + text

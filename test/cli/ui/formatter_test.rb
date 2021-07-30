@@ -33,6 +33,14 @@ module CLI
 
       def test_invalid_funcname
         input = '{{nope:text}}'
+        expected = "\e[0;mtext\e[0m"
+        actual = CLI::UI::Formatter.new(input).format
+        assert_equal(expected, actual)
+      end
+
+      def test_invalid_funcname_testenv
+        ENV['TEST'] = '1'
+        input = '{{nope:text}}'
         ex = assert_raises(CLI::UI::Formatter::FormatError) do
           CLI::UI::Formatter.new(input).format
         end
