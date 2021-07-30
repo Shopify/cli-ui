@@ -20,30 +20,49 @@ module CLI
         @name = name
       end
 
-      RED     = new('31', :red)
-      GREEN   = new('32', :green)
-      YELLOW  = new('33', :yellow)
+      BLACK     = new('90', :black)
+      RED       = new('31', :red)
+      GREEN     = new('32', :green)
+      YELLOW    = new('33', :yellow)
       # default blue is low-contrast against black in some default terminal color scheme
-      BLUE    = new('94', :blue) # 9x = high-intensity fg color x
-      MAGENTA = new('35', :magenta)
-      CYAN    = new('36', :cyan)
-      RESET   = new('0',  :reset)
-      BOLD    = new('1',  :bold)
-      WHITE   = new('97', :white)
+      BLUE      = new('94', :blue) # 9x = high-intensity fg color x
+      MAGENTA   = new('35', :magenta)
+      CYAN      = new('36', :cyan)
+      WHITE     = new('97', :white)
+      RESET     = new('0',  :reset)
+      BOLD      = new('1',  :bold)
+      ITALIC    = new('2',  :italic)
+      UNDERLINE = new('3',  :underline)
 
       # 240 is very dark gray; 255 is very light gray. 244 is somewhat dark.
-      GRAY = new('38;5;244', :grey)
+      GRAY = new('38;5;244', :gray)
+      GREY = GRAY
 
       MAP = {
+        black: BLACK,
         red: RED,
         green: GREEN,
         yellow: YELLOW,
         blue: BLUE,
         magenta: MAGENTA,
         cyan: CYAN,
+        white: WHITE,
+
         reset: RESET,
         bold: BOLD,
+        italic: ITALIC,
+        underline: UNDERLINE,
+
+        # i18n english colors
         gray: GRAY,
+        grey: GRAY,
+
+        # semantic
+        error: RED,
+        success: GREEN,
+        warning: YELLOW,
+        info: BLUE,
+        command: CYAN
       }.freeze
 
       class InvalidColorName < ArgumentError

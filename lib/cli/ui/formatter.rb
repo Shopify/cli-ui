@@ -10,27 +10,8 @@ module CLI
       # There are presentational (colours and formatters)
       # and semantic (error, info, command) formatters available
       #
-      SGR_MAP = {
-        # presentational
-        'red' => '31',
-        'green' => '32',
-        'yellow' => '33',
-        # default blue is low-contrast against black in some default terminal color scheme
-        'blue' => '94', # 9x = high-intensity fg color x
-        'magenta' => '35',
-        'cyan' => '36',
-        'bold' => '1',
-        'italic' => '3',
-        'underline' => '4',
-        'reset' => '0',
-
-        # semantic
-        'error' => '31', # red
-        'success' => '32', # success
-        'warning' => '33', # yellow
-        'info' => '94', # bright blue
-        'command' => '36', # cyan
-      }.freeze
+      # TODO: deprecate SGR_MAP since Color::MAP has all the relevant values
+      SGR_MAP = Color::MAP.map{|key,value| [key.to_s, value.sgr] }.to_h.freeze
 
       BEGIN_EXPR = '{{'
       END_EXPR   = '}}'
