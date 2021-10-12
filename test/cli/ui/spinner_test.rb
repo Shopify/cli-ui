@@ -121,7 +121,7 @@ module CLI
 
       private
 
-      def with_os_mock_test
+      def with_os_mock_test(&block)
         classes = [:Spinner, :Glyph]
 
         root_path = File.join(File.dirname(__FILE__), '../../../lib/cli/ui')
@@ -134,7 +134,7 @@ module CLI
           files << file
         end
 
-        with_os_mock_and_reload(CLI::UI::OS::Windows, classes, files) { yield }
+        with_os_mock_and_reload(CLI::UI::OS::Windows, classes, files, &block)
       end
     end
   end
