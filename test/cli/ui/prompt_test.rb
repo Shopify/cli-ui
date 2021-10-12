@@ -1,4 +1,5 @@
 # coding: utf-8
+
 require 'test_helper'
 require 'readline'
 require 'timeout'
