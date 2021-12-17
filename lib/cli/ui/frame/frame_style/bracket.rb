@@ -116,7 +116,7 @@ module CLI
               # If prefix_width is non-zero, we need to subtract the width of
               # the final space, since we're going to write over it.
               preamble_start -= 1 unless preamble_start.zero?
-              
+
               # Jumping around the line can cause some unwanted flashes
               o << CLI::UI::ANSI.hide_cursor
 
