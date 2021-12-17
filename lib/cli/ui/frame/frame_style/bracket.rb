@@ -116,17 +116,17 @@ module CLI
               # If prefix_width is non-zero, we need to subtract the width of
               # the final space, since we're going to write over it.
               preamble_start -= 1 unless preamble_start.zero?
-
-              # Prefix_width includes the width of the terminal space, which we
-              # want to remove.  The clamping is done to avoid a negative
-              # preamble start which can occur for the first frame.
+              
+              # Jumping around the line can cause some unwanted flashes
               o << CLI::UI::ANSI.hide_cursor
 
               # reset to column 1 so that things like ^C don't ruin formatting
               o << "\r"
+
               o << color.code
               o << print_at_x(preamble_start, preamble + color.code + suffix)
               o << CLI::UI::Color::RESET.code
+              o << CLI::UI::ANSI.show_cursor
               o << "\n"
 
               o
