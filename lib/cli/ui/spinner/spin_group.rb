@@ -11,10 +11,10 @@ module CLI
         #
         # ==== Example Usage
         #
-        #  spin_group = CLI::UI::SpinGroup.new
-        #  spin_group.add('Title')   { |spinner| sleep 3.0 }
-        #  spin_group.add('Title 2') { |spinner| sleep 3.0; spinner.update_title('New Title'); sleep 3.0 }
-        #  spin_group.wait
+        #  CLI::UI::SpinGroup.new do |spin_group|
+        #    spin_group.add('Title')   { |spinner| sleep 3.0 }
+        #    spin_group.add('Title 2') { |spinner| sleep 3.0; spinner.update_title('New Title'); sleep 3.0 }
+        #  end
         #
         # Output:
         #
@@ -26,6 +26,10 @@ module CLI
           @tasks = []
           @auto_debrief = auto_debrief
           @start = Time.new
+          if block_given?
+            yield self
+            wait
+          end
         end
 
         class Task
