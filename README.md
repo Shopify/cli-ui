@@ -83,10 +83,10 @@ CLI::UI.ask('Is CLI UI Awesome?', default: 'It is great!')
 Handle many multi-threaded processes while suppressing output unless there is an issue. Can update title to show state.
 
 ```ruby
-spin_group = CLI::UI::SpinGroup.new
-spin_group.add('Title')   { |spinner| sleep 3.0 }
-spin_group.add('Title 2') { |spinner| sleep 3.0; spinner.update_title('New Title'); sleep 3.0 }
-spin_group.wait
+CLI::UI::SpinGroup.new do |spin_group|
+  spin_group.add('Title')   { |spinner| sleep 3.0 }
+  spin_group.add('Title 2') { |spinner| sleep 3.0; spinner.update_title('New Title'); sleep 3.0 }
+end
 ```
 
 ![Spinner Group](https://user-images.githubusercontent.com/3074765/33798295-d94fd822-dce3-11e7-819b-43e5502d490e.gif)
@@ -187,22 +187,22 @@ CLI::UI::StdoutRouter.enable
 CLI::UI::Frame.open('{{*}} {{bold:a}}', color: :green) do
   CLI::UI::Frame.open('{{i}} b', color: :magenta) do
     CLI::UI::Frame.open('{{?}} c', color: :cyan) do
-      sg = CLI::UI::SpinGroup.new
-      sg.add('wow') do |spinner|
-        sleep(2.5)
-        spinner.update_title('second round!')
-        sleep (1.0)
+      CLI::UI::SpinGroup.new do |sg|
+        sg.add('wow') do |spinner|
+          sleep(2.5)
+          spinner.update_title('second round!')
+          sleep (1.0)
+        end
+        sg.add('such spin') { sleep(1.6) }
+        sg.add('many glyph') { sleep(2.0) }
       end
-      sg.add('such spin') { sleep(1.6) }
-      sg.add('many glyph') { sleep(2.0) }
-      sg.wait
     end
   end
   CLI::UI::Frame.divider('{{v}} lol')
   puts CLI::UI.fmt '{{info:words}} {{red:oh no!}} {{green:success!}}'
-  sg = CLI::UI::SpinGroup.new
-  sg.add('more spins') { sleep(0.5) ; raise 'oh no' }
-  sg.wait
+  CLI::UI::SpinGroup.new do |sg|
+    sg.add('more spins') { sleep(0.5) ; raise 'oh no' }
+  end
 end
 ```
 
