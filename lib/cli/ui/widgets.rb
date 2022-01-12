@@ -54,7 +54,7 @@ module CLI
         end
 
         def message
-          keys = Widget.available.join(',')
+          keys = Widgets.available.join(',')
           "invalid widget handle: #{@handle} " \
             "-- must be one of CLI::UI::Widgets.available (#{keys})"
         end
