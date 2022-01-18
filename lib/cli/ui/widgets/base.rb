@@ -12,7 +12,7 @@ module CLI
           new(argstring).render
         end
 
-        sig { params(argstring: T.untyped).returns(T.untyped) }
+        sig { params(argstring: T.untyped).void }
         def initialize(argstring)
           pat = self.class.argparse_pattern
           unless (@match_data = pat.match(argstring))

@@ -23,7 +23,7 @@ module CLI
         #
         # https://user-images.githubusercontent.com/3074765/33798558-c452fa26-dce8-11e7-9e90-b4b34df21a46.gif
         #
-        sig { params(auto_debrief: T.untyped).returns(T.untyped) }
+        sig { params(auto_debrief: T.untyped).void }
         def initialize(auto_debrief: true)
           @m = Mutex.new
           @consumed_lines = 0
@@ -50,7 +50,7 @@ module CLI
           # * +title+ - Title of the task
           # * +block+ - Block for the task, will be provided with an instance of the spinner
           #
-          sig { params(title: T.untyped, block: T.untyped).returns(T.untyped) }
+          sig { params(title: T.untyped, block: T.untyped).void }
           def initialize(title, &block)
             @title = title
             @always_full_render = title =~ Formatter::SCAN_WIDGET
@@ -209,7 +209,7 @@ module CLI
           idx = 0
 
           loop do
-            all_done = true
+            all_done = T.let(true, T::Boolean)
 
             width = CLI::UI::Terminal.width
 

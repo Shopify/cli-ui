@@ -11,7 +11,7 @@ module CLI
     class Wrap
       extend T::Sig
 
-      sig { params(input: T.untyped).returns(T.untyped) }
+      sig { params(input: T.untyped).void }
       def initialize(input)
         @input = input
       end
@@ -19,7 +19,7 @@ module CLI
       sig { returns(T.untyped) }
       def wrap
         max_width = Terminal.width - Frame.prefix_width
-        width = 0
+        width = T.let(0, T.untyped)
         final = []
         # Create an alternation of format codes of parameter lengths 1-20, since + and {1,n} not allowed in lookbehind
         format_codes = (1..20).map { |n| /\x1b\[[\d;]{#{n}}m/ }.join('|')

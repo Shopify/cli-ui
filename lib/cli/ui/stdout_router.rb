@@ -15,7 +15,7 @@ module CLI
       class Writer
         extend T::Sig
 
-        sig { params(stream: T.untyped, name: T.untyped).returns(T.untyped) }
+        sig { params(stream: T.untyped, name: T.untyped).void }
         def initialize(stream, name)
           @stream = stream
           @name = name
@@ -114,7 +114,7 @@ module CLI
           end
         end
 
-        sig { params(block_args: T.untyped, with_frame_inset: T.untyped, block: T.untyped).returns(T.untyped) }
+        sig { params(block_args: T.untyped, with_frame_inset: T.untyped, block: T.untyped).void }
         def initialize(*block_args, with_frame_inset: true, &block)
           @with_frame_inset = with_frame_inset
           @block_args = block_args

@@ -18,7 +18,7 @@ module CLI
       # * +sgr+ - The color signature
       # * +name+ - The name of the color
       #
-      sig { params(sgr: T.untyped, name: T.untyped).returns(T.untyped) }
+      sig { params(sgr: T.untyped, name: T.untyped).void }
       def initialize(sgr, name)
         @sgr  = sgr
         @code = CLI::UI::ANSI.sgr(sgr)
@@ -54,7 +54,7 @@ module CLI
       class InvalidColorName < ArgumentError
         extend T::Sig
 
-        sig { params(name: T.untyped).returns(T.untyped) }
+        sig { params(name: T.untyped).void }
         def initialize(name)
           super
           @name = name

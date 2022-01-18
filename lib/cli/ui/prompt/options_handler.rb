@@ -6,7 +6,7 @@ module CLI
       class OptionsHandler
         extend T::Sig
 
-        sig { returns(T.untyped) }
+        sig { void }
         def initialize
           @options = {}
         end

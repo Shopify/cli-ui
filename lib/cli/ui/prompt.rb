@@ -154,7 +154,7 @@ module CLI
             password = STDIN.noecho do
               # Chomp will remove the one new line character added by `gets`, without touching potential extra spaces:
               # " 123 \n".chomp => " 123 "
-              STDIN.gets.chomp
+              T.must(STDIN.gets).chomp
             end
 
             STDOUT.puts # Complete the line
@@ -254,7 +254,7 @@ module CLI
           end
           puts_question("#{question} (You chose: {{italic:#{resp_text}}})")
 
-          return handler.call(resp) if block_given?
+          return T.must(handler).call(resp) if block_given?
           resp
         end
 

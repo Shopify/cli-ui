@@ -61,7 +61,7 @@ module CLI
         sig { params(input: T.untyped).returns(T.untyped) }
         attr_accessor :input, :index
 
-        sig { params(message: T.untyped, input: T.untyped, index: T.untyped).returns(T.untyped) }
+        sig { params(message: T.untyped, input: T.untyped, index: T.untyped).void }
         def initialize(message = nil, input = nil, index = nil)
           super(message)
           @input = input
@@ -75,7 +75,7 @@ module CLI
       #
       # * +text+ - the text to format
       #
-      sig { params(text: T.untyped).returns(T.untyped) }
+      sig { params(text: T.untyped).void }
       def initialize(text)
         @text = text
       end
@@ -94,7 +94,7 @@ module CLI
       def format(sgr_map = SGR_MAP, enable_color: CLI::UI.enable_color?)
         @nodes = []
         stack = parse_body(StringScanner.new(@text))
-        prev_fmt = nil
+        prev_fmt = T.let(nil, T.untyped)
         content = @nodes.each_with_object(+'') do |(text, fmt), str|
           if prev_fmt != fmt && enable_color
             text = apply_format(text, fmt, sgr_map)
@@ -150,10 +150,10 @@ module CLI
           end
         elsif (match = sc.scan(SCAN_WIDGET))
           match_data = SCAN_WIDGET.match(match) # Regexp.last_match doesn't work here
-          widget_handle = match_data['handle']
+          widget_handle = T.must(match_data)['handle']
           begin
             widget = Widgets.lookup(widget_handle)
-            emit(widget.call(match_data['args']), stack)
+            emit(widget.call(T.must(match_data)['args']), stack)
           rescue Widgets::InvalidWidgetHandle
             index = sc.pos - 2 # rewind past '}}'
             raise(FormatError.new(

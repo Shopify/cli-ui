@@ -12,7 +12,7 @@ module CLI
           sig { returns(T.untyped) }
           attr_reader :color, :frame_style
 
-          sig { params(color_name: T.untyped, style_name: T.untyped).returns(T.untyped) }
+          sig { params(color_name: T.untyped, style_name: T.untyped).void }
           def initialize(color_name, style_name)
             @color = CLI::UI.resolve_color(color_name)
             @frame_style = CLI::UI.resolve_style(style_name)

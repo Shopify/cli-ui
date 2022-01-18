@@ -56,7 +56,7 @@ module CLI
       class InvalidWidgetHandle < ArgumentError
         extend T::Sig
 
-        sig { params(handle: T.untyped).returns(T.untyped) }
+        sig { params(handle: T.untyped).void }
         def initialize(handle)
           super
           @handle = handle
@@ -71,7 +71,7 @@ module CLI
       end
 
       class InvalidWidgetArguments < ArgumentError
-        sig { params(argstring: T.untyped, pattern: T.untyped).returns(T.untyped) }
+        sig { params(argstring: T.untyped, pattern: T.untyped).void }
         def initialize(argstring, pattern)
           super
           @argstring = argstring

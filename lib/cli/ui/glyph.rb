@@ -9,7 +9,7 @@ module CLI
       class InvalidGlyphHandle < ArgumentError
         extend T::Sig
 
-        sig { params(handle: T.untyped).returns(T.untyped) }
+        sig { params(handle: T.untyped).void }
         def initialize(handle)
           super
           @handle = handle
@@ -35,7 +35,7 @@ module CLI
       # * +plain+ - A fallback plain string to be used in case glyphs are disabled
       # * +color+ - What color to output the glyph. Check +CLI::UI::Color+ for options.
       #
-      sig { params(handle: T.untyped, codepoint: T.untyped, plain: T.untyped, color: T.untyped).returns(T.untyped) }
+      sig { params(handle: T.untyped, codepoint: T.untyped, plain: T.untyped, color: T.untyped).void }
       def initialize(handle, codepoint, plain, color)
         @handle    = handle
         @codepoint = codepoint

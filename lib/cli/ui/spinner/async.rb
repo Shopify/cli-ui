@@ -23,7 +23,7 @@ module CLI
         #
         #   CLI::UI::Spinner::Async.new('Title')
         #
-        sig { params(title: T.untyped).returns(T.untyped) }
+        sig { params(title: T.untyped).void }
         def initialize(title)
           require 'thread'
           sg = CLI::UI::Spinner::SpinGroup.new

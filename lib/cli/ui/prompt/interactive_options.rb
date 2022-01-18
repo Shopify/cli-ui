@@ -45,7 +45,7 @@ module CLI
         #
         #   CLI::UI::Prompt::InteractiveOptions.new(%w(rails go python))
         #
-        sig { params(options: T.untyped, multiple: T.untyped, default: T.untyped).returns(T.untyped) }
+        sig { params(options: T.untyped, multiple: T.untyped, default: T.untyped).void }
         def initialize(options, multiple: false, default: nil)
           @options = options
           @active = 1

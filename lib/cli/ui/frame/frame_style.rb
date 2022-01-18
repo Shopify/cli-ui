@@ -39,7 +39,7 @@ module CLI
         class InvalidFrameStyleName < ArgumentError
           extend T::Sig
 
-          sig { params(name: T.untyped).returns(T.untyped) }
+          sig { params(name: T.untyped).void }
           def initialize(name)
             super
             @name = name

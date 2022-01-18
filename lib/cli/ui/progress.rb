@@ -50,7 +50,7 @@ module CLI
       #
       # * +:width+ - The width of the terminal
       #
-      sig { params(width: T.untyped).returns(T.untyped) }
+      sig { params(width: T.untyped).void }
       def initialize(width: Terminal.width)
         @percent_done = 0
         @max_width = width
