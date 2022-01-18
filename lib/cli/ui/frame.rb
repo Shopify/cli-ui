@@ -11,6 +11,8 @@ module CLI
     module Frame
       class UnnestedFrameException < StandardError; end
       class << self
+        extend T::Sig
+
         DEFAULT_FRAME_COLOR = CLI::UI.resolve_color(:cyan)
 
         sig { returns(T.untyped) }

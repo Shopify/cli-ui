@@ -28,6 +28,8 @@ module CLI
       private_constant :InteractiveOptions, :OptionsHandler
 
       class << self
+        extend T::Sig
+
         # Ask a user a question with either free form answer or a set of answers (multiple choice)
         # Can use arrows, y/n, numbers (1/2), and vim bindings to control multiple choice selection
         # Do not use this method for yes/no questions. Use +confirm+

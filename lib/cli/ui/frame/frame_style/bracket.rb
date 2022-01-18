@@ -13,6 +13,8 @@ module CLI
           BOTTOM_LEFT = '┗'
 
           class << self
+            extend T::Sig
+
             sig { returns(T.untyped) }
             def name
               'bracket'

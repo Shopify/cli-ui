@@ -4,6 +4,8 @@ require 'cli/ui'
 module CLI
   module UI
     class Color
+      extend T::Sig
+
       sig { returns(T.untyped) }
       attr_reader :sgr, :name, :code
 
@@ -50,6 +52,8 @@ module CLI
       }.freeze
 
       class InvalidColorName < ArgumentError
+        extend T::Sig
+
         sig { params(name: T.untyped).returns(T.untyped) }
         def initialize(name)
           super

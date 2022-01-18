@@ -6,6 +6,8 @@ require 'cli/ui'
 module CLI
   module UI
     module Spinner
+      extend T::Sig
+
       autoload :Async,      'cli/ui/spinner/async'
       autoload :SpinGroup,  'cli/ui/spinner/spin_group'
 
@@ -23,6 +25,8 @@ module CLI
       GLYPHS = colors.zip(RUNES).map(&:join)
 
       class << self
+        extend T::Sig
+
         sig { params(index: T.untyped).returns(T.untyped) }
         attr_accessor(:index)
 

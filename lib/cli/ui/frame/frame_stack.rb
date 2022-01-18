@@ -7,6 +7,8 @@ module CLI
         STYLE_ENVVAR = 'CLI_STYLE_STACK'
 
         class StackItem
+          extend T::Sig
+
           sig { returns(T.untyped) }
           attr_reader :color, :frame_style
 
@@ -18,6 +20,8 @@ module CLI
         end
 
         class << self
+          extend T::Sig
+
           # Fetch all items off the frame stack
           sig { returns(T.untyped) }
           def items

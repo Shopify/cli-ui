@@ -4,6 +4,8 @@ require 'cli/ui'
 module CLI
   module UI
     module ANSI
+      extend T::Sig
+
       ESC = "\x1b"
 
       # ANSI escape sequences (like \x1b[31m) have zero width.

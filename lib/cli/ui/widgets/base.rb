@@ -5,6 +5,8 @@ module CLI
   module UI
     module Widgets
       class Base
+        extend T::Sig
+
         sig { params(argstring: T.untyped).returns(T.untyped) }
         def self.call(argstring)
           new(argstring).render

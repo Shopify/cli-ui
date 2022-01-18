@@ -5,6 +5,8 @@ require 'io/console'
 module CLI
   module UI
     module Terminal
+      extend T::Sig
+
       DEFAULT_WIDTH = 80
       DEFAULT_HEIGHT = 24
 

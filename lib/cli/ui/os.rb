@@ -4,6 +4,8 @@ require 'rbconfig'
 module CLI
   module UI
     module OS
+      extend T::Sig
+
       # Determines which OS is currently running the UI, to make it easier to
       # adapt its behaviour to the features of the OS.
       sig { returns(T.untyped) }
@@ -24,6 +26,8 @@ module CLI
 
       class Mac
         class << self
+          extend T::Sig
+
           sig { returns(T.untyped) }
           def supports_emoji?
             true
@@ -51,6 +55,8 @@ module CLI
 
       class Windows
         class << self
+          extend T::Sig
+
           sig { returns(T.untyped) }
           def supports_emoji?
             false

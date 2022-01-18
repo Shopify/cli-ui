@@ -4,6 +4,8 @@ require 'cli/ui'
 module CLI
   module UI
     class Printer
+      extend T::Sig
+
       # Print a message to a stream with common utilities.
       # Allows overriding the color, encoding, and target stream.
       # By default, it formats the string using CLI:UI and rescues common stream errors.

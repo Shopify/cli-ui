@@ -8,6 +8,8 @@ module CLI
   module UI
     module Prompt
       class InteractiveOptions
+        extend T::Sig
+
         DONE = 'Done'
         CHECKBOX_ICON = { false => '☐', true => '☑' }
 

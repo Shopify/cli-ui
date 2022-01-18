@@ -17,6 +17,8 @@ module CLI
     #   CLI::UI::Widgets.register('my-widget') { MyWidget }
     #   puts(CLI::UI.fmt("{{@widget/my-widget:args}}"))
     module Widgets
+      extend T::Sig
+
       MAP = {}
 
       autoload(:Base, 'cli/ui/widgets/base')
@@ -52,6 +54,8 @@ module CLI
       end
 
       class InvalidWidgetHandle < ArgumentError
+        extend T::Sig
+
         sig { params(handle: T.untyped).returns(T.untyped) }
         def initialize(handle)
           super

@@ -4,7 +4,11 @@ require 'cli/ui'
 module CLI
   module UI
     class Glyph
+      extend T::Sig
+
       class InvalidGlyphHandle < ArgumentError
+        extend T::Sig
+
         sig { params(handle: T.untyped).returns(T.untyped) }
         def initialize(handle)
           super

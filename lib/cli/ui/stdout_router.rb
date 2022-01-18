@@ -6,11 +6,15 @@ module CLI
   module UI
     module StdoutRouter
       class << self
+        extend T::Sig
+
         sig { params(duplicate_output_to: T.untyped).returns(T.untyped) }
         attr_accessor :duplicate_output_to
       end
 
       class Writer
+        extend T::Sig
+
         sig { params(stream: T.untyped, name: T.untyped).returns(T.untyped) }
         def initialize(stream, name)
           @stream = stream
@@ -82,6 +86,8 @@ module CLI
       end
 
       class Capture
+        extend T::Sig
+
         @m = Mutex.new
         @active_captures = 0
         @saved_stdin = nil

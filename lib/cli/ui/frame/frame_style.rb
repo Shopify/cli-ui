@@ -6,6 +6,8 @@ module CLI
     module Frame
       module FrameStyle
         class << self
+          extend T::Sig
+
           # rubocop:disable Style/ClassVars
           @@loaded_styles = []
 
@@ -35,6 +37,8 @@ module CLI
         end
 
         class InvalidFrameStyleName < ArgumentError
+          extend T::Sig
+
           sig { params(name: T.untyped).returns(T.untyped) }
           def initialize(name)
             super
@@ -53,6 +57,8 @@ module CLI
         # Public interface for FrameStyles
         # Applied by extending FrameStyle
         module Interface
+          extend T::Sig
+
           # Because these are interface methods, we want to be explicit about their signatures,
           # even if we don't use the arguments.
 

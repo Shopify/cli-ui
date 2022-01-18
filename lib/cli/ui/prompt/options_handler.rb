@@ -4,6 +4,8 @@ module CLI
     module Prompt
       # A class that handles the various options of an InteractivePrompt and their callbacks
       class OptionsHandler
+        extend T::Sig
+
         sig { returns(T.untyped) }
         def initialize
           @options = {}

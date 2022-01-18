@@ -3,6 +3,8 @@ module CLI
   module UI
     module Spinner
       class SpinGroup
+        extend T::Sig
+
         # Initializes a new spin group
         # This lets you add +Task+ objects to the group to multi-thread work
         #
@@ -35,6 +37,8 @@ module CLI
         end
 
         class Task
+          extend T::Sig
+
           sig { returns(T.untyped) }
           attr_reader :title, :exception, :success, :stdout, :stderr
 

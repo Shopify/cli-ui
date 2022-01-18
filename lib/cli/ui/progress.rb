@@ -4,6 +4,8 @@ require 'cli/ui'
 module CLI
   module UI
     class Progress
+      extend T::Sig
+
       # A Cyan filled block
       FILLED_BAR = "\e[46m"
       # A bright white block

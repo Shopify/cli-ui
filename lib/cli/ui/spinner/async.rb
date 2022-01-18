@@ -3,6 +3,8 @@ module CLI
   module UI
     module Spinner
       class Async
+        extend T::Sig
+
         # Convenience method for +initialize+
         #
         sig { params(title: T.untyped).returns(T.untyped) }

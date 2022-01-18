@@ -9,6 +9,8 @@ require 'cli/ui/frame/frame_style'
 module CLI
   module UI
     class Wrap
+      extend T::Sig
+
       sig { params(input: T.untyped).returns(T.untyped) }
       def initialize(input)
         @input = input

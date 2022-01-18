@@ -1,6 +1,8 @@
 # typed: true
 module CLI
   module UI
+    extend T::Sig
+
     autoload :ANSI,      'cli/ui/ansi'
     autoload :Glyph,     'cli/ui/glyph'
     autoload :Color,     'cli/ui/color'

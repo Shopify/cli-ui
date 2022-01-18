@@ -7,6 +7,8 @@ require('strscan')
 module CLI
   module UI
     class Formatter
+      extend T::Sig
+
       # Available mappings of formattings
       # To use any of them, you can use {{<key>:<string>}}
       # There are presentational (colours and formatters)
@@ -54,6 +56,8 @@ module CLI
       LITERAL_BRACES = :__literal_braces__
 
       class FormatError < StandardError
+        extend T::Sig
+
         sig { params(input: T.untyped).returns(T.untyped) }
         attr_accessor :input, :index
 
