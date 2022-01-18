@@ -12,3 +12,6 @@ commands:
         rake test $@
       fi
   style: "bundle exec rubocop -D"
+  typecheck:
+    run: srb
+    aliases: [tc]
