@@ -4,7 +4,7 @@ require 'cli/ui/prompt/options_handler'
 module CLI
   module UI
     module Prompt
-      class OptionsHandlerTest < MiniTest::Test
+      class OptionsHandlerTest < Minitest::Test
         def test_initialize
           handler = OptionsHandler.new
 

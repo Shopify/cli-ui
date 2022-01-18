@@ -2,7 +2,7 @@ require('test_helper')
 
 module CLI
   module UI
-    class WidgetsTest < MiniTest::Test
+    class WidgetsTest < Minitest::Test
       def test_widgets
         assert_equal(Widgets::Status, Widgets.lookup('status'))
 

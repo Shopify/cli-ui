@@ -2,7 +2,7 @@ require 'test_helper'
 
 module CLI
   module UI
-    class ProgressTest < MiniTest::Test
+    class ProgressTest < Minitest::Test
       def test_tick_with_percent
         assert_bar(set_percent: 0.1, expected_filled: 1, expected_unfilled: 9, suffix: ' 10% ')
       end

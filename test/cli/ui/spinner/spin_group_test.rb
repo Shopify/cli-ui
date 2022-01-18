@@ -3,7 +3,7 @@ require 'test_helper'
 module CLI
   module UI
     module Spinner
-      class SpinGroupTest < MiniTest::Test
+      class SpinGroupTest < Minitest::Test
         def test_spin_group
           _out, err = capture_io do
             CLI::UI::StdoutRouter.ensure_activated

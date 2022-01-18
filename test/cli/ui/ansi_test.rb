@@ -2,7 +2,7 @@ require 'test_helper'
 
 module CLI
   module UI
-    class ANSITest < MiniTest::Test
+    class ANSITest < Minitest::Test
       def test_sgr
         assert_equal("\x1b[1;34m", ANSI.sgr('1;34'))
       end

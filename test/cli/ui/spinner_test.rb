@@ -2,7 +2,7 @@ require 'test_helper'
 
 module CLI
   module UI
-    class SpinnerTest < MiniTest::Test
+    class SpinnerTest < Minitest::Test
       def test_spinner
         out, err = capture_io do
           CLI::UI::StdoutRouter.ensure_activated

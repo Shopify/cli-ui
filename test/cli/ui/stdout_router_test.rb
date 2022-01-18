@@ -2,7 +2,7 @@ require 'test_helper'
 
 module CLI
   module UI
-    class StdoutRouterTest < MiniTest::Test
+    class StdoutRouterTest < Minitest::Test
       def test_with_id
         out, _ = capture_io do
           StdoutRouter.with_enabled do

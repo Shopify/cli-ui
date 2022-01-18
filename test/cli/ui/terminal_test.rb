@@ -2,7 +2,7 @@ require 'test_helper'
 
 module CLI
   module UI
-    class TerminalTest < MiniTest::Test
+    class TerminalTest < Minitest::Test
       def test_width
         skip('flaky')
 

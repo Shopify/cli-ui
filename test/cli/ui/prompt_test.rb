@@ -7,7 +7,7 @@ require 'open3'
 
 module CLI
   module UI
-    class PromptTest < MiniTest::Test
+    class PromptTest < Minitest::Test
       # ^C is not handled; raises Interrupt, which may be handled by caller.
       def test_confirm_sigint
         jruby_skip('SIGINT shuts down the JVM instead of raising Interrupt')
