@@ -15,7 +15,7 @@ module CLI
       #
       sig { params(str: T.untyped).returns(T.untyped) }
       def self.printing_width(str)
-        zwj = false
+        zwj = T.let(false, T::Boolean)
         strip_codes(str).codepoints.reduce(0) do |acc, cp|
           if zwj
             zwj = false

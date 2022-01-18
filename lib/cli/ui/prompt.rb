@@ -98,8 +98,9 @@ module CLI
         #   end
         #
         sig do
-          params(question: T.untyped, options: T.untyped, default: T.untyped, is_file: T.untyped, allow_empty: T.untyped,
-            multiple: T.untyped, filter_ui: T.untyped, select_ui: T.untyped, options_proc: T.untyped).returns(T.untyped)
+          params(question: T.untyped, options: T.untyped, default: T.untyped, is_file: T.untyped,
+            allow_empty: T.untyped, multiple: T.untyped, filter_ui: T.untyped, select_ui: T.untyped,
+            options_proc: T.untyped).returns(T.untyped)
         end
         def ask(
           question,

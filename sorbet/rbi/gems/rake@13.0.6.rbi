@@ -566,8 +566,6 @@ class Rake::PseudoStatus
   def to_i; end
 end
 
-Rake::RDocTask = RDoc::Task
-
 class Rake::RuleRecursionOverflowError < ::StandardError
   def initialize(*args); end
 

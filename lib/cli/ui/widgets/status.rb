@@ -21,6 +21,11 @@ module CLI
         SPINNER_STOPPED = '⠿'
         EMPTY_SET = '∅'
 
+        sig { override.returns(T.untyped) }
+        def self.argparse_pattern
+          ARGPARSE_PATTERN
+        end
+
         sig { returns(T.untyped) }
         def render
           if zero?(@succeeded) && zero?(@failed) && zero?(@working) && zero?(@pending)

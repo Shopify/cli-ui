@@ -27,7 +27,7 @@ module CLI
       class << self
         extend T::Sig
 
-        sig { params(index: T.untyped).returns(T.untyped) }
+        sig { returns(T.untyped) }
         attr_accessor(:index)
 
         # We use this from CLI::UI::Widgets::Status to render an additional

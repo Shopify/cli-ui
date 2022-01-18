@@ -36,7 +36,7 @@ module CLI
 
           width            = 0
           mode             = PARSE_ROOT
-          truncation_index = nil
+          truncation_index = T.let(nil, T.nilable(Integer))
 
           codepoints = text.codepoints
           codepoints.each.with_index do |cp, index|

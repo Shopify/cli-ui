@@ -58,7 +58,7 @@ module CLI
       class FormatError < StandardError
         extend T::Sig
 
-        sig { params(input: T.untyped).returns(T.untyped) }
+        sig { returns(T.untyped) }
         attr_accessor :input, :index
 
         sig { params(message: T.untyped, input: T.untyped, index: T.untyped).void }
@@ -78,6 +78,7 @@ module CLI
       sig { params(text: T.untyped).void }
       def initialize(text)
         @text = text
+        @nodes = T.let([], T::Array[T::Array[T.untyped]])
       end
 
       # Format the text using a map.
@@ -92,7 +93,7 @@ module CLI
       #
       sig { params(sgr_map: T.untyped, enable_color: T.untyped).returns(T.untyped) }
       def format(sgr_map = SGR_MAP, enable_color: CLI::UI.enable_color?)
-        @nodes = []
+        @nodes.replace([])
         stack = parse_body(StringScanner.new(@text))
         prev_fmt = T.let(nil, T.untyped)
         content = @nodes.each_with_object(+'') do |(text, fmt), str|
@@ -108,7 +109,7 @@ module CLI
         return content unless enable_color
         return content if stack == prev_fmt
 
-        unless stack.empty? && (@nodes.size.zero? || @nodes.last[1].empty?)
+        unless stack.empty? && (@nodes.size.zero? || T.must(@nodes.last)[1].empty?)
           content << apply_format('', stack, sgr_map)
         end
         content

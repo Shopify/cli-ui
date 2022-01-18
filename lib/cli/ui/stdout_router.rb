@@ -8,7 +8,7 @@ module CLI
       class << self
         extend T::Sig
 
-        sig { params(duplicate_output_to: T.untyped).returns(T.untyped) }
+        sig { returns(T.untyped) }
         attr_accessor :duplicate_output_to
       end
 

@@ -72,9 +72,9 @@ module CLI
     #
     # * +question+ - question to confirm
     #
-    sig { params(question: T.untyped, kwargs: T.untyped).returns(T.untyped) }
-    def self.confirm(question, **kwargs)
-      CLI::UI::Prompt.confirm(question, **kwargs)
+    sig { params(question: T.untyped, default: T.untyped).returns(T.untyped) }
+    def self.confirm(question, default: true)
+      CLI::UI::Prompt.confirm(question, default: default)
     end
 
     # Convenience Method for +CLI::UI::Prompt.ask+
@@ -84,9 +84,32 @@ module CLI
     # * +question+ - question to ask
     # * +kwargs+ - arguments for +Prompt.ask+
     #
-    sig { params(question: T.untyped, kwargs: T.untyped).returns(T.untyped) }
-    def self.ask(question, **kwargs)
-      CLI::UI::Prompt.ask(question, **kwargs)
+    sig do
+      params(question: T.untyped, options: T.untyped, default: T.untyped, is_file: T.untyped, allow_empty: T.untyped,
+        multiple: T.untyped, filter_ui: T.untyped, select_ui: T.untyped, options_proc: T.untyped).returns(T.untyped)
+    end
+    def self.ask(
+      question,
+      options: nil,
+      default: nil,
+      is_file: nil,
+      allow_empty: true,
+      multiple: false,
+      filter_ui: true,
+      select_ui: true,
+      &options_proc
+    )
+      CLI::UI::Prompt.ask(
+        question,
+        options: options,
+        default: default,
+        is_file: is_file,
+        allow_empty: allow_empty,
+        multiple: multiple,
+        filter_ui: filter_ui,
+        select_ui: select_ui,
+        &options_proc
+      )
     end
 
     # Convenience Method to resolve text using +CLI::UI::Formatter.format+
@@ -136,9 +159,28 @@ module CLI
     # * +msg+ - Message to print
     # * +kwargs+ - keyword arguments for +Printer.puts+
     #
-    sig { params(msg: T.untyped, kwargs: T.untyped).returns(T.untyped) }
-    def self.puts(msg, **kwargs)
-      CLI::UI::Printer.puts(msg, **kwargs)
+    sig do
+      params(msg: T.untyped, frame_color: T.untyped, to: T.untyped, encoding: T.untyped, format: T.untyped,
+        graceful: T.untyped, wrap: T.untyped).returns(T.untyped)
+    end
+    def self.puts(
+      msg,
+      frame_color: nil,
+      to: $stdout,
+      encoding: Encoding::UTF_8,
+      format: true,
+      graceful: true,
+      wrap: true
+    )
+      CLI::UI::Printer.puts(
+        msg,
+        frame_color: frame_color,
+        to: to,
+        encoding: encoding,
+        format: format,
+        graceful: graceful,
+        wrap: wrap,
+      )
     end
 
     # Convenience Method for +CLI::UI::Frame.open+
@@ -148,9 +190,20 @@ module CLI
     # * +args+ - arguments for +Frame.open+
     # * +block+ - block for +Frame.open+
     #
-    sig { params(args: T.untyped, kwargs: T.untyped, block: T.untyped).returns(T.untyped) }
-    def self.frame(*args, **kwargs, &block)
-      CLI::UI::Frame.open(*args, **kwargs, &block)
+    sig do
+      params(text: T.untyped, color: T.untyped, failure_text: T.untyped, success_text: T.untyped, timing: T.untyped,
+        frame_style: T.untyped, block: T.untyped).returns(T.untyped)
+    end
+    def self.frame(text, color: nil, failure_text: nil, success_text: nil, timing: nil, frame_style: nil, &block)
+      CLI::UI::Frame.open(
+        text,
+        color: color,
+        failure_text: failure_text,
+        success_text: success_text,
+        timing: timing,
+        frame_style: frame_style,
+        &block
+      )
     end
 
     # Convenience Method for +CLI::UI::Spinner.spin+
@@ -160,9 +213,9 @@ module CLI
     # * +args+ - arguments for +Spinner.open+
     # * +block+ - block for +Spinner.open+
     #
-    sig { params(args: T.untyped, kwargs: T.untyped, block: T.untyped).returns(T.untyped) }
-    def self.spinner(*args, **kwargs, &block)
-      CLI::UI::Spinner.spin(*args, **kwargs, &block)
+    sig { params(title: T.untyped, auto_debrief: T.untyped, block: T.untyped).returns(T.untyped) }
+    def self.spinner(title, auto_debrief: true, &block)
+      CLI::UI::Spinner.spin(title, auto_debrief: auto_debrief, &block)
     end
 
     # Convenience Method to override frame color using +CLI::UI::Frame.with_frame_color+

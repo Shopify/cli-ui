@@ -6,6 +6,8 @@ module CLI
     module Widgets
       class Base
         extend T::Sig
+        extend T::Helpers
+        abstract!
 
         sig { params(argstring: T.untyped).returns(T.untyped) }
         def self.call(argstring)
@@ -23,10 +25,8 @@ module CLI
           end
         end
 
-        sig { returns(T.untyped) }
-        def self.argparse_pattern
-          const_get(:ARGPARSE_PATTERN)
-        end
+        sig { abstract.returns(T.untyped) }
+        def self.argparse_pattern; end
       end
     end
   end

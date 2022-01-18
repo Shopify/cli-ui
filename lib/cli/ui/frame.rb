@@ -78,16 +78,9 @@ module CLI
           params(text: T.untyped, color: T.untyped, failure_text: T.untyped, success_text: T.untyped, timing: T.untyped,
             frame_style: T.untyped).returns(T.untyped)
         end
-        def open(
-          text,
-          color: DEFAULT_FRAME_COLOR,
-          failure_text: nil,
-          success_text: nil,
-          timing:       nil,
-          frame_style:  self.frame_style
-        )
-          frame_style = CLI::UI.resolve_style(frame_style)
-          color = CLI::UI.resolve_color(color)
+        def open(text, color: nil, failure_text: nil, success_text: nil, timing: nil, frame_style: nil)
+          frame_style = CLI::UI.resolve_style(frame_style || self.frame_style)
+          color = CLI::UI.resolve_color(color || DEFAULT_FRAME_COLOR)
 
           unless block_given?
             if failure_text

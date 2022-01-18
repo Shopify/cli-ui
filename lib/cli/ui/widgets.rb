@@ -71,6 +71,8 @@ module CLI
       end
 
       class InvalidWidgetArguments < ArgumentError
+        extend T::Sig
+
         sig { params(argstring: T.untyped, pattern: T.untyped).void }
         def initialize(argstring, pattern)
           super
