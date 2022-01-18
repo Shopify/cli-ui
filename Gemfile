@@ -5,9 +5,17 @@ gemspec
 
 group :development, :test do
   gem 'rubocop'
+  gem 'rubocop-rake'
   gem 'rubocop-shopify'
+  gem 'rubocop-sorbet'
   gem 'byebug', platforms: [:mri]
   gem 'method_source'
+  gem 'simplecov'
+end
+
+group :typecheck do
+  gem 'sorbet'
+  gem 'tapioca', require: false
 end
 
 group :test do
