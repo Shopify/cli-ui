@@ -1,10 +1,14 @@
+# typed: true
 require 'rbconfig'
 
 module CLI
   module UI
     module OS
+      extend T::Sig
+
       # Determines which OS is currently running the UI, to make it easier to
       # adapt its behaviour to the features of the OS.
+      sig { returns(T.untyped) }
       def self.current
         @current_os ||= case RbConfig::CONFIG['host_os']
         when /darwin/
@@ -22,18 +26,24 @@ module CLI
 
       class Mac
         class << self
+          extend T::Sig
+
+          sig { returns(T.untyped) }
           def supports_emoji?
             true
           end
 
+          sig { returns(T.untyped) }
           def supports_color_prompt?
             true
           end
 
+          sig { returns(T.untyped) }
           def supports_arrow_keys?
             true
           end
 
+          sig { returns(T.untyped) }
           def shift_cursor_on_line_reset?
             false
           end
@@ -45,18 +55,24 @@ module CLI
 
       class Windows
         class << self
+          extend T::Sig
+
+          sig { returns(T.untyped) }
           def supports_emoji?
             false
           end
 
+          sig { returns(T.untyped) }
           def supports_color_prompt?
             false
           end
 
+          sig { returns(T.untyped) }
           def supports_arrow_keys?
             false
           end
 
+          sig { returns(T.untyped) }
           def shift_cursor_on_line_reset?
             true
           end

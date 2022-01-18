@@ -1,3 +1,4 @@
+# typed: true
 # frozen_string_literal: true
 
 require('cli/ui')
@@ -6,6 +7,8 @@ require('strscan')
 module CLI
   module UI
     class Formatter
+      extend T::Sig
+
       # Available mappings of formattings
       # To use any of them, you can use {{<key>:<string>}}
       # There are presentational (colours and formatters)
@@ -53,8 +56,12 @@ module CLI
       LITERAL_BRACES = :__literal_braces__
 
       class FormatError < StandardError
+        extend T::Sig
+
+        sig { returns(T.untyped) }
         attr_accessor :input, :index
 
+        sig { params(message: T.untyped, input: T.untyped, index: T.untyped).void }
         def initialize(message = nil, input = nil, index = nil)
           super(message)
           @input = input
@@ -68,8 +75,10 @@ module CLI
       #
       # * +text+ - the text to format
       #
+      sig { params(text: T.untyped).void }
       def initialize(text)
         @text = text
+        @nodes = T.let([], T::Array[T::Array[T.untyped]])
       end
 
       # Format the text using a map.
@@ -82,10 +91,11 @@ module CLI
       #
       # * +:enable_color+ - enable color output? Default is true unless output is redirected
       #
+      sig { params(sgr_map: T.untyped, enable_color: T.untyped).returns(T.untyped) }
       def format(sgr_map = SGR_MAP, enable_color: CLI::UI.enable_color?)
-        @nodes = []
+        @nodes.replace([])
         stack = parse_body(StringScanner.new(@text))
-        prev_fmt = nil
+        prev_fmt = T.let(nil, T.untyped)
         content = @nodes.each_with_object(+'') do |(text, fmt), str|
           if prev_fmt != fmt && enable_color
             text = apply_format(text, fmt, sgr_map)
@@ -99,7 +109,7 @@ module CLI
         return content unless enable_color
         return content if stack == prev_fmt
 
-        unless stack.empty? && (@nodes.size.zero? || @nodes.last[1].empty?)
+        unless stack.empty? && (@nodes.size.zero? || T.must(@nodes.last)[1].empty?)
           content << apply_format('', stack, sgr_map)
         end
         content
@@ -107,6 +117,7 @@ module CLI
 
       private
 
+      sig { params(text: T.untyped, fmt: T.untyped, sgr_map: T.untyped).returns(T.untyped) }
       def apply_format(text, fmt, sgr_map)
         sgr = fmt.each_with_object(+'0') do |name, str|
           next if name == LITERAL_BRACES
@@ -123,6 +134,7 @@ module CLI
         CLI::UI::ANSI.sgr(sgr) + text
       end
 
+      sig { params(sc: T.untyped, stack: T.untyped).returns(T.untyped) }
       def parse_expr(sc, stack)
         if (match = sc.scan(SCAN_GLYPH))
           glyph_handle = match[0]
@@ -139,10 +151,10 @@ module CLI
           end
         elsif (match = sc.scan(SCAN_WIDGET))
           match_data = SCAN_WIDGET.match(match) # Regexp.last_match doesn't work here
-          widget_handle = match_data['handle']
+          widget_handle = T.must(match_data)['handle']
           begin
             widget = Widgets.lookup(widget_handle)
-            emit(widget.call(match_data['args']), stack)
+            emit(widget.call(T.must(match_data)['args']), stack)
           rescue Widgets::InvalidWidgetHandle
             index = sc.pos - 2 # rewind past '}}'
             raise(FormatError.new(
@@ -165,6 +177,7 @@ module CLI
         stack
       end
 
+      sig { params(sc: T.untyped, stack: T.untyped).returns(T.untyped) }
       def parse_body(sc, stack = [])
         match = sc.scan(SCAN_BODY)
         if match&.end_with?(BEGIN_EXPR)
@@ -184,6 +197,7 @@ module CLI
         stack
       end
 
+      sig { params(text: T.untyped, stack: T.untyped).returns(T.untyped) }
       def emit(text, stack)
         return if text.nil? || text.empty?
         @nodes << [text, stack.reject { |n| n == LITERAL_BRACES }]

@@ -2,7 +2,7 @@ require 'test_helper'
 
 module CLI
   module UI
-    class TruncaterTest < MiniTest::Test
+    class TruncaterTest < Minitest::Test
       MAN     = "\u{1f468}" # width=2
       COOKING = "\u{1f373}" # width=2
       ZWJ     = "\u{200d}"  # width=complicated

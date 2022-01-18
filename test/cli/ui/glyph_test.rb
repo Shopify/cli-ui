@@ -2,7 +2,7 @@ require 'test_helper'
 
 module CLI
   module UI
-    class GlyphTest < MiniTest::Test
+    class GlyphTest < Minitest::Test
       def test_glyphs
         assert_equal("\x1b[33m⭑\x1b[0m", Glyph::STAR.to_s)
         assert_equal("\x1b[94m𝒾\x1b[0m", Glyph::INFO.to_s)

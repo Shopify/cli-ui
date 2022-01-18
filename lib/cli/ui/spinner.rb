@@ -1,3 +1,4 @@
+# typed: true
 # frozen-string-literal: true
 
 require 'cli/ui'
@@ -5,6 +6,8 @@ require 'cli/ui'
 module CLI
   module UI
     module Spinner
+      extend T::Sig
+
       autoload :Async,      'cli/ui/spinner/async'
       autoload :SpinGroup,  'cli/ui/spinner/spin_group'
 
@@ -22,6 +25,9 @@ module CLI
       GLYPHS = colors.zip(RUNES).map(&:join)
 
       class << self
+        extend T::Sig
+
+        sig { returns(T.untyped) }
         attr_accessor(:index)
 
         # We use this from CLI::UI::Widgets::Status to render an additional
@@ -34,6 +40,7 @@ module CLI
         # While it would be possible to stitch through some connection between
         # the SpinGroup and the Widgets included in its title, this is simpler
         # in practice and seems unlikely to cause issues in practice.
+        sig { returns(T.untyped) }
         def current_rune
           RUNES[index || 0]
         end
@@ -61,6 +68,7 @@ module CLI
       #
       #   CLI::UI::Spinner.spin('Title') { sleep 1.0 }
       #
+      sig { params(title: T.untyped, auto_debrief: T.untyped, block: T.untyped).returns(T.untyped) }
       def self.spin(title, auto_debrief: true, &block)
         sg = SpinGroup.new(auto_debrief: auto_debrief)
         sg.add(title, &block)

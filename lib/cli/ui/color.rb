@@ -1,8 +1,12 @@
+# typed: true
 require 'cli/ui'
 
 module CLI
   module UI
     class Color
+      extend T::Sig
+
+      sig { returns(T.untyped) }
       attr_reader :sgr, :name, :code
 
       # Creates a new color mapping
@@ -14,6 +18,7 @@ module CLI
       # * +sgr+ - The color signature
       # * +name+ - The name of the color
       #
+      sig { params(sgr: T.untyped, name: T.untyped).void }
       def initialize(sgr, name)
         @sgr  = sgr
         @code = CLI::UI::ANSI.sgr(sgr)
@@ -47,11 +52,15 @@ module CLI
       }.freeze
 
       class InvalidColorName < ArgumentError
+        extend T::Sig
+
+        sig { params(name: T.untyped).void }
         def initialize(name)
           super
           @name = name
         end
 
+        sig { returns(T.untyped) }
         def message
           keys = Color.available.map(&:inspect).join(',')
           "invalid color: #{@name.inspect} " \
@@ -68,6 +77,7 @@ module CLI
       # ==== Returns
       # Returns a color code
       #
+      sig { params(name: T.untyped).returns(T.untyped) }
       def self.lookup(name)
         MAP.fetch(name)
       rescue KeyError
@@ -76,6 +86,7 @@ module CLI
 
       # All available colors by name
       #
+      sig { returns(T.untyped) }
       def self.available
         MAP.keys
       end

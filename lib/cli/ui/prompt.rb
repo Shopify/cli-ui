@@ -1,5 +1,7 @@
 # coding: utf-8
 
+# typed: true
+
 require 'cli/ui'
 require 'readline'
 
@@ -26,6 +28,8 @@ module CLI
       private_constant :InteractiveOptions, :OptionsHandler
 
       class << self
+        extend T::Sig
+
         # Ask a user a question with either free form answer or a set of answers (multiple choice)
         # Can use arrows, y/n, numbers (1/2), and vim bindings to control multiple choice selection
         # Do not use this method for yes/no questions. Use +confirm+
@@ -93,6 +97,11 @@ module CLI
         #     handler.option('python') { |selection| selection }
         #   end
         #
+        sig do
+          params(question: T.untyped, options: T.untyped, default: T.untyped, is_file: T.untyped,
+            allow_empty: T.untyped, multiple: T.untyped, filter_ui: T.untyped, select_ui: T.untyped,
+            options_proc: T.untyped).returns(T.untyped)
+        end
         def ask(
           question,
           options: nil,
@@ -134,6 +143,7 @@ module CLI
         #
         # The password, without a trailing newline.
         # If the user simply presses "Enter" without typing any password, this will return an empty string.
+        sig { params(question: T.untyped).returns(T.untyped) }
         def ask_password(question)
           require 'io/console'
 
@@ -145,7 +155,7 @@ module CLI
             password = STDIN.noecho do
               # Chomp will remove the one new line character added by `gets`, without touching potential extra spaces:
               # " 123 \n".chomp => " 123 "
-              STDIN.gets.chomp
+              T.must(STDIN.gets).chomp
             end
 
             STDOUT.puts # Complete the line
@@ -164,12 +174,16 @@ module CLI
         #
         #   CLI::UI::Prompt.confirm('Do a dangerous thing?', default: false)
         #
+        sig { params(question: T.untyped, default: T.untyped).returns(T.untyped) }
         def confirm(question, default: true)
           ask_interactive(question, default ? ['yes', 'no'] : ['no', 'yes'], filter_ui: false) == 'yes'
         end
 
         private
 
+        sig do
+          params(question: T.untyped, default: T.untyped, is_file: T.untyped, allow_empty: T.untyped).returns(T.untyped)
+        end
         def ask_free_form(question, default, is_file, allow_empty)
           if default && !allow_empty
             raise(ArgumentError, 'conflicting arguments: default enabled but allow_empty is false')
@@ -196,6 +210,10 @@ module CLI
           end
         end
 
+        sig do
+          params(question: T.untyped, options: T.untyped, multiple: T.untyped, default: T.untyped, filter_ui: T.untyped,
+            select_ui: T.untyped).returns(T.untyped)
+        end
         def ask_interactive(question, options = nil, multiple: false, default: nil, filter_ui: true, select_ui: true)
           raise(ArgumentError, 'conflicting arguments: options and block given') if options && block_given?
 
@@ -237,15 +255,17 @@ module CLI
           end
           puts_question("#{question} (You chose: {{italic:#{resp_text}}})")
 
-          return handler.call(resp) if block_given?
+          return T.must(handler).call(resp) if block_given?
           resp
         end
 
         # Useful for stubbing in tests
+        sig { params(options: T.untyped, multiple: T.untyped, default: T.untyped).returns(T.untyped) }
         def interactive_prompt(options, multiple: false, default: nil)
           InteractiveOptions.call(options, multiple: multiple, default: default)
         end
 
+        sig { params(default: T.untyped).returns(T.untyped) }
         def write_default_over_empty_input(default)
           CLI::UI.raw do
             STDERR.puts(
@@ -258,12 +278,14 @@ module CLI
           end
         end
 
+        sig { params(str: T.untyped).returns(T.untyped) }
         def puts_question(str)
           CLI::UI.with_frame_color(:blue) do
             STDOUT.puts(CLI::UI.fmt('{{?}} ' + str))
           end
         end
 
+        sig { params(is_file: T.untyped).returns(T.untyped) }
         def readline(is_file: false)
           if is_file
             Readline.completion_proc = Readline::FILENAME_COMPLETION_PROC

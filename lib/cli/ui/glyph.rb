@@ -1,14 +1,21 @@
+# typed: true
 require 'cli/ui'
 
 module CLI
   module UI
     class Glyph
+      extend T::Sig
+
       class InvalidGlyphHandle < ArgumentError
+        extend T::Sig
+
+        sig { params(handle: T.untyped).void }
         def initialize(handle)
           super
           @handle = handle
         end
 
+        sig { returns(T.untyped) }
         def message
           keys = Glyph.available.join(',')
           "invalid glyph handle: #{@handle} " \
@@ -16,6 +23,7 @@ module CLI
         end
       end
 
+      sig { returns(T.untyped) }
       attr_reader :handle, :codepoint, :color, :to_s, :fmt
 
       # Creates a new glyph
@@ -27,6 +35,7 @@ module CLI
       # * +plain+ - A fallback plain string to be used in case glyphs are disabled
       # * +color+ - What color to output the glyph. Check +CLI::UI::Color+ for options.
       #
+      sig { params(handle: T.untyped, codepoint: T.untyped, plain: T.untyped, color: T.untyped).void }
       def initialize(handle, codepoint, plain, color)
         @handle    = handle
         @codepoint = codepoint
@@ -43,6 +52,7 @@ module CLI
       #
       # ==== Returns
       # Returns the glyph string
+      sig { returns(T.untyped) }
       def char
         CLI::UI::OS.current.supports_emoji? ? @char : @plain
       end
@@ -68,6 +78,7 @@ module CLI
       # ==== Returns
       # Returns a terminal output-capable string
       #
+      sig { params(name: T.untyped).returns(T.untyped) }
       def self.lookup(name)
         MAP.fetch(name.to_s)
       rescue KeyError
@@ -76,6 +87,7 @@ module CLI
 
       # All available glyphs by name
       #
+      sig { returns(T.untyped) }
       def self.available
         MAP.keys
       end

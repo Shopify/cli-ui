@@ -1,8 +1,11 @@
+# typed: true
 require 'cli/ui'
 
 module CLI
   module UI
     class Progress
+      extend T::Sig
+
       # A Cyan filled block
       FILLED_BAR = "\e[46m"
       # A bright white block
@@ -28,6 +31,7 @@ module CLI
       #   CLI::UI::Progress.progress do |bar|
       #     bar.tick(percent: 0.05)
       #   end
+      sig { params(width: T.untyped).returns(T.untyped) }
       def self.progress(width: Terminal.width)
         bar = Progress.new(width: width)
         print(CLI::UI::ANSI.hide_cursor)
@@ -46,6 +50,7 @@ module CLI
       #
       # * +:width+ - The width of the terminal
       #
+      sig { params(width: T.untyped).void }
       def initialize(width: Terminal.width)
         @percent_done = 0
         @max_width = width
@@ -61,6 +66,7 @@ module CLI
       #
       # *Note:* The +:percent+ and +:set_percent must be between 0.00 and 1.0
       #
+      sig { params(percent: T.untyped, set_percent: T.untyped).returns(T.untyped) }
       def tick(percent: 0.01, set_percent: nil)
         raise ArgumentError, 'percent and set_percent cannot both be specified' if percent != 0.01 && set_percent
         @percent_done += percent
@@ -73,6 +79,7 @@ module CLI
 
       # Format the progress bar to be printed to terminal
       #
+      sig { returns(T.untyped) }
       def to_s
         suffix = " #{(@percent_done * 100).floor}%".ljust(5)
         workable_width = @max_width - Frame.prefix_width - suffix.size

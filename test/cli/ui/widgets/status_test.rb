@@ -3,7 +3,7 @@ require('test_helper')
 module CLI
   module UI
     module Widgets
-      class StatusTest < MiniTest::Test
+      class StatusTest < Minitest::Test
         def setup
           Spinner.index = 0
         end

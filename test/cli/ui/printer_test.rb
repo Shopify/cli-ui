@@ -2,7 +2,7 @@ require 'test_helper'
 
 module CLI
   module UI
-    class PrinterTest < MiniTest::Test
+    class PrinterTest < Minitest::Test
       def test_puts_color
         out, _ = capture_io do
           CLI::UI::StdoutRouter.ensure_activated

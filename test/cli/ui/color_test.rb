@@ -2,7 +2,7 @@ require 'test_helper'
 
 module CLI
   module UI
-    class ColorTest < MiniTest::Test
+    class ColorTest < Minitest::Test
       def test_colors
         assert_equal("\x1b[31m", Color::RED.code)
         assert_equal("\x1b[32m", Color::GREEN.code)

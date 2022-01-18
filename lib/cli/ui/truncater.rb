@@ -1,3 +1,4 @@
+# typed: true
 # frozen_string_literal: true
 
 require 'cli/ui'
@@ -27,12 +28,15 @@ module CLI
       TRUNCATED = "\x1b[0m…"
 
       class << self
+        extend T::Sig
+
+        sig { params(text: T.untyped, printing_width: T.untyped).returns(T.untyped) }
         def call(text, printing_width)
           return text if text.size <= printing_width
 
           width            = 0
           mode             = PARSE_ROOT
-          truncation_index = nil
+          truncation_index = T.let(nil, T.nilable(Integer))
 
           codepoints = text.codepoints
           codepoints.each.with_index do |cp, index|
@@ -88,6 +92,7 @@ module CLI
 
         private
 
+        sig { params(printable_codepoint: T.untyped).returns(T.untyped) }
         def width(printable_codepoint)
           case printable_codepoint
           when EMOJI_RANGE

@@ -1,5 +1,13 @@
+# typed: true
+
+unless defined?(T)
+  require('cli/ui/sorbet_runtime_stub')
+end
+
 module CLI
   module UI
+    extend T::Sig
+
     autoload :ANSI,      'cli/ui/ansi'
     autoload :Glyph,     'cli/ui/glyph'
     autoload :Color,     'cli/ui/color'
@@ -25,6 +33,7 @@ module CLI
     #
     # * +handle+ - handle of the glyph to resolve
     #
+    sig { params(handle: T.untyped).returns(T.untyped) }
     def self.glyph(handle)
       CLI::UI::Glyph.lookup(handle)
     end
@@ -36,6 +45,7 @@ module CLI
     #
     # * +input+ - color to resolve
     #
+    sig { params(input: T.untyped).returns(T.untyped) }
     def self.resolve_color(input)
       case input
       when CLI::UI::Color, nil
@@ -51,6 +61,7 @@ module CLI
     # ==== Attributes
     #
     # * +input+ - frame style to resolve
+    sig { params(input: T.untyped).returns(T.untyped) }
     def self.resolve_style(input)
       case input
       when CLI::UI::Frame::FrameStyle, nil
@@ -66,8 +77,9 @@ module CLI
     #
     # * +question+ - question to confirm
     #
-    def self.confirm(question, **kwargs)
-      CLI::UI::Prompt.confirm(question, **kwargs)
+    sig { params(question: T.untyped, default: T.untyped).returns(T.untyped) }
+    def self.confirm(question, default: true)
+      CLI::UI::Prompt.confirm(question, default: default)
     end
 
     # Convenience Method for +CLI::UI::Prompt.ask+
@@ -77,8 +89,32 @@ module CLI
     # * +question+ - question to ask
     # * +kwargs+ - arguments for +Prompt.ask+
     #
-    def self.ask(question, **kwargs)
-      CLI::UI::Prompt.ask(question, **kwargs)
+    sig do
+      params(question: T.untyped, options: T.untyped, default: T.untyped, is_file: T.untyped, allow_empty: T.untyped,
+        multiple: T.untyped, filter_ui: T.untyped, select_ui: T.untyped, options_proc: T.untyped).returns(T.untyped)
+    end
+    def self.ask(
+      question,
+      options: nil,
+      default: nil,
+      is_file: nil,
+      allow_empty: true,
+      multiple: false,
+      filter_ui: true,
+      select_ui: true,
+      &options_proc
+    )
+      CLI::UI::Prompt.ask(
+        question,
+        options: options,
+        default: default,
+        is_file: is_file,
+        allow_empty: allow_empty,
+        multiple: multiple,
+        filter_ui: filter_ui,
+        select_ui: select_ui,
+        &options_proc
+      )
     end
 
     # Convenience Method to resolve text using +CLI::UI::Formatter.format+
@@ -89,6 +125,7 @@ module CLI
     # * +input+ - input to format
     # * +truncate_to+ - number of characters to truncate the string to (or nil)
     #
+    sig { params(input: T.untyped, truncate_to: T.untyped).returns(T.untyped) }
     def self.resolve_text(input, truncate_to: nil)
       return input if input.nil?
       formatted = CLI::UI::Formatter.new(input).format
@@ -110,10 +147,12 @@ module CLI
     #
     # * +enable_color+ - should color be used? default to true unless output is redirected.
     #
+    sig { params(input: T.untyped, enable_color: T.untyped).returns(T.untyped) }
     def self.fmt(input, enable_color: enable_color?)
       CLI::UI::Formatter.new(input).format(enable_color: enable_color)
     end
 
+    sig { params(input: T.untyped).returns(T.untyped) }
     def self.wrap(input)
       CLI::UI::Wrap.new(input).wrap
     end
@@ -125,8 +164,28 @@ module CLI
     # * +msg+ - Message to print
     # * +kwargs+ - keyword arguments for +Printer.puts+
     #
-    def self.puts(msg, **kwargs)
-      CLI::UI::Printer.puts(msg, **kwargs)
+    sig do
+      params(msg: T.untyped, frame_color: T.untyped, to: T.untyped, encoding: T.untyped, format: T.untyped,
+        graceful: T.untyped, wrap: T.untyped).returns(T.untyped)
+    end
+    def self.puts(
+      msg,
+      frame_color: nil,
+      to: $stdout,
+      encoding: Encoding::UTF_8,
+      format: true,
+      graceful: true,
+      wrap: true
+    )
+      CLI::UI::Printer.puts(
+        msg,
+        frame_color: frame_color,
+        to: to,
+        encoding: encoding,
+        format: format,
+        graceful: graceful,
+        wrap: wrap,
+      )
     end
 
     # Convenience Method for +CLI::UI::Frame.open+
@@ -136,8 +195,20 @@ module CLI
     # * +args+ - arguments for +Frame.open+
     # * +block+ - block for +Frame.open+
     #
-    def self.frame(*args, **kwargs, &block)
-      CLI::UI::Frame.open(*args, **kwargs, &block)
+    sig do
+      params(text: T.untyped, color: T.untyped, failure_text: T.untyped, success_text: T.untyped, timing: T.untyped,
+        frame_style: T.untyped, block: T.untyped).returns(T.untyped)
+    end
+    def self.frame(text, color: nil, failure_text: nil, success_text: nil, timing: nil, frame_style: nil, &block)
+      CLI::UI::Frame.open(
+        text,
+        color: color,
+        failure_text: failure_text,
+        success_text: success_text,
+        timing: timing,
+        frame_style: frame_style,
+        &block
+      )
     end
 
     # Convenience Method for +CLI::UI::Spinner.spin+
@@ -147,8 +218,9 @@ module CLI
     # * +args+ - arguments for +Spinner.open+
     # * +block+ - block for +Spinner.open+
     #
-    def self.spinner(*args, **kwargs, &block)
-      CLI::UI::Spinner.spin(*args, **kwargs, &block)
+    sig { params(title: T.untyped, auto_debrief: T.untyped, block: T.untyped).returns(T.untyped) }
+    def self.spinner(title, auto_debrief: true, &block)
+      CLI::UI::Spinner.spin(title, auto_debrief: auto_debrief, &block)
     end
 
     # Convenience Method to override frame color using +CLI::UI::Frame.with_frame_color+
@@ -158,6 +230,7 @@ module CLI
     # * +color+ - color to override to
     # * +block+ - block for +Frame.with_frame_color_override+
     #
+    sig { params(color: T.untyped, block: T.untyped).returns(T.untyped) }
     def self.with_frame_color(color, &block)
       CLI::UI::Frame.with_frame_color_override(color, &block)
     end
@@ -168,6 +241,7 @@ module CLI
     #
     # * +path+ - path to duplicate output to
     #
+    sig { params(path: T.untyped).returns(T.untyped) }
     def self.log_output_to(path)
       if CLI::UI::StdoutRouter.duplicate_output_to
         raise 'multiple logs not allowed'
@@ -187,6 +261,7 @@ module CLI
     #
     # * +block+ - block in which to disable frames
     #
+    sig { returns(T.untyped) }
     def self.raw
       prev = Thread.current[:no_cliui_frame_inset]
       Thread.current[:no_cliui_frame_inset] = true
@@ -199,6 +274,7 @@ module CLI
     # is enabled when STDOUT is a TTY; that is, when output has not been
     # redirected to another program or to a file.
     #
+    sig { returns(T.untyped) }
     def self.enable_color?
       @enable_color
     end
@@ -209,6 +285,7 @@ module CLI
     #
     # * +bool+ - true or false; enable or disable colour.
     #
+    sig { params(bool: T.untyped).returns(T.untyped) }
     def self.enable_color=(bool)
       @enable_color = !!bool
     end
@@ -224,6 +301,7 @@ module CLI
     #
     # * +symbol+ - the default frame style to use for frames
     #
+    sig { params(frame_style: T.untyped).returns(T.untyped) }
     def self.frame_style=(frame_style)
       Frame.frame_style = frame_style.to_sym
     end

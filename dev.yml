@@ -1,5 +1,5 @@
 up:
-  - ruby: 2.5.1
+  - ruby: 3.1.0
   - bundler
 
 commands:
@@ -12,3 +12,6 @@ commands:
         rake test $@
       fi
   style: "bundle exec rubocop -D"
+  typecheck:
+    run: srb
+    aliases: [tc]

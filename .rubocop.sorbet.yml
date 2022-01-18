@@ -1,0 +1,44 @@
+Sorbet:
+  Enabled: true
+
+Sorbet/ValidSigil:
+  Enabled: true
+  Exclude:
+    - lib/cli/ui/sorbet_runtime_stub.rb
+
+Sorbet/FalseSigil:
+  Enabled: false
+
+Sorbet/TrueSigil:
+  Enabled: true
+  Include:
+    - "**/*.rb"
+    - "**/*.rbi"
+    - "**/*.rake"
+    - "**/*.ru"
+  Exclude:
+    - lib/cli/ui/sorbet_runtime_stub.rb
+    - "test/**/*"
+
+Sorbet/EnforceSigilOrder:
+  Enabled: true
+
+Sorbet/EnforceSignatures:
+  Enabled: true
+  Exclude:
+    - lib/cli/ui/sorbet_runtime_stub.rb
+    - "test/**/*"
+
+Sorbet/SignatureBuildOrder:
+  Enabled: true
+
+Sorbet/KeywordArgumentOrdering:
+  Enabled: true
+
+Sorbet/ConstantsFromStrings:
+  Enabled: true
+  Exclude:
+    - "examples/**/*"
+
+Sorbet/ForbidIncludeConstLiteral:
+  Enabled: false

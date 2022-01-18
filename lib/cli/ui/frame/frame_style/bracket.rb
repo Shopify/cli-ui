@@ -1,3 +1,4 @@
+# typed: true
 module CLI
   module UI
     module Frame
@@ -12,10 +13,14 @@ module CLI
           BOTTOM_LEFT = '┗'
 
           class << self
+            extend T::Sig
+
+            sig { returns(T.untyped) }
             def name
               'bracket'
             end
 
+            sig { returns(T.untyped) }
             def prefix
               VERTICAL
             end
@@ -34,6 +39,7 @@ module CLI
             #
             #   ┏━━ Open
             #
+            sig { params(text: T.untyped, color: T.untyped).returns(T.untyped) }
             def open(text, color:)
               edge(text, color: color, first: TOP_LEFT)
             end
@@ -52,6 +58,7 @@ module CLI
             #
             #   ┣━━ Divider
             #
+            sig { params(text: T.untyped, color: T.untyped).returns(T.untyped) }
             def divider(text, color:)
               edge(text, color: color, first: DIVIDER)
             end
@@ -71,12 +78,16 @@ module CLI
             #
             #   ┗━━ Close
             #
+            sig { params(text: T.untyped, color: T.untyped, right_text: T.untyped).returns(T.untyped) }
             def close(text, color:, right_text: nil)
               edge(text, color: color, right_text: right_text, first: BOTTOM_LEFT)
             end
 
             private
 
+            sig do
+              params(text: T.untyped, color: T.untyped, first: T.untyped, right_text: T.untyped).returns(T.untyped)
+            end
             def edge(text, color:, first:, right_text: nil)
               color = CLI::UI.resolve_color(color)
 
