@@ -1,3 +1,4 @@
+# typed: true
 # frozen_string_literal: true
 
 require('cli/ui')
@@ -53,8 +54,10 @@ module CLI
       LITERAL_BRACES = :__literal_braces__
 
       class FormatError < StandardError
+        sig { params(input: T.untyped).returns(T.untyped) }
         attr_accessor :input, :index
 
+        sig { params(message: T.untyped, input: T.untyped, index: T.untyped).returns(T.untyped) }
         def initialize(message = nil, input = nil, index = nil)
           super(message)
           @input = input
@@ -68,6 +71,7 @@ module CLI
       #
       # * +text+ - the text to format
       #
+      sig { params(text: T.untyped).returns(T.untyped) }
       def initialize(text)
         @text = text
       end
@@ -82,6 +86,7 @@ module CLI
       #
       # * +:enable_color+ - enable color output? Default is true unless output is redirected
       #
+      sig { params(sgr_map: T.untyped, enable_color: T.untyped).returns(T.untyped) }
       def format(sgr_map = SGR_MAP, enable_color: CLI::UI.enable_color?)
         @nodes = []
         stack = parse_body(StringScanner.new(@text))
@@ -107,6 +112,7 @@ module CLI
 
       private
 
+      sig { params(text: T.untyped, fmt: T.untyped, sgr_map: T.untyped).returns(T.untyped) }
       def apply_format(text, fmt, sgr_map)
         sgr = fmt.each_with_object(+'0') do |name, str|
           next if name == LITERAL_BRACES
@@ -123,6 +129,7 @@ module CLI
         CLI::UI::ANSI.sgr(sgr) + text
       end
 
+      sig { params(sc: T.untyped, stack: T.untyped).returns(T.untyped) }
       def parse_expr(sc, stack)
         if (match = sc.scan(SCAN_GLYPH))
           glyph_handle = match[0]
@@ -165,6 +172,7 @@ module CLI
         stack
       end
 
+      sig { params(sc: T.untyped, stack: T.untyped).returns(T.untyped) }
       def parse_body(sc, stack = [])
         match = sc.scan(SCAN_BODY)
         if match&.end_with?(BEGIN_EXPR)
@@ -184,6 +192,7 @@ module CLI
         stack
       end
 
+      sig { params(text: T.untyped, stack: T.untyped).returns(T.untyped) }
       def emit(text, stack)
         return if text.nil? || text.empty?
         @nodes << [text, stack.reject { |n| n == LITERAL_BRACES }]

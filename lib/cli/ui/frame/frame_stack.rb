@@ -1,3 +1,4 @@
+# typed: true
 module CLI
   module UI
     module Frame
@@ -6,8 +7,10 @@ module CLI
         STYLE_ENVVAR = 'CLI_STYLE_STACK'
 
         class StackItem
+          sig { returns(T.untyped) }
           attr_reader :color, :frame_style
 
+          sig { params(color_name: T.untyped, style_name: T.untyped).returns(T.untyped) }
           def initialize(color_name, style_name)
             @color = CLI::UI.resolve_color(color_name)
             @frame_style = CLI::UI.resolve_style(style_name)
@@ -16,6 +19,7 @@ module CLI
 
         class << self
           # Fetch all items off the frame stack
+          sig { returns(T.untyped) }
           def items
             colors = ENV.fetch(COLOR_ENVVAR, '').split(':').map(&:to_sym)
             styles = ENV.fetch(STYLE_ENVVAR, '').split(':').map(&:to_sym)
@@ -43,6 +47,7 @@ module CLI
           # If both an item and a color/style pair are given, raises an +ArgumentError+
           # If the given item is not a +StackItem+, raises an +ArgumentError+
           #
+          sig { params(item: T.untyped, color: T.untyped, style: T.untyped).returns(T.untyped) }
           def push(item = nil, color: nil, style: nil)
             unless item.nil?
               unless item.is_a?(StackItem)
@@ -63,6 +68,7 @@ module CLI
           end
 
           # Removes and returns the last stack item off the stack
+          sig { returns(T.untyped) }
           def pop
             curr = items
             ret = curr.pop
@@ -79,6 +85,7 @@ module CLI
           # This is done to preserve backward compatibility with earlier versions of cli/ui.
           # This ensures that any code that relied upon previous stack behavior should continue
           # to work.
+          sig { params(items: T.untyped).returns(T.untyped) }
           def serialize(items)
             colors = []
             styles = []

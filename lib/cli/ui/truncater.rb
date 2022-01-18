@@ -1,3 +1,4 @@
+# typed: true
 # frozen_string_literal: true
 
 require 'cli/ui'
@@ -27,6 +28,7 @@ module CLI
       TRUNCATED = "\x1b[0m…"
 
       class << self
+        sig { params(text: T.untyped, printing_width: T.untyped).returns(T.untyped) }
         def call(text, printing_width)
           return text if text.size <= printing_width
 
@@ -88,6 +90,7 @@ module CLI
 
         private
 
+        sig { params(printable_codepoint: T.untyped).returns(T.untyped) }
         def width(printable_codepoint)
           case printable_codepoint
           when EMOJI_RANGE

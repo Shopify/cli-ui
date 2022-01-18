@@ -1,13 +1,16 @@
+# typed: true
 require('cli/ui')
 
 module CLI
   module UI
     module Widgets
       class Base
+        sig { params(argstring: T.untyped).returns(T.untyped) }
         def self.call(argstring)
           new(argstring).render
         end
 
+        sig { params(argstring: T.untyped).returns(T.untyped) }
         def initialize(argstring)
           pat = self.class.argparse_pattern
           unless (@match_data = pat.match(argstring))
@@ -18,6 +21,7 @@ module CLI
           end
         end
 
+        sig { returns(T.untyped) }
         def self.argparse_pattern
           const_get(:ARGPARSE_PATTERN)
         end

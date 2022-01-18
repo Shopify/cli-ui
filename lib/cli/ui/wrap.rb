@@ -1,5 +1,7 @@
 # coding: utf-8
 
+# typed: true
+
 require 'cli/ui'
 require 'cli/ui/frame/frame_stack'
 require 'cli/ui/frame/frame_style'
@@ -7,10 +9,12 @@ require 'cli/ui/frame/frame_style'
 module CLI
   module UI
     class Wrap
+      sig { params(input: T.untyped).returns(T.untyped) }
       def initialize(input)
         @input = input
       end
 
+      sig { returns(T.untyped) }
       def wrap
         max_width = Terminal.width - Frame.prefix_width
         width = 0

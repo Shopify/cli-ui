@@ -1,5 +1,7 @@
 # coding: utf-8
 
+# typed: true
+
 require 'io/console'
 
 module CLI
@@ -23,6 +25,7 @@ module CLI
         # Ask an interactive question
         #   CLI::UI::Prompt::InteractiveOptions.call(%w(rails go python))
         #
+        sig { params(options: T.untyped, multiple: T.untyped, default: T.untyped).returns(T.untyped) }
         def self.call(options, multiple: false, default: nil)
           list = new(options, multiple: multiple, default: default)
           selected = list.call
@@ -40,6 +43,7 @@ module CLI
         #
         #   CLI::UI::Prompt::InteractiveOptions.new(%w(rails go python))
         #
+        sig { params(options: T.untyped, multiple: T.untyped, default: T.untyped).returns(T.untyped) }
         def initialize(options, multiple: false, default: nil)
           @options = options
           @active = 1
@@ -67,6 +71,7 @@ module CLI
         # Calls the +InteractiveOptions+ and asks the question
         # Usually used from +self.call+
         #
+        sig { returns(T.untyped) }
         def call
           calculate_option_line_lengths
           CLI::UI.raw { print(ANSI.hide_cursor) }
@@ -86,6 +91,7 @@ module CLI
 
         private
 
+        sig { returns(T.untyped) }
         def calculate_option_line_lengths
           @terminal_width_at_calculation_time = CLI::UI::Terminal.width
           # options will be an array of questions but each option can be multi-line
@@ -111,6 +117,7 @@ module CLI
           end
         end
 
+        sig { params(number_of_lines: T.untyped).returns(T.untyped) }
         def reset_position(number_of_lines = num_lines)
           # This will put us back at the beginning of the options
           # When we redraw the options, they will be overwritten
@@ -119,6 +126,7 @@ module CLI
           end
         end
 
+        sig { params(number_of_lines: T.untyped).returns(T.untyped) }
         def clear_output(number_of_lines = num_lines)
           CLI::UI.raw do
             # Write over all lines with whitespace
@@ -134,10 +142,12 @@ module CLI
 
         # Don't use this in place of +@displaying_metadata+, this updates too
         # quickly to be useful when drawing to the screen.
+        sig { returns(T.untyped) }
         def display_metadata?
           filtering? || selecting? || has_filter?
         end
 
+        sig { returns(T.untyped) }
         def num_lines
           calculate_option_line_lengths if terminal_width_changed?
 
@@ -150,6 +160,7 @@ module CLI
           option_length + (@displaying_metadata ? 1 : 0)
         end
 
+        sig { returns(T.untyped) }
         def terminal_width_changed?
           @terminal_width_at_calculation_time != CLI::UI::Terminal.width
         end
@@ -159,6 +170,7 @@ module CLI
         CTRL_C = "\u0003"
         CTRL_D = "\u0004"
 
+        sig { returns(T.untyped) }
         def up
           active_index = @filtered_options.index { |_, num| num == @active } || 0
 
@@ -169,6 +181,7 @@ module CLI
           @redraw = true
         end
 
+        sig { returns(T.untyped) }
         def down
           active_index = @filtered_options.index { |_, num| num == @active } || 0
 
@@ -181,6 +194,7 @@ module CLI
 
         # n is 1-indexed selection
         # n == 0 if "Done" was selected in @multiple mode
+        sig { params(n: T.untyped).returns(T.untyped) }
         def select_n(n)
           if @multiple
             if n == 0
@@ -201,6 +215,7 @@ module CLI
           @redraw = true
         end
 
+        sig { params(char: T.untyped).returns(T.untyped) }
         def select_bool(char)
           return unless (@options - ['yes', 'no']).empty?
           opt = @options.detect { |o| o.start_with?(char) }
@@ -209,16 +224,19 @@ module CLI
           @redraw = true
         end
 
+        sig { params(char: T.untyped).returns(T.untyped) }
         def build_selection(char)
           @active = (@active.to_s + char).to_i
           @redraw = true
         end
 
+        sig { returns(T.untyped) }
         def chop_selection
           @active = @active.to_s.chop.to_i
           @redraw = true
         end
 
+        sig { params(char: T.untyped).returns(T.untyped) }
         def update_search(char)
           @redraw = true
 
@@ -236,18 +254,21 @@ module CLI
           end
         end
 
+        sig { returns(T.untyped) }
         def select_current
           # Prevent selection of invisible options
           return unless presented_options.any? { |_, num| num == @active }
           select_n(@active)
         end
 
+        sig { returns(T.untyped) }
         def process_input_until_redraw_required
           @redraw = false
           wait_for_user_input until @redraw
         end
 
         # rubocop:disable Style/WhenThen,Layout/SpaceBeforeSemicolon,Style/Semicolon
+        sig { returns(T.untyped) }
         def wait_for_user_input
           char = read_char
           @last_char = char
@@ -305,35 +326,42 @@ module CLI
         end
         # rubocop:enable Style/WhenThen,Layout/SpaceBeforeSemicolon
 
+        sig { returns(T.untyped) }
         def selecting?
           @state == :line_select
         end
 
+        sig { returns(T.untyped) }
         def filtering?
           @state == :filter
         end
 
+        sig { returns(T.untyped) }
         def has_filter?
           !@filter.empty?
         end
 
+        sig { returns(T.untyped) }
         def start_filter
           @state = :filter
           @redraw = true
         end
 
+        sig { returns(T.untyped) }
         def start_line_select
           @state  = :line_select
           @active = 0
           @redraw = true
         end
 
+        sig { returns(T.untyped) }
         def stop_line_select
           @state = :root
           @active = 1 if @active.zero?
           @redraw = true
         end
 
+        sig { returns(T.untyped) }
         def read_char
           if $stdin.tty? && !ENV['TEST']
             $stdin.getch # raw mode for tty
@@ -344,6 +372,7 @@ module CLI
           "\e"
         end
 
+        sig { params(recalculate: T.untyped).returns(T.untyped) }
         def presented_options(recalculate: false)
           return @presented_options unless recalculate
 
@@ -386,36 +415,44 @@ module CLI
           @presented_options
         end
 
+        sig { returns(T.untyped) }
         def ensure_visible_is_active
           unless presented_options.any? { |_, num| num == @active }
             @active = presented_options.first&.last.to_i
           end
         end
 
+        sig { returns(T.untyped) }
         def distance_from_selection_to_end
           @presented_options.count - index_of_active_option
         end
 
+        sig { returns(T.untyped) }
         def distance_from_start_to_selection
           index_of_active_option
         end
 
+        sig { returns(T.untyped) }
         def index_of_active_option
           @presented_options.index { |_, num| num == @active }.to_i
         end
 
+        sig { returns(T.untyped) }
         def ensure_last_item_is_continuation_marker
           @presented_options.push(['...', nil]) if @presented_options.last.last
         end
 
+        sig { returns(T.untyped) }
         def ensure_first_item_is_continuation_marker
           @presented_options.unshift(['...', nil]) if @presented_options.first.last
         end
 
+        sig { returns(T.untyped) }
         def max_lines
           CLI::UI::Terminal.height - (@displaying_metadata ? 3 : 2) # Keeps a one line question visible
         end
 
+        sig { returns(T.untyped) }
         def render_options
           previously_displayed_lines = num_lines
 
@@ -470,6 +507,7 @@ module CLI
           end
         end
 
+        sig { params(format: T.untyped, choice: T.untyped).returns(T.untyped) }
         def format_choice(format, choice)
           eol = CLI::UI::ANSI.clear_to_end_of_line
           lines = choice.split("\n")

@@ -1,3 +1,4 @@
+# typed: true
 require 'cli/ui'
 require 'stringio'
 
@@ -5,15 +6,18 @@ module CLI
   module UI
     module StdoutRouter
       class << self
+        sig { params(duplicate_output_to: T.untyped).returns(T.untyped) }
         attr_accessor :duplicate_output_to
       end
 
       class Writer
+        sig { params(stream: T.untyped, name: T.untyped).returns(T.untyped) }
         def initialize(stream, name)
           @stream = stream
           @name = name
         end
 
+        sig { params(args: T.untyped).returns(T.untyped) }
         def write(*args)
           args = args.map do |str|
             if auto_frame_inset?
@@ -39,6 +43,7 @@ module CLI
 
         private
 
+        sig { params(stream: T.untyped, args: T.untyped).returns(T.untyped) }
         def prepend_id(stream, args)
           return args unless prepend_id_for_stream(stream)
           args.map do |a|
@@ -47,16 +52,19 @@ module CLI
           end
         end
 
+        sig { params(stream: T.untyped).returns(T.untyped) }
         def prepend_id_for_stream(stream)
           return false unless Thread.current[:cliui_output_id]
           return true if Thread.current[:cliui_output_id][:streams].include?(stream)
           false
         end
 
+        sig { returns(T.untyped) }
         def auto_frame_inset?
           !Thread.current[:no_cliui_frame_inset]
         end
 
+        sig { params(str: T.untyped, prefix: T.untyped).returns(T.untyped) }
         def apply_line_prefix(str, prefix)
           return '' if str.empty?
           prefixed = +''
@@ -78,6 +86,7 @@ module CLI
         @active_captures = 0
         @saved_stdin = nil
 
+        sig { returns(T.untyped) }
         def self.with_stdin_masked
           @m.synchronize do
             if @active_captures.zero?
@@ -99,14 +108,17 @@ module CLI
           end
         end
 
+        sig { params(block_args: T.untyped, with_frame_inset: T.untyped, block: T.untyped).returns(T.untyped) }
         def initialize(*block_args, with_frame_inset: true, &block)
           @with_frame_inset = with_frame_inset
           @block_args = block_args
           @block = block
         end
 
+        sig { returns(T.untyped) }
         attr_reader :stdout, :stderr
 
+        sig { returns(T.untyped) }
         def run
           require 'stringio'
 
@@ -151,6 +163,7 @@ module CLI
 
         NotEnabled = Class.new(StandardError)
 
+        sig { params(on_streams: T.untyped).returns(T.untyped) }
         def with_id(on_streams:)
           unless on_streams.is_a?(Array) && on_streams.all? { |s| s.respond_to?(:write) }
             raise ArgumentError, <<~EOF
@@ -171,14 +184,17 @@ module CLI
           Thread.current[:cliui_output_id] = nil
         end
 
+        sig { returns(T.untyped) }
         def current_id
           Thread.current[:cliui_output_id]
         end
 
+        sig { returns(T.untyped) }
         def assert_enabled!
           raise NotEnabled unless enabled?
         end
 
+        sig { returns(T.untyped) }
         def with_enabled
           enable
           yield
@@ -187,10 +203,12 @@ module CLI
         end
 
         # TODO: remove this
+        sig { returns(T.untyped) }
         def ensure_activated
           enable unless enabled?
         end
 
+        sig { returns(T.untyped) }
         def enable
           return false if enabled?($stdout) || enabled?($stderr)
           activate($stdout, :stdout)
@@ -198,10 +216,12 @@ module CLI
           true
         end
 
+        sig { params(stream: T.untyped).returns(T.untyped) }
         def enabled?(stream = $stdout)
           stream.respond_to?(WRITE_WITHOUT_CLI_UI)
         end
 
+        sig { returns(T.untyped) }
         def disable
           return false unless enabled?($stdout) && enabled?($stderr)
           deactivate($stdout)
@@ -211,12 +231,14 @@ module CLI
 
         private
 
+        sig { params(stream: T.untyped).returns(T.untyped) }
         def deactivate(stream)
           sc = stream.singleton_class
           sc.send(:remove_method, :write)
           sc.send(:alias_method, :write, WRITE_WITHOUT_CLI_UI)
         end
 
+        sig { params(stream: T.untyped, streamname: T.untyped).returns(T.untyped) }
         def activate(stream, streamname)
           writer = StdoutRouter::Writer.new(stream, streamname)
 

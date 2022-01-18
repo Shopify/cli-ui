@@ -1,3 +1,4 @@
+# typed: true
 module CLI
   module UI
     autoload :ANSI,      'cli/ui/ansi'
@@ -25,6 +26,7 @@ module CLI
     #
     # * +handle+ - handle of the glyph to resolve
     #
+    sig { params(handle: T.untyped).returns(T.untyped) }
     def self.glyph(handle)
       CLI::UI::Glyph.lookup(handle)
     end
@@ -36,6 +38,7 @@ module CLI
     #
     # * +input+ - color to resolve
     #
+    sig { params(input: T.untyped).returns(T.untyped) }
     def self.resolve_color(input)
       case input
       when CLI::UI::Color, nil
@@ -51,6 +54,7 @@ module CLI
     # ==== Attributes
     #
     # * +input+ - frame style to resolve
+    sig { params(input: T.untyped).returns(T.untyped) }
     def self.resolve_style(input)
       case input
       when CLI::UI::Frame::FrameStyle, nil
@@ -66,6 +70,7 @@ module CLI
     #
     # * +question+ - question to confirm
     #
+    sig { params(question: T.untyped, kwargs: T.untyped).returns(T.untyped) }
     def self.confirm(question, **kwargs)
       CLI::UI::Prompt.confirm(question, **kwargs)
     end
@@ -77,6 +82,7 @@ module CLI
     # * +question+ - question to ask
     # * +kwargs+ - arguments for +Prompt.ask+
     #
+    sig { params(question: T.untyped, kwargs: T.untyped).returns(T.untyped) }
     def self.ask(question, **kwargs)
       CLI::UI::Prompt.ask(question, **kwargs)
     end
@@ -89,6 +95,7 @@ module CLI
     # * +input+ - input to format
     # * +truncate_to+ - number of characters to truncate the string to (or nil)
     #
+    sig { params(input: T.untyped, truncate_to: T.untyped).returns(T.untyped) }
     def self.resolve_text(input, truncate_to: nil)
       return input if input.nil?
       formatted = CLI::UI::Formatter.new(input).format
@@ -110,10 +117,12 @@ module CLI
     #
     # * +enable_color+ - should color be used? default to true unless output is redirected.
     #
+    sig { params(input: T.untyped, enable_color: T.untyped).returns(T.untyped) }
     def self.fmt(input, enable_color: enable_color?)
       CLI::UI::Formatter.new(input).format(enable_color: enable_color)
     end
 
+    sig { params(input: T.untyped).returns(T.untyped) }
     def self.wrap(input)
       CLI::UI::Wrap.new(input).wrap
     end
@@ -125,6 +134,7 @@ module CLI
     # * +msg+ - Message to print
     # * +kwargs+ - keyword arguments for +Printer.puts+
     #
+    sig { params(msg: T.untyped, kwargs: T.untyped).returns(T.untyped) }
     def self.puts(msg, **kwargs)
       CLI::UI::Printer.puts(msg, **kwargs)
     end
@@ -136,6 +146,7 @@ module CLI
     # * +args+ - arguments for +Frame.open+
     # * +block+ - block for +Frame.open+
     #
+    sig { params(args: T.untyped, kwargs: T.untyped, block: T.untyped).returns(T.untyped) }
     def self.frame(*args, **kwargs, &block)
       CLI::UI::Frame.open(*args, **kwargs, &block)
     end
@@ -147,6 +158,7 @@ module CLI
     # * +args+ - arguments for +Spinner.open+
     # * +block+ - block for +Spinner.open+
     #
+    sig { params(args: T.untyped, kwargs: T.untyped, block: T.untyped).returns(T.untyped) }
     def self.spinner(*args, **kwargs, &block)
       CLI::UI::Spinner.spin(*args, **kwargs, &block)
     end
@@ -158,6 +170,7 @@ module CLI
     # * +color+ - color to override to
     # * +block+ - block for +Frame.with_frame_color_override+
     #
+    sig { params(color: T.untyped, block: T.untyped).returns(T.untyped) }
     def self.with_frame_color(color, &block)
       CLI::UI::Frame.with_frame_color_override(color, &block)
     end
@@ -168,6 +181,7 @@ module CLI
     #
     # * +path+ - path to duplicate output to
     #
+    sig { params(path: T.untyped).returns(T.untyped) }
     def self.log_output_to(path)
       if CLI::UI::StdoutRouter.duplicate_output_to
         raise 'multiple logs not allowed'
@@ -187,6 +201,7 @@ module CLI
     #
     # * +block+ - block in which to disable frames
     #
+    sig { returns(T.untyped) }
     def self.raw
       prev = Thread.current[:no_cliui_frame_inset]
       Thread.current[:no_cliui_frame_inset] = true
@@ -199,6 +214,7 @@ module CLI
     # is enabled when STDOUT is a TTY; that is, when output has not been
     # redirected to another program or to a file.
     #
+    sig { returns(T.untyped) }
     def self.enable_color?
       @enable_color
     end
@@ -209,6 +225,7 @@ module CLI
     #
     # * +bool+ - true or false; enable or disable colour.
     #
+    sig { params(bool: T.untyped).returns(T.untyped) }
     def self.enable_color=(bool)
       @enable_color = !!bool
     end
@@ -224,6 +241,7 @@ module CLI
     #
     # * +symbol+ - the default frame style to use for frames
     #
+    sig { params(frame_style: T.untyped).returns(T.untyped) }
     def self.frame_style=(frame_style)
       Frame.frame_style = frame_style.to_sym
     end

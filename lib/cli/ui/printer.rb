@@ -1,3 +1,4 @@
+# typed: true
 require 'cli/ui'
 
 module CLI
@@ -28,6 +29,10 @@ module CLI
       #
       #   CLI::UI::Printer.puts('{{x}} Ouch', to: $stderr)
       #
+      sig do
+        params(msg: T.untyped, frame_color: T.untyped, to: T.untyped, encoding: T.untyped, format: T.untyped,
+          graceful: T.untyped, wrap: T.untyped).returns(T.untyped)
+      end
       def self.puts(
         msg,
         frame_color:

@@ -1,3 +1,4 @@
+# typed: true
 module CLI
   module UI
     module Spinner
@@ -20,6 +21,7 @@ module CLI
         #
         # https://user-images.githubusercontent.com/3074765/33798558-c452fa26-dce8-11e7-9e90-b4b34df21a46.gif
         #
+        sig { params(auto_debrief: T.untyped).returns(T.untyped) }
         def initialize(auto_debrief: true)
           @m = Mutex.new
           @consumed_lines = 0
@@ -33,6 +35,7 @@ module CLI
         end
 
         class Task
+          sig { returns(T.untyped) }
           attr_reader :title, :exception, :success, :stdout, :stderr
 
           # Initializes a new Task
@@ -43,6 +46,7 @@ module CLI
           # * +title+ - Title of the task
           # * +block+ - Block for the task, will be provided with an instance of the spinner
           #
+          sig { params(title: T.untyped, block: T.untyped).returns(T.untyped) }
           def initialize(title, &block)
             @title = title
             @always_full_render = title =~ Formatter::SCAN_WIDGET
@@ -65,6 +69,7 @@ module CLI
 
           # Checks if a task is finished
           #
+          sig { returns(T.untyped) }
           def check
             return true if @done
             return false if @thread.alive?
@@ -100,6 +105,7 @@ module CLI
           # * +force+ - force rerender of the task
           # * +width+ - current terminal width to format for
           #
+          sig { params(index: T.untyped, force: T.untyped, width: T.untyped).returns(T.untyped) }
           def render(index, force = true, width: CLI::UI::Terminal.width)
             @m.synchronize do
               if force || @always_full_render || @force_full_render
@@ -118,6 +124,7 @@ module CLI
           #
           # * +title+ - title to change the spinner to
           #
+          sig { params(new_title: T.untyped).returns(T.untyped) }
           def update_title(new_title)
             @m.synchronize do
               @always_full_render = new_title =~ Formatter::SCAN_WIDGET
@@ -128,6 +135,7 @@ module CLI
 
           private
 
+          sig { params(index: T.untyped, terminal_width: T.untyped).returns(T.untyped) }
           def full_render(index, terminal_width)
             prefix = inset +
               glyph(index) +
@@ -141,10 +149,12 @@ module CLI
               "\e[K"
           end
 
+          sig { params(index: T.untyped).returns(T.untyped) }
           def partial_render(index)
             CLI::UI::ANSI.cursor_forward(inset_width) + glyph(index) + CLI::UI::Color::RESET.code
           end
 
+          sig { params(index: T.untyped).returns(T.untyped) }
           def glyph(index)
             if @done
               @success ? CLI::UI::Glyph::CHECK.to_s : CLI::UI::Glyph::X.to_s
@@ -153,10 +163,12 @@ module CLI
             end
           end
 
+          sig { returns(T.untyped) }
           def inset
             @inset ||= CLI::UI::Frame.prefix
           end
 
+          sig { returns(T.untyped) }
           def inset_width
             @inset_width ||= CLI::UI::ANSI.printing_width(inset)
           end
@@ -174,6 +186,7 @@ module CLI
         #   spin_group.add('Title') { |spinner| sleep 1.0 }
         #   spin_group.wait
         #
+        sig { params(title: T.untyped, block: T.untyped).returns(T.untyped) }
         def add(title, &block)
           @m.synchronize do
             @tasks << Task.new(title, &block)
@@ -187,6 +200,7 @@ module CLI
         #   spin_group.add('Title') { |spinner| sleep 1.0 }
         #   spin_group.wait
         #
+        sig { returns(T.untyped) }
         def wait
           idx = 0
 
@@ -234,6 +248,7 @@ module CLI
 
         # Debriefs failed tasks is +auto_debrief+ is true
         #
+        sig { returns(T.untyped) }
         def debrief
           @m.synchronize do
             @tasks.each do |task|

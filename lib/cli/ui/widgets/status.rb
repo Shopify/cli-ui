@@ -1,3 +1,4 @@
+# typed: true
 # frozen-string-literal: true
 
 require('cli/ui')
@@ -20,6 +21,7 @@ module CLI
         SPINNER_STOPPED = '⠿'
         EMPTY_SET = '∅'
 
+        sig { returns(T.untyped) }
         def render
           if zero?(@succeeded) && zero?(@failed) && zero?(@working) && zero?(@pending)
             Color::RESET.code + Color::BOLD.code + EMPTY_SET + Color::RESET.code
@@ -31,28 +33,34 @@ module CLI
 
         private
 
+        sig { params(num_str: T.untyped).returns(T.untyped) }
         def zero?(num_str)
           num_str == '0'
         end
 
+        sig { params(num_str: T.untyped, rune: T.untyped, color: T.untyped).returns(T.untyped) }
         def colorize_if_nonzero(num_str, rune, color)
           color = Color::GRAY if zero?(num_str)
           color.code + num_str + rune
         end
 
+        sig { returns(T.untyped) }
         def succeeded_part
           colorize_if_nonzero(@succeeded, Glyph::CHECK.char, Color::GREEN)
         end
 
+        sig { returns(T.untyped) }
         def failed_part
           colorize_if_nonzero(@failed, Glyph::X.char, Color::RED)
         end
 
+        sig { returns(T.untyped) }
         def working_part
           rune = zero?(@working) ? SPINNER_STOPPED : Spinner.current_rune
           colorize_if_nonzero(@working, rune, Color::BLUE)
         end
 
+        sig { returns(T.untyped) }
         def pending_part
           colorize_if_nonzero(@pending, Glyph::HOURGLASS.char, Color::WHITE)
         end
