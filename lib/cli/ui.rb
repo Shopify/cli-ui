@@ -1,4 +1,9 @@
 # typed: true
+
+unless defined?(T)
+  require('cli/ui/sorbet_runtime_stub')
+end
+
 module CLI
   module UI
     extend T::Sig
