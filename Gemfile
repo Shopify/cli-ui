@@ -14,7 +14,7 @@ group :development, :test do
 end
 
 group :typecheck do
-  gem 'sorbet'
+  gem 'sorbet-static-and-runtime'
   gem 'tapioca', require: false
 end
 

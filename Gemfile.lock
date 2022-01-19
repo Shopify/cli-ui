@@ -78,6 +78,9 @@ GEM
     sorbet-static (0.5.9531-universal-darwin-20)
     sorbet-static (0.5.9531-universal-darwin-21)
     sorbet-static (0.5.9531-x86_64-linux)
+    sorbet-static-and-runtime (0.5.9531)
+      sorbet (= 0.5.9531)
+      sorbet-runtime (= 0.5.9531)
     spoom (1.1.7)
       sorbet (>= 0.5.9204)
       sorbet-runtime (>= 0.5.9204)
@@ -122,7 +125,7 @@ DEPENDENCIES
   rubocop-shopify
   rubocop-sorbet
   simplecov
-  sorbet
+  sorbet-static-and-runtime
   tapioca
 
 BUNDLED WITH
