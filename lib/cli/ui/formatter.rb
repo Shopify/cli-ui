@@ -23,6 +23,8 @@ module CLI
         'blue' => '94', # 9x = high-intensity fg color x
         'magenta' => '35',
         'cyan' => '36',
+        'gray' => '38;5;244',
+        'white' => '97',
         'bold' => '1',
         'italic' => '3',
         'underline' => '4',
