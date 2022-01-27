@@ -32,15 +32,20 @@ module CLI
       #   CLI::UI::Printer.puts('{{x}} Ouch', to: $stderr)
       #
       sig do
-        params(msg: T.untyped, frame_color: T.untyped, to: T.untyped, encoding: T.untyped, format: T.untyped,
-          graceful: T.untyped, wrap: T.untyped).returns(T.untyped)
+        params(
+          msg: String,
+          frame_color: T.nilable(Colorable),
+          to: IOLike,
+          encoding: T.nilable(Encoding),
+          format: T::Boolean,
+          graceful: T::Boolean,
+          wrap: T::Boolean
+        ).returns(T::Boolean)
       end
       def self.puts(
         msg,
-        frame_color:
-        nil,
-        to:
-        $stdout,
+        frame_color: nil,
+        to: $stdout,
         encoding: Encoding::UTF_8,
         format: true,
         graceful: true,

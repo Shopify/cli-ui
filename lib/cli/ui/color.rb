@@ -6,8 +6,11 @@ module CLI
     class Color
       extend T::Sig
 
-      sig { returns(T.untyped) }
-      attr_reader :sgr, :name, :code
+      sig { returns(String) }
+      attr_reader :sgr, :code
+
+      sig { returns(Symbol) }
+      attr_reader :name
 
       # Creates a new color mapping
       # Signatures can be found here:
@@ -18,7 +21,7 @@ module CLI
       # * +sgr+ - The color signature
       # * +name+ - The name of the color
       #
-      sig { params(sgr: T.untyped, name: T.untyped).void }
+      sig { params(sgr: String, name: Symbol).void }
       def initialize(sgr, name)
         @sgr  = sgr
         @code = CLI::UI::ANSI.sgr(sgr)
@@ -54,13 +57,13 @@ module CLI
       class InvalidColorName < ArgumentError
         extend T::Sig
 
-        sig { params(name: T.untyped).void }
+        sig { params(name: Symbol).void }
         def initialize(name)
           super
           @name = name
         end
 
-        sig { returns(T.untyped) }
+        sig { returns(String) }
         def message
           keys = Color.available.map(&:inspect).join(',')
           "invalid color: #{@name.inspect} " \
@@ -77,16 +80,16 @@ module CLI
       # ==== Returns
       # Returns a color code
       #
-      sig { params(name: T.untyped).returns(T.untyped) }
+      sig { params(name: T.any(Symbol, String)).returns(Color) }
       def self.lookup(name)
-        MAP.fetch(name)
+        MAP.fetch(name.to_sym)
       rescue KeyError
         raise InvalidColorName, name
       end
 
       # All available colors by name
       #
-      sig { returns(T.untyped) }
+      sig { returns(T::Array[Symbol]) }
       def self.available
         MAP.keys
       end

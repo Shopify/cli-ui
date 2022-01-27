@@ -98,30 +98,51 @@ module CLI
         #   end
         #
         sig do
-          params(question: T.untyped, options: T.untyped, default: T.untyped, is_file: T.untyped,
-            allow_empty: T.untyped, multiple: T.untyped, filter_ui: T.untyped, select_ui: T.untyped,
-            options_proc: T.untyped).returns(T.untyped)
+          params(
+            question: String,
+            options: T.nilable(T::Array[String]),
+            default: T.nilable(T.any(String, T::Array[String])),
+            is_file: T::Boolean,
+            allow_empty: T::Boolean,
+            multiple: T::Boolean,
+            filter_ui: T::Boolean,
+            select_ui: T::Boolean,
+            options_proc: T.nilable(T.proc.params(handler: OptionsHandler).void)
+          ).returns(T.any(String, T::Array[String]))
         end
         def ask(
           question,
           options: nil,
           default: nil,
-          is_file: nil,
+          is_file: false,
           allow_empty: true,
           multiple: false,
           filter_ui: true,
           select_ui: true,
           &options_proc
         )
-          if (options || block_given?) && ((default && !multiple) || is_file)
-            raise(ArgumentError, 'conflicting arguments: options provided with default or is_file')
+          has_options = !!(options || block_given?)
+          if has_options && default && !multiple
+            raise(ArgumentError, 'conflicting arguments: default may not be provided with options when not multiple')
           end
 
-          if options && multiple && default && !(default - options).empty?
+          if has_options && is_file
+            raise(ArgumentError, 'conflicting arguments: is_file is only useful when options are not provided')
+          end
+
+          if options && multiple && default && !(Array(default) - options).empty?
             raise(ArgumentError, 'conflicting arguments: default should only include elements present in options')
           end
 
-          if options || block_given?
+          if multiple && !has_options
+            raise(ArgumentError, 'conflicting arguments: options must be provided when multiple is true')
+          end
+
+          if !multiple && default.is_a?(Array)
+            raise(ArgumentError, 'conflicting arguments: multiple defaults may only be provided when multiple is true')
+          end
+
+          if has_options
             ask_interactive(
               question,
               options,
@@ -132,7 +153,7 @@ module CLI
               &options_proc
             )
           else
-            ask_free_form(question, default, is_file, allow_empty)
+            ask_free_form(question, T.cast(default, T.nilable(String)), is_file, allow_empty)
           end
         end
 
@@ -143,7 +164,7 @@ module CLI
         #
         # The password, without a trailing newline.
         # If the user simply presses "Enter" without typing any password, this will return an empty string.
-        sig { params(question: T.untyped).returns(T.untyped) }
+        sig { params(question: String).returns(String) }
         def ask_password(question)
           require 'io/console'
 
@@ -174,7 +195,7 @@ module CLI
         #
         #   CLI::UI::Prompt.confirm('Do a dangerous thing?', default: false)
         #
-        sig { params(question: T.untyped, default: T.untyped).returns(T.untyped) }
+        sig { params(question: String, default: T::Boolean).returns(T::Boolean) }
         def confirm(question, default: true)
           ask_interactive(question, default ? ['yes', 'no'] : ['no', 'yes'], filter_ui: false) == 'yes'
         end
@@ -182,7 +203,8 @@ module CLI
         private
 
         sig do
-          params(question: T.untyped, default: T.untyped, is_file: T.untyped, allow_empty: T.untyped).returns(T.untyped)
+          params(question: String, default: T.nilable(String), is_file: T::Boolean, allow_empty: T::Boolean)
+            .returns(String)
         end
         def ask_free_form(question, default, is_file, allow_empty)
           if default && !allow_empty
@@ -211,8 +233,14 @@ module CLI
         end
 
         sig do
-          params(question: T.untyped, options: T.untyped, multiple: T.untyped, default: T.untyped, filter_ui: T.untyped,
-            select_ui: T.untyped).returns(T.untyped)
+          params(
+            question: String,
+            options: T.nilable(T::Array[String]),
+            multiple: T::Boolean,
+            default: T.nilable(T.any(String, T::Array[String])),
+            filter_ui: T::Boolean,
+            select_ui: T::Boolean
+          ).returns(T.any(String, T::Array[String]))
         end
         def ask_interactive(question, options = nil, multiple: false, default: nil, filter_ui: true, select_ui: true)
           raise(ArgumentError, 'conflicting arguments: options and block given') if options && block_given?
@@ -224,7 +252,7 @@ module CLI
           end
 
           raise(ArgumentError, 'insufficient options') if options.nil? || options.empty?
-          navigate_text = if CLI::UI::OS.current.supports_arrow_keys?
+          navigate_text = if CLI::UI::OS.current.suggest_arrow_keys?
             'Choose with ↑ ↓ ⏎'
           else
             "Navigate up with 'k' and down with 'j', press Enter to select"
@@ -242,9 +270,9 @@ module CLI
           print(ANSI.previous_line + "\n")
 
           # reset the question to include the answer
-          resp_text = resp
-          if multiple
-            resp_text = case resp.size
+          resp_text = case resp
+          when Array
+            case resp.size
             when 0
               '<nothing>'
             when 1..2
@@ -252,6 +280,8 @@ module CLI
             else
               "#{resp.size} items"
             end
+          else
+            resp
           end
           puts_question("#{question} (You chose: {{italic:#{resp_text}}})")
 
@@ -260,12 +290,15 @@ module CLI
         end
 
         # Useful for stubbing in tests
-        sig { params(options: T.untyped, multiple: T.untyped, default: T.untyped).returns(T.untyped) }
+        sig do
+          params(options: T::Array[String], multiple: T::Boolean, default: T.nilable(T.any(T::Array[String], String)))
+            .returns(T.any(T::Array[String], String))
+        end
         def interactive_prompt(options, multiple: false, default: nil)
           InteractiveOptions.call(options, multiple: multiple, default: default)
         end
 
-        sig { params(default: T.untyped).returns(T.untyped) }
+        sig { params(default: String).void }
         def write_default_over_empty_input(default)
           CLI::UI.raw do
             STDERR.puts(
@@ -278,14 +311,14 @@ module CLI
           end
         end
 
-        sig { params(str: T.untyped).returns(T.untyped) }
+        sig { params(str: String).void }
         def puts_question(str)
           CLI::UI.with_frame_color(:blue) do
             STDOUT.puts(CLI::UI.fmt('{{?}} ' + str))
           end
         end
 
-        sig { params(is_file: T.untyped).returns(T.untyped) }
+        sig { params(is_file: T::Boolean).returns(String) }
         def readline(is_file: false)
           if is_file
             Readline.completion_proc = Readline::FILENAME_COMPLETION_PROC
@@ -303,7 +336,7 @@ module CLI
           # If a prompt is interrupted on Windows it locks the colour of the terminal from that point on, so we should
           # not change the colour here.
           prompt = prefix + CLI::UI.fmt('{{blue:> }}')
-          prompt += CLI::UI::Color::YELLOW.code if CLI::UI::OS.current.supports_color_prompt?
+          prompt += CLI::UI::Color::YELLOW.code if CLI::UI::OS.current.use_color_prompt?
 
           begin
             line = Readline.readline(prompt, true)

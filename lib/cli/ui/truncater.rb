@@ -30,7 +30,7 @@ module CLI
       class << self
         extend T::Sig
 
-        sig { params(text: T.untyped, printing_width: T.untyped).returns(T.untyped) }
+        sig { params(text: String, printing_width: Integer).returns(String) }
         def call(text, printing_width)
           return text if text.size <= printing_width
 
@@ -87,12 +87,12 @@ module CLI
           # the end of the string.
           return text if !truncation_index || width <= printing_width
 
-          codepoints[0...truncation_index].pack('U*') + TRUNCATED
+          T.must(codepoints[0...truncation_index]).pack('U*') + TRUNCATED
         end
 
         private
 
-        sig { params(printable_codepoint: T.untyped).returns(T.untyped) }
+        sig { params(printable_codepoint: Integer).returns(Integer) }
         def width(printable_codepoint)
           case printable_codepoint
           when EMOJI_RANGE

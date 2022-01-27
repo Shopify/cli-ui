@@ -13,7 +13,7 @@ module CLI
       # Returns the width of the terminal, if possible
       # Otherwise will return DEFAULT_WIDTH
       #
-      sig { returns(T.untyped) }
+      sig { returns(Integer) }
       def self.width
         winsize[1]
       end
@@ -21,12 +21,12 @@ module CLI
       # Returns the width of the terminal, if possible
       # Otherwise, will return DEFAULT_HEIGHT
       #
-      sig { returns(T.untyped) }
+      sig { returns(Integer) }
       def self.height
         winsize[0]
       end
 
-      sig { returns(T.untyped) }
+      sig { returns([Integer, Integer]) }
       def self.winsize
         @winsize ||= begin
           winsize = IO.console.winsize
@@ -42,7 +42,7 @@ module CLI
         end
       end
 
-      sig { returns(T.untyped) }
+      sig { void }
       def self.setup_winsize_trap
         @winsize_trap ||= Signal.trap('WINCH') do
           @winsize = nil

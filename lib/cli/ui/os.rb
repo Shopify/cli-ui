@@ -3,81 +3,56 @@ require 'rbconfig'
 
 module CLI
   module UI
-    module OS
+    class OS
       extend T::Sig
 
-      # Determines which OS is currently running the UI, to make it easier to
-      # adapt its behaviour to the features of the OS.
-      sig { returns(T.untyped) }
+      sig { params(emoji: T::Boolean, color_prompt: T::Boolean, arrow_keys: T::Boolean, shift_cursor: T::Boolean).void }
+      def initialize(emoji: true, color_prompt: true, arrow_keys: true, shift_cursor: false)
+        @emoji = emoji
+        @color_prompt = color_prompt
+        @arrow_keys = arrow_keys
+        @shift_cursor = shift_cursor
+      end
+
+      sig { returns(T::Boolean) }
+      def use_emoji?
+        @emoji
+      end
+
+      sig { returns(T::Boolean) }
+      def use_color_prompt?
+        @color_prompt
+      end
+
+      sig { returns(T::Boolean) }
+      def suggest_arrow_keys?
+        @arrow_keys
+      end
+
+      sig { returns(T::Boolean) }
+      def shift_cursor_back_on_horizontal_absolute?
+        @shift_cursor
+      end
+
+      sig { returns(OS) }
       def self.current
         @current_os ||= case RbConfig::CONFIG['host_os']
         when /darwin/
-          Mac
+          MAC
         when /linux/
-          Linux
+          LINUX
         else
           if RUBY_PLATFORM !~ /cygwin/ && ENV['OS'] == 'Windows_NT'
-            Windows
+            WINDOWS
           else
             raise "Could not determine OS from host_os #{RbConfig::CONFIG["host_os"]}"
           end
         end
       end
 
-      class Mac
-        class << self
-          extend T::Sig
-
-          sig { returns(T.untyped) }
-          def supports_emoji?
-            true
-          end
-
-          sig { returns(T.untyped) }
-          def supports_color_prompt?
-            true
-          end
-
-          sig { returns(T.untyped) }
-          def supports_arrow_keys?
-            true
-          end
-
-          sig { returns(T.untyped) }
-          def shift_cursor_on_line_reset?
-            false
-          end
-        end
-      end
-
-      class Linux < Mac
-      end
-
-      class Windows
-        class << self
-          extend T::Sig
-
-          sig { returns(T.untyped) }
-          def supports_emoji?
-            false
-          end
-
-          sig { returns(T.untyped) }
-          def supports_color_prompt?
-            false
-          end
-
-          sig { returns(T.untyped) }
-          def supports_arrow_keys?
-            false
-          end
-
-          sig { returns(T.untyped) }
-          def shift_cursor_on_line_reset?
-            true
-          end
-        end
-      end
+      MAC = OS.new
+      LINUX = OS.new
+      WINDOWS = OS.new(emoji: false, color_prompt: false, arrow_keys: false, shift_cursor: true)
     end
   end
 end

@@ -1,4 +1,6 @@
 up:
+  - homebrew:
+    - fswatch
   - ruby: 3.1.0
   - bundler
 
@@ -15,3 +17,18 @@ commands:
   typecheck:
     run: srb
     aliases: [tc]
+  watch:
+    aliases: [w]
+    subcommands:
+      style:
+        run: fswatch -e coverage -e "/\." -o . | xargs -n1 -I@ rake style
+        aliases: [st]
+      test:
+        run: fswatch -e coverage -e "/\." -o . | xargs -n1 -I@ rake test
+        alises: [t]
+      typecheck:
+        run: fswatch -e coverage -e "/\." -o . | xargs -n1 -I@ srb
+        aliases: [tc]
+      check:
+        run: fswatch -e coverage -e "/\." -o . | xargs -n1 -I@ bash -c 'srb && rake style test'
+        aliases: [ck]

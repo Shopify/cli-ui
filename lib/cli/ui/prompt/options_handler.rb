@@ -11,17 +11,17 @@ module CLI
           @options = {}
         end
 
-        sig { returns(T.untyped) }
+        sig { returns(T::Array[String]) }
         def options
           @options.keys
         end
 
-        sig { params(option: T.untyped, handler: T.untyped).returns(T.untyped) }
+        sig { params(option: String, handler: T.proc.params(option: String).returns(String)).void }
         def option(option, &handler)
           @options[option] = handler
         end
 
-        sig { params(options: T.untyped).returns(T.untyped) }
+        sig { params(options: T.any(T::Array[String], String)).returns(String) }
         def call(options)
           case options
           when Array

@@ -7,7 +7,7 @@ module CLI
 
         # Convenience method for +initialize+
         #
-        sig { params(title: T.untyped).returns(T.untyped) }
+        sig { params(title: String).returns(Async) }
         def self.start(title)
           new(title)
         end
@@ -23,7 +23,7 @@ module CLI
         #
         #   CLI::UI::Spinner::Async.new('Title')
         #
-        sig { params(title: T.untyped).void }
+        sig { params(title: String).void }
         def initialize(title)
           require 'thread'
           sg = CLI::UI::Spinner::SpinGroup.new
@@ -35,7 +35,7 @@ module CLI
 
         # Stops an asynchronous spinner
         #
-        sig { returns(T.untyped) }
+        sig { returns(T::Boolean) }
         def stop
           @m.synchronize { @cv.signal }
           @t.value

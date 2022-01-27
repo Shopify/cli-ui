@@ -134,7 +134,7 @@ module CLI
           files << file
         end
 
-        with_os_mock_and_reload(CLI::UI::OS::Windows, classes, files, &block)
+        with_os_mock_and_reload(CLI::UI::OS::WINDOWS, classes, files, &block)
       end
     end
   end

@@ -15,7 +15,8 @@ module CLI
       end
 
       def test_with_id_with_argument_errors
-        assert_raises(ArgumentError) do
+        skip('jruby runs without sorbet-runtime') if RUBY_ENGINE.include?('jruby')
+        assert_raises(TypeError) do
           StdoutRouter.with_id(on_streams: ['a']) do
             $stdout.puts 'hello'
           end

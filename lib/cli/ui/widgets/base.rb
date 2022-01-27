@@ -9,12 +9,12 @@ module CLI
         extend T::Helpers
         abstract!
 
-        sig { params(argstring: T.untyped).returns(T.untyped) }
+        sig { params(argstring: String).returns(String) }
         def self.call(argstring)
           new(argstring).render
         end
 
-        sig { params(argstring: T.untyped).void }
+        sig { params(argstring: String).void }
         def initialize(argstring)
           pat = self.class.argparse_pattern
           unless (@match_data = pat.match(argstring))
@@ -25,8 +25,11 @@ module CLI
           end
         end
 
-        sig { abstract.returns(T.untyped) }
+        sig { abstract.returns(Regexp) }
         def self.argparse_pattern; end
+
+        sig { abstract.returns(String) }
+        def render; end
       end
     end
   end

@@ -27,7 +27,7 @@ module CLI
 
       def test_plain_glyphs
         with_os_mock_and_reload(
-          CLI::UI::OS::Windows,
+          CLI::UI::OS::WINDOWS,
           :Glyph,
           File.join(File.dirname(__FILE__), '../../../lib/cli/ui/glyph.rb')
         ) do
