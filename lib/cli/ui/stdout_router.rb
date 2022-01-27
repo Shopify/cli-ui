@@ -5,23 +5,16 @@ require 'stringio'
 module CLI
   module UI
     module StdoutRouter
-      class << self
-        extend T::Sig
-
-        sig { returns(T.untyped) }
-        attr_accessor :duplicate_output_to
-      end
-
       class Writer
         extend T::Sig
 
-        sig { params(stream: T.untyped, name: T.untyped).void }
+        sig { params(stream: IOLike, name: Symbol).void }
         def initialize(stream, name)
           @stream = stream
           @name = name
         end
 
-        sig { params(args: T.untyped).returns(T.untyped) }
+        sig { params(args: String).void }
         def write(*args)
           args = args.map do |str|
             if auto_frame_inset?
@@ -39,15 +32,15 @@ module CLI
             return if hook.call(args.map(&:to_s).join, @name) == false
           end
 
-          @stream.write_without_cli_ui(*prepend_id(@stream, args))
+          T.unsafe(@stream).write_without_cli_ui(*prepend_id(@stream, args))
           if (dup = StdoutRouter.duplicate_output_to)
-            dup.write(*prepend_id(dup, args))
+            T.unsafe(dup).write(*prepend_id(dup, args))
           end
         end
 
         private
 
-        sig { params(stream: T.untyped, args: T.untyped).returns(T.untyped) }
+        sig { params(stream: IOLike, args: T::Array[String]).returns(T::Array[String]) }
         def prepend_id(stream, args)
           return args unless prepend_id_for_stream(stream)
           args.map do |a|
@@ -56,19 +49,19 @@ module CLI
           end
         end
 
-        sig { params(stream: T.untyped).returns(T.untyped) }
+        sig { params(stream: IOLike).returns(T::Boolean) }
         def prepend_id_for_stream(stream)
           return false unless Thread.current[:cliui_output_id]
           return true if Thread.current[:cliui_output_id][:streams].include?(stream)
           false
         end
 
-        sig { returns(T.untyped) }
+        sig { returns(T::Boolean) }
         def auto_frame_inset?
           !Thread.current[:no_cliui_frame_inset]
         end
 
-        sig { params(str: T.untyped, prefix: T.untyped).returns(T.untyped) }
+        sig { params(str: String, prefix: String).returns(String) }
         def apply_line_prefix(str, prefix)
           return '' if str.empty?
           prefixed = +''
@@ -92,8 +85,8 @@ module CLI
         @active_captures = 0
         @saved_stdin = nil
 
-        sig { returns(T.untyped) }
-        def self.with_stdin_masked
+        sig { type_parameters(:T).params(block: T.proc.returns(T.type_parameter(:T))).returns(T.type_parameter(:T)) }
+        def self.with_stdin_masked(&block)
           @m.synchronize do
             if @active_captures.zero?
               @saved_stdin = $stdin
@@ -114,14 +107,17 @@ module CLI
           end
         end
 
-        sig { params(block_args: T.untyped, with_frame_inset: T.untyped, block: T.untyped).void }
-        def initialize(*block_args, with_frame_inset: true, &block)
+        sig do
+          params(with_frame_inset: T::Boolean, block: T.proc.void).void
+        end
+        def initialize(with_frame_inset: true, &block)
           @with_frame_inset = with_frame_inset
-          @block_args = block_args
           @block = block
+          @stdout = ''
+          @stderr = ''
         end
 
-        sig { returns(T.untyped) }
+        sig { returns(String) }
         attr_reader :stdout, :stderr
 
         sig { returns(T.untyped) }
@@ -152,7 +148,7 @@ module CLI
             end
 
             begin
-              @block.call(*@block_args)
+              @block.call
             ensure
               @stdout = out.string
               @stderr = err.string
@@ -165,43 +161,44 @@ module CLI
       end
 
       class << self
+        extend T::Sig
+
         WRITE_WITHOUT_CLI_UI = :write_without_cli_ui
 
         NotEnabled = Class.new(StandardError)
 
-        sig { params(on_streams: T.untyped).returns(T.untyped) }
-        def with_id(on_streams:)
-          unless on_streams.is_a?(Array) && on_streams.all? { |s| s.respond_to?(:write) }
-            raise ArgumentError, <<~EOF
-            on_streams must be an array of objects that respond to `write`
-            These do not respond to write
-            #{on_streams.reject { |s| s.respond_to?(:write) }.map.with_index { |s| s.class.to_s }.join("\n")}
-            EOF
-          end
+        sig { returns(T.nilable(IOLike)) }
+        attr_accessor :duplicate_output_to
 
+        sig do
+          type_parameters(:T)
+            .params(on_streams: T::Array[IOLike], block: T.proc.params(id: String).returns(T.type_parameter(:T)))
+            .returns(T.type_parameter(:T))
+        end
+        def with_id(on_streams:, &block)
           require 'securerandom'
           id = format('%05d', rand(10**5))
           Thread.current[:cliui_output_id] = {
             id: id,
-            streams: on_streams,
+            streams: on_streams.map { |stream| T.cast(stream, IOLike) },
           }
           yield(id)
         ensure
           Thread.current[:cliui_output_id] = nil
         end
 
-        sig { returns(T.untyped) }
+        sig { returns(T.nilable(T::Hash[Symbol, T.any(String, IOLike)])) }
         def current_id
           Thread.current[:cliui_output_id]
         end
 
-        sig { returns(T.untyped) }
+        sig { void }
         def assert_enabled!
           raise NotEnabled unless enabled?
         end
 
-        sig { returns(T.untyped) }
-        def with_enabled
+        sig { type_parameters(:T).params(block: T.proc.returns(T.type_parameter(:T))).returns(T.type_parameter(:T)) }
+        def with_enabled(&block)
           enable
           yield
         ensure
@@ -209,12 +206,12 @@ module CLI
         end
 
         # TODO: remove this
-        sig { returns(T.untyped) }
+        sig { void }
         def ensure_activated
           enable unless enabled?
         end
 
-        sig { returns(T.untyped) }
+        sig { returns(T::Boolean) }
         def enable
           return false if enabled?($stdout) || enabled?($stderr)
           activate($stdout, :stdout)
@@ -222,12 +219,12 @@ module CLI
           true
         end
 
-        sig { params(stream: T.untyped).returns(T.untyped) }
+        sig { params(stream: IOLike).returns(T::Boolean) }
         def enabled?(stream = $stdout)
           stream.respond_to?(WRITE_WITHOUT_CLI_UI)
         end
 
-        sig { returns(T.untyped) }
+        sig { returns(T::Boolean) }
         def disable
           return false unless enabled?($stdout) && enabled?($stderr)
           deactivate($stdout)
@@ -237,14 +234,14 @@ module CLI
 
         private
 
-        sig { params(stream: T.untyped).returns(T.untyped) }
+        sig { params(stream: IOLike).void }
         def deactivate(stream)
           sc = stream.singleton_class
           sc.send(:remove_method, :write)
           sc.send(:alias_method, :write, WRITE_WITHOUT_CLI_UI)
         end
 
-        sig { params(stream: T.untyped, streamname: T.untyped).returns(T.untyped) }
+        sig { params(stream: IOLike, streamname: Symbol).void }
         def activate(stream, streamname)
           writer = StdoutRouter::Writer.new(stream, streamname)
 

@@ -15,31 +15,34 @@ module CLI
       # NOTE: The spacing in the assertion of this test is important for
       #       downstream projects and should be maintained.
       def test_puts_color_frame
-        Frame.open('test') do
-          out, _ = capture_io do
-            CLI::UI::StdoutRouter.ensure_activated
-            assert(Printer.puts('foo', frame_color: :red))
+        out = nil
+        capture_io do
+          Frame.open('test') do
+            out, _ = capture_io do
+              CLI::UI::StdoutRouter.ensure_activated
+              Printer.puts('foo', frame_color: :red)
+            end
           end
-
-          assert_equal("\e[31m┃ \e[0m\e[0mfoo\n", out)
         end
+
+        assert_equal("\e[31m┃ \e[0m\e[0mfoo\n", out)
       end
 
       def test_frame_with_long_texts
-        overlong_preamble = 'This is a long preamble! '
-        overlong_preamble *= (CLI::UI::Terminal.width / overlong_preamble.length).floor + 1
+        overlong_preamble = 'a' * (CLI::UI::Terminal.width + 1)
+        overlong_suffix = 'z' * (CLI::UI::Terminal.width + 1)
 
-        overlong_suffix = 'This overlaps the suffix! '
-        overlong_suffix *= (CLI::UI::Terminal.width / overlong_suffix.length).floor + 1
-
-        Frame.open(overlong_preamble, success_text: overlong_suffix) do
-          out, _ = capture_io do
-            CLI::UI::StdoutRouter.ensure_activated
-            assert(Printer.puts('foo', frame_color: :red))
+        out = nil
+        capture_io do
+          Frame.open(overlong_preamble, success_text: overlong_suffix) do
+            out, _ = capture_io do
+              CLI::UI::StdoutRouter.ensure_activated
+              Printer.puts('foo', frame_color: :red)
+            end
           end
-
-          assert_equal("\e[31m┃ \e[0m\e[0mfoo\n", out)
         end
+
+        assert_equal("\e[31m┃ \e[0m\e[0mfoo\n", out)
       end
 
       def test_puts_stream

@@ -10,12 +10,12 @@ module CLI
   module UI
     module Frame
       class UnnestedFrameException < StandardError; end
+      DEFAULT_FRAME_COLOR = CLI::UI.resolve_color(:cyan)
+
       class << self
         extend T::Sig
 
-        DEFAULT_FRAME_COLOR = CLI::UI.resolve_color(:cyan)
-
-        sig { returns(T.untyped) }
+        sig { returns(FrameStyle) }
         def frame_style
           @frame_style ||= FrameStyle::Box
         end
@@ -28,7 +28,7 @@ module CLI
         #
         # * +symbol+ or +FrameStyle+ - the default frame style to use for frames
         #
-        sig { params(frame_style: T.untyped).returns(T.untyped) }
+        sig { params(frame_style: FrameStylable).void }
         def frame_style=(frame_style)
           @frame_style = CLI::UI.resolve_style(frame_style)
         end
@@ -75,12 +75,27 @@ module CLI
         #
         #
         sig do
-          params(text: T.untyped, color: T.untyped, failure_text: T.untyped, success_text: T.untyped, timing: T.untyped,
-            frame_style: T.untyped).returns(T.untyped)
+          type_parameters(:T).params(
+            text: String,
+            color: Colorable,
+            failure_text: T.nilable(String),
+            success_text: T.nilable(String),
+            timing: T.any(T::Boolean, Numeric),
+            frame_style: FrameStylable,
+            block: T.nilable(T.proc.returns(T.type_parameter(:T)))
+          ).returns(T.nilable(T.type_parameter(:T)))
         end
-        def open(text, color: nil, failure_text: nil, success_text: nil, timing: nil, frame_style: nil)
-          frame_style = CLI::UI.resolve_style(frame_style || self.frame_style)
-          color = CLI::UI.resolve_color(color || DEFAULT_FRAME_COLOR)
+        def open(
+          text,
+          color: DEFAULT_FRAME_COLOR,
+          failure_text: nil,
+          success_text: nil,
+          timing: block_given?,
+          frame_style: self.frame_style,
+          &block
+        )
+          frame_style = CLI::UI.resolve_style(frame_style)
+          color = CLI::UI.resolve_color(color)
 
           unless block_given?
             if failure_text
@@ -95,7 +110,7 @@ module CLI
           t_start = Time.now
           CLI::UI.raw do
             print(prefix.chop)
-            puts frame_style.open(text, color: color)
+            puts frame_style.start(text, color: color)
           end
           FrameStack.push(color: color, style: frame_style)
 
@@ -107,14 +122,14 @@ module CLI
             success = yield
           rescue
             closed = true
-            t_diff = elasped(t_start, timing)
+            t_diff = elapsed(t_start, timing)
             close(failure_text, color: :red, elapsed: t_diff)
             raise
           else
             success
           ensure
             unless closed
-              t_diff = elasped(t_start, timing)
+              t_diff = elapsed(t_start, timing)
               if success != false
                 close(success_text, color: color, elapsed: t_diff)
               else
@@ -149,17 +164,17 @@ module CLI
         #
         # MUST be inside an open frame or it raises a +UnnestedFrameException+
         #
-        sig { params(text: T.untyped, color: T.untyped, frame_style: T.untyped).returns(T.untyped) }
+        sig { params(text: T.nilable(String), color: T.nilable(Colorable), frame_style: T.nilable(FrameStylable)).void }
         def divider(text, color: nil, frame_style: nil)
           fs_item = FrameStack.pop
           raise UnnestedFrameException, 'No frame nesting to unnest' unless fs_item
 
-          color = CLI::UI.resolve_color(color) || fs_item.color
-          frame_style = CLI::UI.resolve_style(frame_style) || fs_item.frame_style
+          divider_color = CLI::UI.resolve_color(color || fs_item.color)
+          frame_style = CLI::UI.resolve_style(frame_style || fs_item.frame_style)
 
           CLI::UI.raw do
             print(prefix.chop)
-            puts frame_style.divider(text, color: color)
+            puts frame_style.divider(text.to_s, color: divider_color)
           end
 
           FrameStack.push(fs_item)
@@ -189,22 +204,25 @@ module CLI
         #
         # MUST be inside an open frame or it raises a +UnnestedFrameException+
         #
-        sig { params(text: T.untyped, color: T.untyped, elapsed: T.untyped, frame_style: T.untyped).returns(T.untyped) }
+        sig do
+          params(
+            text: T.nilable(String),
+            color: T.nilable(Colorable),
+            elapsed: T.nilable(Numeric),
+            frame_style: T.nilable(FrameStylable)
+          ).void
+        end
         def close(text, color: nil, elapsed: nil, frame_style: nil)
           fs_item = FrameStack.pop
           raise UnnestedFrameException, 'No frame nesting to unnest' unless fs_item
 
-          color = CLI::UI.resolve_color(color) || fs_item.color
-          frame_style = CLI::UI.resolve_style(frame_style) || fs_item.frame_style
-
-          kwargs = {}
-          if elapsed
-            kwargs[:right_text] = "(#{elapsed.round(2)}s)"
-          end
+          close_color = CLI::UI.resolve_color(color || fs_item.color)
+          frame_style = CLI::UI.resolve_style(frame_style || fs_item.frame_style)
+          elapsed_string = elapsed ? "(#{elapsed.round(2)}s)" : nil
 
           CLI::UI.raw do
             print(prefix.chop)
-            puts frame_style.close(text, color: color, **kwargs)
+            puts frame_style.close(text.to_s, color: close_color, right_text: elapsed_string)
           end
         end
 
@@ -214,12 +232,12 @@ module CLI
         #
         # * +:color+ - The color of the prefix. Defaults to +Thread.current[:cliui_frame_color_override]+
         #
-        sig { params(color: T.untyped).returns(T.untyped) }
+        sig { params(color: T.nilable(Colorable)).returns(String) }
         def prefix(color: Thread.current[:cliui_frame_color_override])
           +''.tap do |output|
             items = FrameStack.items
 
-            items[0..-2].each do |item|
+            items[0..-2].to_a.each do |item|
               output << item.color.code << item.frame_style.prefix
             end
 
@@ -234,7 +252,7 @@ module CLI
         end
 
         # The width of a prefix given the number of Frames in the stack
-        sig { returns(T.untyped) }
+        sig { returns(Integer) }
         def prefix_width
           w = FrameStack.items.reduce(0) do |width, item|
             width + item.frame_style.prefix_width
@@ -249,8 +267,12 @@ module CLI
         #
         # * +color+ - The color to override to
         #
-        sig { params(color: T.untyped).returns(T.untyped) }
-        def with_frame_color_override(color)
+        sig do
+          type_parameters(:T)
+            .params(color: Colorable, block: T.proc.returns(T.type_parameter(:T)))
+            .returns(T.type_parameter(:T))
+        end
+        def with_frame_color_override(color, &block)
           prev = Thread.current[:cliui_frame_color_override]
           Thread.current[:cliui_frame_color_override] = color
           yield
@@ -263,14 +285,13 @@ module CLI
         # If timing is:
         #   Numeric: return it
         #   false: return nil
-        #   true or nil: defaults to Time.new
-        #   Time: return the difference with start
-        sig { params(start: T.untyped, timing: T.untyped).returns(T.untyped) }
-        def elasped(start, timing)
+        #   true: defaults to Time.new
+        sig { params(start: Time, timing: T.any(Numeric, T::Boolean)).returns(T.nilable(Numeric)) }
+        def elapsed(start, timing)
           return timing if timing.is_a?(Numeric)
           return if timing.is_a?(FalseClass)
 
-          timing = Time.new if timing.is_a?(TrueClass) || timing.nil?
+          timing = Time.new
           timing - start
         end
       end

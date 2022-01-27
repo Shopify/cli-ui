@@ -99,9 +99,9 @@ module CLI
           CLI::UI::OS # Force the file to load before redefining ::current
           module CLI
             module UI
-              module OS
+              class OS
                 def self.current
-                  CLI::UI::OS::Windows
+                  CLI::UI::OS::WINDOWS
                 end
               end
             end
@@ -155,15 +155,11 @@ module CLI
       end
 
       def test_ask_invalid_kwargs
-        kwargsets = [
-          { options: ['a'], default: 'a' },
-          { options: ['a'], is_file: true },
-        ]
+        error = assert_raises(ArgumentError) { Prompt.ask('q', options: ['a'], default: 'a') }
+        assert_equal('conflicting arguments: default may not be provided with options when not multiple', error.message)
 
-        kwargsets.each do |kwargs|
-          error = assert_raises(ArgumentError) { Prompt.ask('q', **kwargs) }
-          assert_equal('conflicting arguments: options provided with default or is_file', error.message)
-        end
+        error = assert_raises(ArgumentError) { Prompt.ask('q', options: ['a'], is_file: true) }
+        assert_equal('conflicting arguments: is_file is only useful when options are not provided', error.message)
 
         error = assert_raises(ArgumentError) do
           Prompt.ask('q', default: 'a', allow_empty: false)
@@ -173,7 +169,7 @@ module CLI
         error = assert_raises(ArgumentError) do
           Prompt.ask('q', default: 'b') {}
         end
-        assert_equal('conflicting arguments: options provided with default or is_file', error.message)
+        assert_equal('conflicting arguments: default may not be provided with options when not multiple', error.message)
       end
 
       def test_ask_interactive_conflicting_arguments

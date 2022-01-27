@@ -9,13 +9,13 @@ module CLI
       class InvalidGlyphHandle < ArgumentError
         extend T::Sig
 
-        sig { params(handle: T.untyped).void }
+        sig { params(handle: String).void }
         def initialize(handle)
           super
           @handle = handle
         end
 
-        sig { returns(T.untyped) }
+        sig { returns(String) }
         def message
           keys = Glyph.available.join(',')
           "invalid glyph handle: #{@handle} " \
@@ -23,8 +23,14 @@ module CLI
         end
       end
 
-      sig { returns(T.untyped) }
-      attr_reader :handle, :codepoint, :color, :to_s, :fmt
+      sig { returns(String) }
+      attr_reader :handle, :to_s, :fmt, :char
+
+      sig { returns(T.any(Integer, T::Array[Integer])) }
+      attr_reader :codepoint
+
+      sig { returns(Color) }
+      attr_reader :color
 
       # Creates a new glyph
       #
@@ -35,26 +41,16 @@ module CLI
       # * +plain+ - A fallback plain string to be used in case glyphs are disabled
       # * +color+ - What color to output the glyph. Check +CLI::UI::Color+ for options.
       #
-      sig { params(handle: T.untyped, codepoint: T.untyped, plain: T.untyped, color: T.untyped).void }
+      sig { params(handle: String, codepoint: T.any(Integer, T::Array[Integer]), plain: String, color: Color).void }
       def initialize(handle, codepoint, plain, color)
         @handle    = handle
         @codepoint = codepoint
         @color     = color
-        @plain     = plain
-        @char      = Array(codepoint).pack('U*')
-        @to_s      = color.code + char + Color::RESET.code
-        @fmt       = "{{#{color.name}:#{char}}}"
+        @char      = CLI::UI::OS.current.use_emoji? ? Array(codepoint).pack('U*') : plain
+        @to_s      = color.code + @char + Color::RESET.code
+        @fmt       = "{{#{color.name}:#{@char}}}"
 
         MAP[handle] = self
-      end
-
-      # Fetches the actual character(s) to be displayed for a glyph, based on the current OS support
-      #
-      # ==== Returns
-      # Returns the glyph string
-      sig { returns(T.untyped) }
-      def char
-        CLI::UI::OS.current.supports_emoji? ? @char : @plain
       end
 
       # Mapping of glyphs to terminal output
@@ -78,7 +74,7 @@ module CLI
       # ==== Returns
       # Returns a terminal output-capable string
       #
-      sig { params(name: T.untyped).returns(T.untyped) }
+      sig { params(name: String).returns(Glyph) }
       def self.lookup(name)
         MAP.fetch(name.to_s)
       rescue KeyError
@@ -87,7 +83,7 @@ module CLI
 
       # All available glyphs by name
       #
-      sig { returns(T.untyped) }
+      sig { returns(T::Array[String]) }
       def self.available
         MAP.keys
       end

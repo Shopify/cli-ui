@@ -31,8 +31,12 @@ module CLI
       #   CLI::UI::Progress.progress do |bar|
       #     bar.tick(percent: 0.05)
       #   end
-      sig { params(width: T.untyped).returns(T.untyped) }
-      def self.progress(width: Terminal.width)
+      sig do
+        type_parameters(:T)
+          .params(width: Integer, block: T.proc.params(bar: Progress).returns(T.type_parameter(:T)))
+          .returns(T.type_parameter(:T))
+      end
+      def self.progress(width: Terminal.width, &block)
         bar = Progress.new(width: width)
         print(CLI::UI::ANSI.hide_cursor)
         yield(bar)
@@ -50,9 +54,9 @@ module CLI
       #
       # * +:width+ - The width of the terminal
       #
-      sig { params(width: T.untyped).void }
+      sig { params(width: Integer).void }
       def initialize(width: Terminal.width)
-        @percent_done = 0
+        @percent_done = T.let(0, Numeric)
         @max_width = width
       end
 
@@ -66,10 +70,10 @@ module CLI
       #
       # *Note:* The +:percent+ and +:set_percent must be between 0.00 and 1.0
       #
-      sig { params(percent: T.untyped, set_percent: T.untyped).returns(T.untyped) }
-      def tick(percent: 0.01, set_percent: nil)
-        raise ArgumentError, 'percent and set_percent cannot both be specified' if percent != 0.01 && set_percent
-        @percent_done += percent
+      sig { params(percent: T.nilable(Numeric), set_percent: T.nilable(Numeric)).void }
+      def tick(percent: nil, set_percent: nil)
+        raise ArgumentError, 'percent and set_percent cannot both be specified' if percent && set_percent
+        @percent_done += percent || 0.01
         @percent_done = set_percent if set_percent
         @percent_done = [@percent_done, 1.0].min # Make sure we can't go above 1.0
 
@@ -79,7 +83,7 @@ module CLI
 
       # Format the progress bar to be printed to terminal
       #
-      sig { returns(T.untyped) }
+      sig { returns(String) }
       def to_s
         suffix = " #{(@percent_done * 100).floor}%".ljust(5)
         workable_width = @max_width - Frame.prefix_width - suffix.size

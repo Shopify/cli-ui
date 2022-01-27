@@ -9,10 +9,16 @@ module CLI
         class StackItem
           extend T::Sig
 
-          sig { returns(T.untyped) }
-          attr_reader :color, :frame_style
+          sig { returns(CLI::UI::Color) }
+          attr_reader :color
 
-          sig { params(color_name: T.untyped, style_name: T.untyped).void }
+          sig { returns(CLI::UI::Frame::FrameStyle) }
+          attr_reader :frame_style
+
+          sig do
+            params(color_name: CLI::UI::Colorable, style_name: FrameStylable)
+              .void
+          end
           def initialize(color_name, style_name)
             @color = CLI::UI.resolve_color(color_name)
             @frame_style = CLI::UI.resolve_style(style_name)
@@ -23,13 +29,13 @@ module CLI
           extend T::Sig
 
           # Fetch all items off the frame stack
-          sig { returns(T.untyped) }
+          sig { returns(T::Array[StackItem]) }
           def items
             colors = ENV.fetch(COLOR_ENVVAR, '').split(':').map(&:to_sym)
             styles = ENV.fetch(STYLE_ENVVAR, '').split(':').map(&:to_sym)
 
-            colors.length.times.map do |i|
-              StackItem.new(colors[i], styles[i] || Frame.frame_style)
+            colors.each_with_index.map do |color, i|
+              StackItem.new(color, styles[i] || Frame.frame_style)
             end
           end
 
@@ -51,19 +57,20 @@ module CLI
           # If both an item and a color/style pair are given, raises an +ArgumentError+
           # If the given item is not a +StackItem+, raises an +ArgumentError+
           #
-          sig { params(item: T.untyped, color: T.untyped, style: T.untyped).returns(T.untyped) }
+          sig do
+            params(
+              item: T.nilable(StackItem),
+              color: T.nilable(CLI::UI::Color),
+              style: T.nilable(CLI::UI::Frame::FrameStyle)
+            )
+              .void
+          end
           def push(item = nil, color: nil, style: nil)
-            unless item.nil?
-              unless item.is_a?(StackItem)
-                raise ArgumentError, 'item must be a StackItem'
-              end
-
-              unless color.nil? && style.nil?
-                raise ArgumentError, 'Must give one of item or color: and style:'
-              end
+            if color.nil? != style.nil? || item.nil? == color.nil?
+              raise ArgumentError, 'Must give one of item or color: and style:'
             end
 
-            item ||= StackItem.new(color, style)
+            item ||= StackItem.new(T.must(color), T.must(style))
 
             curr = items
             curr << item
@@ -72,7 +79,7 @@ module CLI
           end
 
           # Removes and returns the last stack item off the stack
-          sig { returns(T.untyped) }
+          sig { returns(T.nilable(StackItem)) }
           def pop
             curr = items
             ret = curr.pop
@@ -89,14 +96,14 @@ module CLI
           # This is done to preserve backward compatibility with earlier versions of cli/ui.
           # This ensures that any code that relied upon previous stack behavior should continue
           # to work.
-          sig { params(items: T.untyped).returns(T.untyped) }
+          sig { params(items: T::Array[StackItem]).void }
           def serialize(items)
             colors = []
             styles = []
 
             items.each do |item|
               colors << item.color.name
-              styles << item.frame_style.name
+              styles << item.frame_style.style_name
             end
 
             ENV[COLOR_ENVVAR] = colors.join(':')

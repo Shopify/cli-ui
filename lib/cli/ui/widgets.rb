@@ -23,7 +23,7 @@ module CLI
 
       autoload(:Base, 'cli/ui/widgets/base')
 
-      sig { params(name: T.untyped, cb: T.untyped).returns(T.untyped) }
+      sig { params(name: String, cb: T.proc.returns(T.class_of(Widgets::Base))).void }
       def self.register(name, &cb)
         MAP[name] = cb
       end
@@ -39,16 +39,16 @@ module CLI
       # ==== Returns
       # A callable widget, to be invoked like `.call(argstring)`
       #
-      sig { params(handle: T.untyped).returns(T.untyped) }
+      sig { params(handle: String).returns(T.class_of(Widgets::Base)) }
       def self.lookup(handle)
-        MAP.fetch(handle.to_s).call
+        MAP.fetch(handle).call
       rescue KeyError, NameError
         raise(InvalidWidgetHandle, handle)
       end
 
       # All available widgets by name
       #
-      sig { returns(T.untyped) }
+      sig { returns(T::Array[String]) }
       def self.available
         MAP.keys
       end
@@ -56,13 +56,13 @@ module CLI
       class InvalidWidgetHandle < ArgumentError
         extend T::Sig
 
-        sig { params(handle: T.untyped).void }
+        sig { params(handle: String).void }
         def initialize(handle)
           super
           @handle = handle
         end
 
-        sig { returns(T.untyped) }
+        sig { returns(String) }
         def message
           keys = Widgets.available.join(',')
           "invalid widget handle: #{@handle} " \
@@ -73,14 +73,14 @@ module CLI
       class InvalidWidgetArguments < ArgumentError
         extend T::Sig
 
-        sig { params(argstring: T.untyped, pattern: T.untyped).void }
+        sig { params(argstring: String, pattern: Regexp).void }
         def initialize(argstring, pattern)
           super
           @argstring = argstring
           @pattern   = pattern
         end
 
-        sig { returns(T.untyped) }
+        sig { returns(String) }
         def message
           "invalid widget arguments: #{@argstring} " \
             "-- must match pattern: #{@pattern.inspect}"

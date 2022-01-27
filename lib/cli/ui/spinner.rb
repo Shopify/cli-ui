@@ -14,7 +14,7 @@ module CLI
       PERIOD = 0.1 # seconds
       TASK_FAILED = :task_failed
 
-      RUNES = if CLI::UI::OS.current.supports_emoji?
+      RUNES = if CLI::UI::OS.current.use_emoji?
         ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'].freeze
       else
         ['\\', '|', '/', '-', '\\', '|', '/', '-'].freeze
@@ -27,7 +27,7 @@ module CLI
       class << self
         extend T::Sig
 
-        sig { returns(T.untyped) }
+        sig { returns(T.nilable(Integer)) }
         attr_accessor(:index)
 
         # We use this from CLI::UI::Widgets::Status to render an additional
@@ -40,7 +40,7 @@ module CLI
         # While it would be possible to stitch through some connection between
         # the SpinGroup and the Widgets included in its title, this is simpler
         # in practice and seems unlikely to cause issues in practice.
-        sig { returns(T.untyped) }
+        sig { returns(String) }
         def current_rune
           RUNES[index || 0]
         end
@@ -68,7 +68,10 @@ module CLI
       #
       #   CLI::UI::Spinner.spin('Title') { sleep 1.0 }
       #
-      sig { params(title: T.untyped, auto_debrief: T.untyped, block: T.untyped).returns(T.untyped) }
+      sig do
+        params(title: String, auto_debrief: T::Boolean, block: T.proc.params(task: SpinGroup::Task).void)
+          .returns(T::Boolean)
+      end
       def self.spin(title, auto_debrief: true, &block)
         sg = SpinGroup.new(auto_debrief: auto_debrief)
         sg.add(title, &block)

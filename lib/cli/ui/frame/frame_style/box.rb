@@ -15,12 +15,12 @@ module CLI
           class << self
             extend T::Sig
 
-            sig { returns(T.untyped) }
-            def name
-              'box'
+            sig { override.returns(Symbol) }
+            def style_name
+              :box
             end
 
-            sig { returns(T.untyped) }
+            sig { override.returns(String) }
             def prefix
               VERTICAL
             end
@@ -39,8 +39,8 @@ module CLI
             #
             #   ┏━━ Open ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             #
-            sig { params(text: T.untyped, color: T.untyped).returns(T.untyped) }
-            def open(text, color:)
+            sig { override.params(text: String, color: CLI::UI::Color).returns(String) }
+            def start(text, color:)
               edge(text, color: color, first: TOP_LEFT)
             end
 
@@ -58,7 +58,7 @@ module CLI
             #
             #   ┣━━ Divider ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             #
-            sig { params(text: T.untyped, color: T.untyped).returns(T.untyped) }
+            sig { override.params(text: String, color: CLI::UI::Color).returns(String) }
             def divider(text, color:)
               edge(text, color: color, first: DIVIDER)
             end
@@ -78,7 +78,7 @@ module CLI
             #
             #   ┗━━ Close ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             #
-            sig { params(text: T.untyped, color: T.untyped, right_text: T.untyped).returns(T.untyped) }
+            sig { override.params(text: String, color: CLI::UI::Color, right_text: T.nilable(String)).returns(String) }
             def close(text, color:, right_text: nil)
               edge(text, color: color, right_text: right_text, first: BOTTOM_LEFT)
             end
@@ -86,7 +86,7 @@ module CLI
             private
 
             sig do
-              params(text: T.untyped, color: T.untyped, first: T.untyped, right_text: T.untyped).returns(T.untyped)
+              params(text: String, color: CLI::UI::Color, first: String, right_text: T.nilable(String)).returns(String)
             end
             def edge(text, color:, first:, right_text: nil)
               color = CLI::UI.resolve_color(color)
@@ -95,7 +95,6 @@ module CLI
 
               preamble << color.code << first << (HORIZONTAL * 2)
 
-              text ||= ''
               unless text.empty?
                 preamble << ' ' << CLI::UI.resolve_text("{{#{color.name}:#{text}}}") << ' '
               end

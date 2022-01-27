@@ -24,7 +24,7 @@ module CLI
         assert_equal(next_line_expected, ANSI.next_line)
         assert_equal(previous_line_expected, ANSI.previous_line)
 
-        CLI::UI::OS.stubs(:current).returns(CLI::UI::OS::Windows)
+        CLI::UI::OS.stubs(:current).returns(CLI::UI::OS::WINDOWS)
 
         assert_equal("#{next_line_expected}\e[1D", ANSI.next_line)
         assert_equal("#{previous_line_expected}\e[1D", ANSI.previous_line)

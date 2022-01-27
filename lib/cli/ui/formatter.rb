@@ -55,16 +55,21 @@ module CLI
 
       DISCARD_BRACES = 0..-3
 
-      LITERAL_BRACES = :__literal_braces__
+      LITERAL_BRACES = Class.new
+
+      Stack = T.type_alias { T::Array[T.any(String, LITERAL_BRACES)] }
 
       class FormatError < StandardError
         extend T::Sig
 
-        sig { returns(T.untyped) }
-        attr_accessor :input, :index
+        sig { returns(String) }
+        attr_accessor :input
 
-        sig { params(message: T.untyped, input: T.untyped, index: T.untyped).void }
-        def initialize(message = nil, input = nil, index = nil)
+        sig { returns(Integer) }
+        attr_accessor :index
+
+        sig { params(message: String, input: String, index: Integer).void }
+        def initialize(message, input, index)
           super(message)
           @input = input
           @index = index
@@ -77,10 +82,10 @@ module CLI
       #
       # * +text+ - the text to format
       #
-      sig { params(text: T.untyped).void }
+      sig { params(text: String).void }
       def initialize(text)
         @text = text
-        @nodes = T.let([], T::Array[T::Array[T.untyped]])
+        @nodes = T.let([], T::Array[[String, Stack]])
       end
 
       # Format the text using a map.
@@ -93,11 +98,11 @@ module CLI
       #
       # * +:enable_color+ - enable color output? Default is true unless output is redirected
       #
-      sig { params(sgr_map: T.untyped, enable_color: T.untyped).returns(T.untyped) }
+      sig { params(sgr_map: T::Hash[String, String], enable_color: T::Boolean).returns(String) }
       def format(sgr_map = SGR_MAP, enable_color: CLI::UI.enable_color?)
         @nodes.replace([])
         stack = parse_body(StringScanner.new(@text))
-        prev_fmt = T.let(nil, T.untyped)
+        prev_fmt = T.let(nil, T.nilable(Stack))
         content = @nodes.each_with_object(+'') do |(text, fmt), str|
           if prev_fmt != fmt && enable_color
             text = apply_format(text, fmt, sgr_map)
@@ -106,7 +111,7 @@ module CLI
           prev_fmt = fmt
         end
 
-        stack.reject! { |e| e == LITERAL_BRACES }
+        stack.reject! { |e| e.is_a?(LITERAL_BRACES) }
 
         return content unless enable_color
         return content if stack == prev_fmt
@@ -119,10 +124,10 @@ module CLI
 
       private
 
-      sig { params(text: T.untyped, fmt: T.untyped, sgr_map: T.untyped).returns(T.untyped) }
+      sig { params(text: String, fmt: Stack, sgr_map: T::Hash[String, String]).returns(String) }
       def apply_format(text, fmt, sgr_map)
         sgr = fmt.each_with_object(+'0') do |name, str|
-          next if name == LITERAL_BRACES
+          next if name.is_a?(LITERAL_BRACES)
           begin
             str << ';' << sgr_map.fetch(name)
           rescue KeyError
@@ -136,10 +141,10 @@ module CLI
         CLI::UI::ANSI.sgr(sgr) + text
       end
 
-      sig { params(sc: T.untyped, stack: T.untyped).returns(T.untyped) }
+      sig { params(sc: StringScanner, stack: Stack).returns(Stack) }
       def parse_expr(sc, stack)
         if (match = sc.scan(SCAN_GLYPH))
-          glyph_handle = match[0]
+          glyph_handle = T.must(match[0])
           begin
             glyph = Glyph.lookup(glyph_handle)
             emit(glyph.char, [glyph.color.name.to_s])
@@ -152,11 +157,11 @@ module CLI
             )
           end
         elsif (match = sc.scan(SCAN_WIDGET))
-          match_data = SCAN_WIDGET.match(match) # Regexp.last_match doesn't work here
-          widget_handle = T.must(match_data)['handle']
+          match_data = T.must(SCAN_WIDGET.match(match)) # Regexp.last_match doesn't work here
+          widget_handle = T.must(match_data['handle'])
           begin
             widget = Widgets.lookup(widget_handle)
-            emit(widget.call(T.must(match_data)['args']), stack)
+            emit(widget.call(T.must(match_data['args'])), stack)
           rescue Widgets::InvalidWidgetHandle
             index = sc.pos - 2 # rewind past '}}'
             raise(FormatError.new(
@@ -173,21 +178,21 @@ module CLI
           # We do kind of assume that the text will probably have balanced
           # pairs of {{ }} at least.
           emit('{{', stack)
-          stack.push(LITERAL_BRACES)
+          stack.push(LITERAL_BRACES.new)
         end
         parse_body(sc, stack)
         stack
       end
 
-      sig { params(sc: T.untyped, stack: T.untyped).returns(T.untyped) }
+      sig { params(sc: StringScanner, stack: Stack).returns(Stack) }
       def parse_body(sc, stack = [])
         match = sc.scan(SCAN_BODY)
         if match&.end_with?(BEGIN_EXPR)
-          emit(match[DISCARD_BRACES], stack)
+          emit(T.must(match[DISCARD_BRACES]), stack)
           parse_expr(sc, stack)
         elsif match&.end_with?(END_EXPR)
-          emit(match[DISCARD_BRACES], stack)
-          if stack.pop == LITERAL_BRACES
+          emit(T.must(match[DISCARD_BRACES]), stack)
+          if stack.pop.is_a?(LITERAL_BRACES)
             emit('}}', stack)
           end
           parse_body(sc, stack)
@@ -199,10 +204,10 @@ module CLI
         stack
       end
 
-      sig { params(text: T.untyped, stack: T.untyped).returns(T.untyped) }
+      sig { params(text: String, stack: Stack).void }
       def emit(text, stack)
-        return if text.nil? || text.empty?
-        @nodes << [text, stack.reject { |n| n == LITERAL_BRACES }]
+        return if text.empty?
+        @nodes << [text, stack.reject { |n| n.is_a?(LITERAL_BRACES) }]
       end
     end
   end
