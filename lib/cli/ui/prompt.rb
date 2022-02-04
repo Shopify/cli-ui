@@ -25,7 +25,6 @@ module CLI
     module Prompt
       autoload :InteractiveOptions,  'cli/ui/prompt/interactive_options'
       autoload :OptionsHandler,      'cli/ui/prompt/options_handler'
-      private_constant :InteractiveOptions, :OptionsHandler
 
       class << self
         extend T::Sig
