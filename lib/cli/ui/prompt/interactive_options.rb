@@ -79,7 +79,7 @@ module CLI
         # Calls the +InteractiveOptions+ and asks the question
         # Usually used from +self.call+
         #
-        sig { returns(T.any(String, T::Array[String])) }
+        sig { returns(T.any(Integer, T::Array[Integer])) }
         def call
           calculate_option_line_lengths
           CLI::UI.raw { print(ANSI.hide_cursor) }
