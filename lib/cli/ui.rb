@@ -289,7 +289,11 @@ module CLI
       yield
     ensure
       if (file_descriptor = CLI::UI::StdoutRouter.duplicate_output_to)
-        file_descriptor.close
+        begin
+          file_descriptor.close
+        rescue IOError
+          nil
+        end
         CLI::UI::StdoutRouter.duplicate_output_to = nil
       end
     end
