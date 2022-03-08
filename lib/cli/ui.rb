@@ -136,6 +136,7 @@ module CLI
     def self.resolve_text(input, truncate_to: nil)
       formatted = CLI::UI::Formatter.new(input).format
       return formatted unless truncate_to
+
       CLI::UI::Truncater.call(formatted, truncate_to)
     end
 
@@ -285,6 +286,7 @@ module CLI
       if CLI::UI::StdoutRouter.duplicate_output_to
         raise 'multiple logs not allowed'
       end
+
       CLI::UI::StdoutRouter.duplicate_output_to = File.open(path, 'w')
       yield
     ensure

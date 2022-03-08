@@ -73,6 +73,7 @@ module CLI
       sig { params(percent: T.nilable(Numeric), set_percent: T.nilable(Numeric)).void }
       def tick(percent: nil, set_percent: nil)
         raise ArgumentError, 'percent and set_percent cannot both be specified' if percent && set_percent
+
         @percent_done += percent || 0.01
         @percent_done = set_percent if set_percent
         @percent_done = [@percent_done, 1.0].min # Make sure we can't go above 1.0

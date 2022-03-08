@@ -73,6 +73,7 @@ module CLI
       sig { params(n: Integer).returns(String) }
       def self.cursor_up(n = 1)
         return '' if n.zero?
+
         control(n.to_s, 'A')
       end
 
@@ -85,6 +86,7 @@ module CLI
       sig { params(n: Integer).returns(String) }
       def self.cursor_down(n = 1)
         return '' if n.zero?
+
         control(n.to_s, 'B')
       end
 
@@ -97,6 +99,7 @@ module CLI
       sig { params(n: Integer).returns(String) }
       def self.cursor_forward(n = 1)
         return '' if n.zero?
+
         control(n.to_s, 'C')
       end
 
@@ -109,6 +112,7 @@ module CLI
       sig { params(n: Integer).returns(String) }
       def self.cursor_back(n = 1)
         return '' if n.zero?
+
         control(n.to_s, 'D')
       end
 

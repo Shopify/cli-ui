@@ -64,6 +64,7 @@ module CLI
         true
       rescue Errno::EIO, Errno::EPIPE, IOError => e
         raise(e) unless graceful
+
         false
       end
     end

@@ -43,8 +43,10 @@ module CLI
         sig { params(stream: IOLike, args: T::Array[String]).returns(T::Array[String]) }
         def prepend_id(stream, args)
           return args unless prepend_id_for_stream(stream)
+
           args.map do |a|
             next a if a.chomp.empty? # allow new lines to be new lines
+
             "[#{Thread.current[:cliui_output_id][:id]}] #{a}"
           end
         end
@@ -53,6 +55,7 @@ module CLI
         def prepend_id_for_stream(stream)
           return false unless Thread.current[:cliui_output_id]
           return true if Thread.current[:cliui_output_id][:streams].include?(stream)
+
           false
         end
 
@@ -64,6 +67,7 @@ module CLI
         sig { params(str: String, prefix: String).returns(String) }
         def apply_line_prefix(str, prefix)
           return '' if str.empty?
+
           prefixed = +''
           str.force_encoding(Encoding::UTF_8).lines.each do |line|
             if @pending_newline
@@ -214,6 +218,7 @@ module CLI
         sig { returns(T::Boolean) }
         def enable
           return false if enabled?($stdout) || enabled?($stderr)
+
           activate($stdout, :stdout)
           activate($stderr, :stderr)
           true
@@ -227,6 +232,7 @@ module CLI
         sig { returns(T::Boolean) }
         def disable
           return false unless enabled?($stdout) && enabled?($stderr)
+
           deactivate($stdout)
           deactivate($stderr)
           true
@@ -246,6 +252,7 @@ module CLI
           writer = StdoutRouter::Writer.new(stream, streamname)
 
           raise if stream.respond_to?(WRITE_WITHOUT_CLI_UI)
+
           stream.singleton_class.send(:alias_method, WRITE_WITHOUT_CLI_UI, :write)
           stream.define_singleton_method(:write) do |*args|
             writer.write(*args)
