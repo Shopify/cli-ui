@@ -162,6 +162,7 @@ module CLI
           option_length = presented_options.reduce(0) do |total_length, (_, option_number)|
             # Handle continuation markers and "Done" option when multiple is true
             next total_length + 1 if option_number.nil? || option_number.zero?
+
             total_length + @option_lengths[option_number - 1]
           end
 
@@ -226,6 +227,7 @@ module CLI
         sig { params(char: String).void }
         def select_bool(char)
           return unless (@options - ['yes', 'no']).empty?
+
           index = T.must(@options.index { |o| o.start_with?(char) })
           @active = index + 1
           @answer = index + 1
@@ -266,6 +268,7 @@ module CLI
         def select_current
           # Prevent selection of invisible options
           return unless presented_options.any? { |_, num| num == @active }
+
           select_n(@active)
         end
 

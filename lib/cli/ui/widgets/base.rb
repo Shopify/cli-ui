@@ -20,6 +20,7 @@ module CLI
           unless (@match_data = pat.match(argstring))
             raise(Widgets::InvalidWidgetArguments.new(argstring, pat))
           end
+
           @match_data.names.each do |name|
             instance_variable_set(:"@#{name}", @match_data[name])
           end

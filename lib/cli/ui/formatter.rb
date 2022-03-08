@@ -128,6 +128,7 @@ module CLI
       def apply_format(text, fmt, sgr_map)
         sgr = fmt.each_with_object(+'0') do |name, str|
           next if name.is_a?(LITERAL_BRACES)
+
           begin
             str << ';' << sgr_map.fetch(name)
           rescue KeyError
@@ -207,6 +208,7 @@ module CLI
       sig { params(text: String, stack: Stack).void }
       def emit(text, stack)
         return if text.empty?
+
         @nodes << [text, stack.reject { |n| n.is_a?(LITERAL_BRACES) }]
       end
     end

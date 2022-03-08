@@ -251,6 +251,7 @@ module CLI
           end
 
           raise(ArgumentError, 'insufficient options') if options.nil? || options.empty?
+
           navigate_text = if CLI::UI::OS.current.suggest_arrow_keys?
             'Choose with ↑ ↓ ⏎'
           else
@@ -285,6 +286,7 @@ module CLI
           puts_question("#{question} (You chose: {{italic:#{resp_text}}})")
 
           return T.must(handler).call(resp) if block_given?
+
           resp
         end
 
