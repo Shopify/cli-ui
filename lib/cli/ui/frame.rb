@@ -130,7 +130,7 @@ module CLI
           ensure
             unless closed
               t_diff = elapsed(t_start, timing)
-              if success != false
+              if T.unsafe(success) != false
                 close(success_text, color: color, elapsed: t_diff)
               else
                 close(failure_text, color: :red, elapsed: t_diff)
