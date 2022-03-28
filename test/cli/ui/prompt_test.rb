@@ -1,7 +1,7 @@
 # coding: utf-8
 
 require 'test_helper'
-require 'readline'
+require 'reline'
 require 'timeout'
 require 'open3'
 

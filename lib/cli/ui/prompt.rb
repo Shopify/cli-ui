@@ -3,7 +3,7 @@
 # typed: true
 
 require 'cli/ui'
-require 'readline'
+require 'reline'
 
 module Readline
   unless const_defined?(:FILENAME_COMPLETION_PROC)
