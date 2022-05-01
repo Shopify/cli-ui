@@ -23,7 +23,7 @@ In your code, simply add a `require 'cli/ui'`. Most options assume `CLI::UI::Std
 
 ## Features
 
-This may not be an exhaustive list. Please check our [documentation](http://www.rubydoc.info/github/Shopify/cli-ui/master/CLI/UI) for more information.
+This may not be an exhaustive list. Please check our [documentation](http://www.rubydoc.info/github/Shopify/cli-ui/main/CLI/UI) for more information.
 
 ---
 
