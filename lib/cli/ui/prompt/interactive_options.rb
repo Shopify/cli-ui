@@ -485,11 +485,7 @@ module CLI
             "Filter: #{filter_text}"
           end
 
-          if metadata_text
-            CLI::UI.with_frame_color(:blue) do
-              puts CLI::UI.fmt("  {{green:#{metadata_text}}}#{ANSI.clear_to_end_of_line}")
-            end
-          end
+          puts CLI::UI.fmt("  {{green:#{metadata_text}}}#{ANSI.clear_to_end_of_line}") if metadata_text
 
           options.each do |choice, num|
             is_chosen = @multiple && num && @chosen[num - 1] && num != 0
@@ -512,9 +508,7 @@ module CLI
               message = message.split("\n").map { |l| "{{#{color}:> #{l.strip}}}" }.join("\n")
             end
 
-            CLI::UI.with_frame_color(:blue) do
-              puts CLI::UI.fmt(message)
-            end
+            puts CLI::UI.fmt(message)
           end
         end
 

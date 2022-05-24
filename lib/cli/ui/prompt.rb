@@ -167,21 +167,19 @@ module CLI
         def ask_password(question)
           require 'io/console'
 
-          CLI::UI.with_frame_color(:blue) do
-            STDOUT.print(CLI::UI.fmt('{{?}} ' + question)) # Do not use puts_question to avoid the new line.
+          STDOUT.print(CLI::UI.fmt('{{?}} ' + question)) # Do not use puts_question to avoid the new line.
 
-            # noecho interacts poorly with Readline under system Ruby, so do a manual `gets` here.
-            # No fancy Readline integration (like echoing back) is required for a password prompt anyway.
-            password = STDIN.noecho do
-              # Chomp will remove the one new line character added by `gets`, without touching potential extra spaces:
-              # " 123 \n".chomp => " 123 "
-              T.must(STDIN.gets).chomp
-            end
-
-            STDOUT.puts # Complete the line
-
-            password
+          # noecho interacts poorly with Readline under system Ruby, so do a manual `gets` here.
+          # No fancy Readline integration (like echoing back) is required for a password prompt anyway.
+          password = STDIN.noecho do
+            # Chomp will remove the one new line character added by `gets`, without touching potential extra spaces:
+            # " 123 \n".chomp => " 123 "
+            T.must(STDIN.gets).chomp
           end
+
+          STDOUT.puts # Complete the line
+
+          password
         end
 
         # Asks the user a yes/no question.
@@ -314,9 +312,7 @@ module CLI
 
         sig { params(str: String).void }
         def puts_question(str)
-          CLI::UI.with_frame_color(:blue) do
-            STDOUT.puts(CLI::UI.fmt('{{?}} ' + str))
-          end
+          STDOUT.puts(CLI::UI.fmt('{{?}} ' + str))
         end
 
         sig { params(is_file: T::Boolean).returns(String) }
@@ -333,7 +329,7 @@ module CLI
           # work. We could work around this by having CLI::UI use a pipe and a
           # thread to manage output, but the current strategy feels like a
           # better tradeoff.
-          prefix = CLI::UI.with_frame_color(:blue) { CLI::UI::Frame.prefix }
+          prefix = CLI::UI::Frame.prefix
           # If a prompt is interrupted on Windows it locks the colour of the terminal from that point on, so we should
           # not change the colour here.
           prompt = prefix + CLI::UI.fmt('{{blue:> }}')
