@@ -143,6 +143,11 @@ module CLI
             end
           end
 
+          sig { void }
+          def interrupt
+            @thread.raise(Interrupt)
+          end
+
           private
 
           sig { params(index: Integer, terminal_width: Integer).returns(String) }
@@ -254,6 +259,9 @@ module CLI
               @tasks.all?(&:success)
             end
           end
+        rescue Interrupt
+          @tasks.each(&:interrupt)
+          raise
         end
 
         # Debriefs failed tasks is +auto_debrief+ is true
