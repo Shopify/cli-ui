@@ -1,4 +1,5 @@
 # typed: true
+
 module CLI
   module UI
     module Spinner
