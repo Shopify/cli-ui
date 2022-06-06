@@ -1,4 +1,5 @@
 # typed: true
+
 require 'cli/ui'
 require 'stringio'
 

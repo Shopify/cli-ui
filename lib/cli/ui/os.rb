@@ -1,4 +1,5 @@
 # typed: true
+
 require 'rbconfig'
 
 module CLI
