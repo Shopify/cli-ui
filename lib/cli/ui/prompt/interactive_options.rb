@@ -34,10 +34,11 @@ module CLI
         def self.call(options, multiple: false, default: nil)
           list = new(options, multiple: multiple, default: default)
           selected = list.call
-          if multiple
-            selected.map { |s| options[s - 1] }
+          case selected
+          when Array
+            selected.map { |s| T.must(options[s - 1]) }
           else
-            options[selected - 1]
+            T.must(options[selected - 1])
           end
         end
 
