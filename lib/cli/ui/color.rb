@@ -41,7 +41,7 @@ module CLI
       WHITE   = new('97', :white)
 
       # 240 is very dark gray; 255 is very light gray. 244 is somewhat dark.
-      GRAY = new('38;5;244', :grey)
+      GRAY = new('38;5;244', :gray)
 
       MAP = {
         red: RED,
