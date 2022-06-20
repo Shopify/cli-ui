@@ -15,7 +15,7 @@ GEM
     docile (1.4.0)
     ffi (1.15.5-java)
     method_source (1.0.0)
-    minitest (5.15.0)
+    minitest (5.16.0)
     minitest-reporters (1.5.0)
       ansi
       builder
