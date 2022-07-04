@@ -14,6 +14,8 @@ GEM
     diff-lcs (1.5.0)
     docile (1.4.0)
     ffi (1.15.5-java)
+    json (2.6.2)
+    json (2.6.2-java)
     method_source (1.0.0)
     minitest (5.16.1)
     minitest-reporters (1.5.0)
@@ -41,7 +43,8 @@ GEM
       unparser
     regexp_parser (2.5.0)
     rexml (3.2.5)
-    rubocop (1.31.0)
+    rubocop (1.31.1)
+      json (~> 2.3)
       parallel (~> 1.10)
       parser (>= 3.1.0.0)
       rainbow (>= 2.2.2, < 4.0)
