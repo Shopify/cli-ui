@@ -17,7 +17,7 @@ GEM
     json (2.6.2)
     json (2.6.2-java)
     method_source (1.0.0)
-    minitest (5.16.1)
+    minitest (5.16.2)
     minitest-reporters (1.5.0)
       ansi
       builder
