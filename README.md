@@ -3,7 +3,7 @@ CLI UI
 
 CLI UI is a small framework for generating nice command-line user interfaces
 
-- [Master Documentation](http://www.rubydoc.info/github/Shopify/cli-ui/master/CLI/UI)
+- [Master Documentation](http://www.rubydoc.info/github/Shopify/cli-ui/main/CLI/UI)
 - [Documentation of the Rubygems version](http://www.rubydoc.info/gems/cli-ui/)
 - [Rubygems](https://rubygems.org/gems/cli-ui)
 
