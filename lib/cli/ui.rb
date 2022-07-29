@@ -350,6 +350,16 @@ module CLI
     def self.frame_style=(frame_style)
       Frame.frame_style = frame_style
     end
+
+    # Create a terminal link
+    sig { params(url: String, text: String, format: T::Boolean, blue_underline: T::Boolean).returns(String) }
+    def self.link(url, text, format: true, blue_underline: format)
+      raise 'cannot use blue_underline without format' if blue_underline && !format
+
+      text = "{{blue:{{underline:#{text}}}}}" if blue_underline
+      text = CLI::UI.fmt(text) if format
+      "\x1b]8;;#{url}\x1b\\#{text}\x1b]8;;\x1b\\"
+    end
   end
 end
 
