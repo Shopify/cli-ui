@@ -72,27 +72,31 @@ module CLI
         end
       end
 
-      # Looks up a color code by name
-      #
-      # ==== Raises
-      # Raises a InvalidColorName if the color is not available
-      # You likely need to add it to the +MAP+ or you made a typo
-      #
-      # ==== Returns
-      # Returns a color code
-      #
-      sig { params(name: T.any(Symbol, String)).returns(Color) }
-      def self.lookup(name)
-        MAP.fetch(name.to_sym)
-      rescue KeyError
-        raise InvalidColorName, name
-      end
+      class << self
+        extend T::Sig
 
-      # All available colors by name
-      #
-      sig { returns(T::Array[Symbol]) }
-      def self.available
-        MAP.keys
+        # Looks up a color code by name
+        #
+        # ==== Raises
+        # Raises a InvalidColorName if the color is not available
+        # You likely need to add it to the +MAP+ or you made a typo
+        #
+        # ==== Returns
+        # Returns a color code
+        #
+        sig { params(name: T.any(Symbol, String)).returns(Color) }
+        def lookup(name)
+          MAP.fetch(name.to_sym)
+        rescue KeyError
+          raise InvalidColorName, name
+        end
+
+        # All available colors by name
+        #
+        sig { returns(T::Array[Symbol]) }
+        def available
+          MAP.keys
+        end
       end
     end
   end

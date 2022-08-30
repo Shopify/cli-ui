@@ -13,32 +13,36 @@ module CLI
         DONE = 'Done'
         CHECKBOX_ICON = { false => '☐', true => '☑' }
 
-        # Prompts the user with options
-        # Uses an interactive session to allow the user to pick an answer
-        # Can use arrows, y/n, numbers (1/2), and vim bindings to control
-        # For more than 9 options, hitting 'e', ':', or 'G' will enter select
-        # mode allowing the user to type in longer numbers
-        # Pressing 'f' or '/' will allow the user to filter the results
-        #
-        # https://user-images.githubusercontent.com/3074765/33797984-0ebb5e64-dcdf-11e7-9e7e-7204f279cece.gif
-        #
-        # ==== Example Usage:
-        #
-        # Ask an interactive question
-        #   CLI::UI::Prompt::InteractiveOptions.call(%w(rails go python))
-        #
-        sig do
-          params(options: T::Array[String], multiple: T::Boolean, default: T.nilable(T.any(String, T::Array[String])))
-            .returns(T.any(String, T::Array[String]))
-        end
-        def self.call(options, multiple: false, default: nil)
-          list = new(options, multiple: multiple, default: default)
-          selected = list.call
-          case selected
-          when Array
-            selected.map { |s| T.must(options[s - 1]) }
-          else
-            T.must(options[selected - 1])
+        class << self
+          extend T::Sig
+
+          # Prompts the user with options
+          # Uses an interactive session to allow the user to pick an answer
+          # Can use arrows, y/n, numbers (1/2), and vim bindings to control
+          # For more than 9 options, hitting 'e', ':', or 'G' will enter select
+          # mode allowing the user to type in longer numbers
+          # Pressing 'f' or '/' will allow the user to filter the results
+          #
+          # https://user-images.githubusercontent.com/3074765/33797984-0ebb5e64-dcdf-11e7-9e7e-7204f279cece.gif
+          #
+          # ==== Example Usage:
+          #
+          # Ask an interactive question
+          #   CLI::UI::Prompt::InteractiveOptions.call(%w(rails go python))
+          #
+          sig do
+            params(options: T::Array[String], multiple: T::Boolean, default: T.nilable(T.any(String, T::Array[String])))
+              .returns(T.any(String, T::Array[String]))
+          end
+          def call(options, multiple: false, default: nil)
+            list = new(options, multiple: multiple, default: default)
+            selected = list.call
+            case selected
+            when Array
+              selected.map { |s| T.must(options[s - 1]) }
+            else
+              T.must(options[selected - 1])
+            end
           end
         end
 

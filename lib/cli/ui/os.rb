@@ -35,18 +35,22 @@ module CLI
         @shift_cursor
       end
 
-      sig { returns(OS) }
-      def self.current
-        @current_os ||= case RbConfig::CONFIG['host_os']
-        when /darwin/
-          MAC
-        when /linux/
-          LINUX
-        else
-          if RUBY_PLATFORM !~ /cygwin/ && ENV['OS'] == 'Windows_NT'
-            WINDOWS
+      class << self
+        extend T::Sig
+
+        sig { returns(OS) }
+        def current
+          @current_os ||= case RbConfig::CONFIG['host_os']
+          when /darwin/
+            MAC
+          when /linux/
+            LINUX
           else
-            raise "Could not determine OS from host_os #{RbConfig::CONFIG["host_os"]}"
+            if RUBY_PLATFORM !~ /cygwin/ && ENV['OS'] == 'Windows_NT'
+              WINDOWS
+            else
+              raise "Could not determine OS from host_os #{RbConfig::CONFIG["host_os"]}"
+            end
           end
         end
       end

@@ -1,7 +1,7 @@
 up:
   - homebrew:
     - fswatch
-  - ruby: 3.1.0
+  - ruby: 3.1.2
   - bundler
 
 commands:

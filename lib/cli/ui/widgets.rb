@@ -23,36 +23,40 @@ module CLI
       MAP = {}
 
       autoload(:Base, 'cli/ui/widgets/base')
-
-      sig { params(name: String, cb: T.proc.returns(T.class_of(Widgets::Base))).void }
-      def self.register(name, &cb)
-        MAP[name] = cb
-      end
-
       autoload(:Status, 'cli/ui/widgets/status')
+
+      class << self
+        extend T::Sig
+
+        sig { params(name: String, cb: T.proc.returns(T.class_of(Widgets::Base))).void }
+        def register(name, &cb)
+          MAP[name] = cb
+        end
+
+        # Looks up a widget by handle
+        #
+        # ==== Raises
+        # Raises InvalidWidgetHandle if the widget is not available.
+        #
+        # ==== Returns
+        # A callable widget, to be invoked like `.call(argstring)`
+        #
+        sig { params(handle: String).returns(T.class_of(Widgets::Base)) }
+        def lookup(handle)
+          MAP.fetch(handle).call
+        rescue KeyError, NameError
+          raise(InvalidWidgetHandle, handle)
+        end
+
+        # All available widgets by name
+        #
+        sig { returns(T::Array[String]) }
+        def available
+          MAP.keys
+        end
+      end
+
       register('status') { Widgets::Status }
-
-      # Looks up a widget by handle
-      #
-      # ==== Raises
-      # Raises InvalidWidgetHandle if the widget is not available.
-      #
-      # ==== Returns
-      # A callable widget, to be invoked like `.call(argstring)`
-      #
-      sig { params(handle: String).returns(T.class_of(Widgets::Base)) }
-      def self.lookup(handle)
-        MAP.fetch(handle).call
-      rescue KeyError, NameError
-        raise(InvalidWidgetHandle, handle)
-      end
-
-      # All available widgets by name
-      #
-      sig { returns(T::Array[String]) }
-      def self.available
-        MAP.keys
-      end
 
       class InvalidWidgetHandle < ArgumentError
         extend T::Sig

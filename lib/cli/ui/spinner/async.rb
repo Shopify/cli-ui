@@ -6,11 +6,15 @@ module CLI
       class Async
         extend T::Sig
 
-        # Convenience method for +initialize+
-        #
-        sig { params(title: String).returns(Async) }
-        def self.start(title)
-          new(title)
+        class << self
+          extend T::Sig
+
+          # Convenience method for +initialize+
+          #
+          sig { params(title: String).returns(Async) }
+          def start(title)
+            new(title)
+          end
         end
 
         # Initializes a new asynchronous spinner with no specific end.
