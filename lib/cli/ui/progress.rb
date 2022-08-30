@@ -12,39 +12,43 @@ module CLI
       # A bright white block
       UNFILLED_BAR = "\e[1;47m"
 
-      # Add a progress bar to the terminal output
-      #
-      # https://user-images.githubusercontent.com/3074765/33799794-cc4c940e-dd00-11e7-9bdc-90f77ec9167c.gif
-      #
-      # ==== Example Usage:
-      #
-      # Set the percent to X
-      #   CLI::UI::Progress.progress do |bar|
-      #     bar.tick(set_percent: percent)
-      #   end
-      #
-      # Increase the percent by 1 percent
-      #   CLI::UI::Progress.progress do |bar|
-      #     bar.tick
-      #   end
-      #
-      # Increase the percent by X
-      #   CLI::UI::Progress.progress do |bar|
-      #     bar.tick(percent: 0.05)
-      #   end
-      sig do
-        type_parameters(:T)
-          .params(width: Integer, block: T.proc.params(bar: Progress).returns(T.type_parameter(:T)))
-          .returns(T.type_parameter(:T))
-      end
-      def self.progress(width: Terminal.width, &block)
-        bar = Progress.new(width: width)
-        print(CLI::UI::ANSI.hide_cursor)
-        yield(bar)
-      ensure
-        puts bar.to_s
-        CLI::UI.raw do
-          print(ANSI.show_cursor)
+      class << self
+        extend T::Sig
+
+        # Add a progress bar to the terminal output
+        #
+        # https://user-images.githubusercontent.com/3074765/33799794-cc4c940e-dd00-11e7-9bdc-90f77ec9167c.gif
+        #
+        # ==== Example Usage:
+        #
+        # Set the percent to X
+        #   CLI::UI::Progress.progress do |bar|
+        #     bar.tick(set_percent: percent)
+        #   end
+        #
+        # Increase the percent by 1 percent
+        #   CLI::UI::Progress.progress do |bar|
+        #     bar.tick
+        #   end
+        #
+        # Increase the percent by X
+        #   CLI::UI::Progress.progress do |bar|
+        #     bar.tick(percent: 0.05)
+        #   end
+        sig do
+          type_parameters(:T)
+            .params(width: Integer, block: T.proc.params(bar: Progress).returns(T.type_parameter(:T)))
+            .returns(T.type_parameter(:T))
+        end
+        def progress(width: Terminal.width, &block)
+          bar = Progress.new(width: width)
+          print(CLI::UI::ANSI.hide_cursor)
+          yield(bar)
+        ensure
+          puts bar.to_s
+          CLI::UI.raw do
+            print(ANSI.show_cursor)
+          end
         end
       end
 

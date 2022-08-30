@@ -70,49 +70,59 @@ module T
   end
 
   module Array
-    def self.[](type); end
+    class << self
+      def [](type); end
+    end
   end
 
   Boolean = Object.new.freeze
 
   module Configuration
-    def self.call_validation_error_handler(signature, opts); end
-    def self.call_validation_error_handler=(value); end
-    def self.default_checked_level=(default_checked_level); end
-    def self.enable_checking_for_sigs_marked_checked_tests; end
-    def self.enable_final_checks_on_hooks; end
-    def self.enable_legacy_t_enum_migration_mode; end
-    def self.reset_final_checks_on_hooks; end
-    def self.hard_assert_handler(str, extra); end
-    def self.hard_assert_handler=(value); end
-    def self.inline_type_error_handler(error); end
-    def self.inline_type_error_handler=(value); end
-    def self.log_info_handler(str, extra); end
-    def self.log_info_handler=(value); end
-    def self.scalar_types; end
-    def self.scalar_types=(values); end
-    # rubocop:disable Naming/InclusiveLanguage
-    def self.sealed_violation_whitelist; end
-    def self.sealed_violation_whitelist=(sealed_violation_whitelist); end
-    # rubocop:enable Naming/InclusiveLanguage
-    def self.sig_builder_error_handler(error, location); end
-    def self.sig_builder_error_handler=(value); end
-    def self.sig_validation_error_handler(error, opts); end
-    def self.sig_validation_error_handler=(value); end
-    def self.soft_assert_handler(str, extra); end
-    def self.soft_assert_handler=(value); end
+    class << self
+      def call_validation_error_handler(signature, opts); end
+      def call_validation_error_handler=(value); end
+      def default_checked_level=(default_checked_level); end
+      def enable_checking_for_sigs_marked_checked_tests; end
+      def enable_final_checks_on_hooks; end
+      def enable_legacy_t_enum_migration_mode; end
+      def reset_final_checks_on_hooks; end
+      def hard_assert_handler(str, extra); end
+      def hard_assert_handler=(value); end
+      def inline_type_error_handler(error); end
+      def inline_type_error_handler=(value); end
+      def log_info_handler(str, extra); end
+      def log_info_handler=(value); end
+      def scalar_types; end
+      def scalar_types=(values); end
+      # rubocop:disable Naming/InclusiveLanguage
+      def sealed_violation_whitelist; end
+      def sealed_violation_whitelist=(sealed_violation_whitelist); end
+      # rubocop:enable Naming/InclusiveLanguage
+      def sig_builder_error_handler(error, location); end
+      def sig_builder_error_handler=(value); end
+      def sig_validation_error_handler(error, opts); end
+      def sig_validation_error_handler=(value); end
+      def soft_assert_handler(str, extra); end
+      def soft_assert_handler=(value); end
+    end
   end
 
   module Enumerable
-    def self.[](type); end
+    class << self
+      def [](type); end
+    end
   end
 
   module Enumerator
-    def self.[](type); end
+    class << self
+      def [](type); end
+    end
   end
 
   module Hash
-    def self.[](keys, values); end
+    class << self
+      def [](keys, values); end
+    end
   end
 
   class Proc
@@ -134,10 +144,14 @@ module T
   end
 
   module Range
-    def self.[](type); end
+    class << self
+      def [](type); end
+    end
   end
 
   module Set
-    def self.[](type); end
+    class << self
+      def [](type); end
+    end
   end
 end

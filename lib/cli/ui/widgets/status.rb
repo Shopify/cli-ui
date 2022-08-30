@@ -21,9 +21,13 @@ module CLI
         SPINNER_STOPPED = '⠿'
         EMPTY_SET = '∅'
 
-        sig { override.returns(Regexp) }
-        def self.argparse_pattern
-          ARGPARSE_PATTERN
+        class << self
+          extend T::Sig
+
+          sig { override.returns(Regexp) }
+          def argparse_pattern
+            ARGPARSE_PATTERN
+          end
         end
 
         sig { override.returns(String) }

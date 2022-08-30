@@ -66,27 +66,31 @@ module CLI
       HOURGLASS = new('H', [0x231b, 0xfe0e], 'H', Color::BLUE)   # HOURGLASS + VARIATION SELECTOR 15 (⌛︎)
       WARNING   = new('!', [0x26a0, 0xfe0f], '!', Color::YELLOW) # WARNING SIGN + VARIATION SELECTOR 16 (⚠️ )
 
-      # Looks up a glyph by name
-      #
-      # ==== Raises
-      # Raises a InvalidGlyphHandle if the glyph is not available
-      # You likely need to create it with +.new+ or you made a typo
-      #
-      # ==== Returns
-      # Returns a terminal output-capable string
-      #
-      sig { params(name: String).returns(Glyph) }
-      def self.lookup(name)
-        MAP.fetch(name.to_s)
-      rescue KeyError
-        raise InvalidGlyphHandle, name
-      end
+      class << self
+        extend T::Sig
 
-      # All available glyphs by name
-      #
-      sig { returns(T::Array[String]) }
-      def self.available
-        MAP.keys
+        # Looks up a glyph by name
+        #
+        # ==== Raises
+        # Raises a InvalidGlyphHandle if the glyph is not available
+        # You likely need to create it with +.new+ or you made a typo
+        #
+        # ==== Returns
+        # Returns a terminal output-capable string
+        #
+        sig { params(name: String).returns(Glyph) }
+        def lookup(name)
+          MAP.fetch(name.to_s)
+        rescue KeyError
+          raise InvalidGlyphHandle, name
+        end
+
+        # All available glyphs by name
+        #
+        sig { returns(T::Array[String]) }
+        def available
+          MAP.keys
+        end
       end
     end
   end

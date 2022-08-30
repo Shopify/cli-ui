@@ -19,16 +19,20 @@ module CLI
           bracket: -> { FrameStyle::Bracket },
         }
 
-        # Lookup a frame style via its name
-        #
-        # ==== Attributes
-        #
-        # * +symbol+ - frame style name to lookup
-        sig { params(name: T.any(String, Symbol)).returns(FrameStyle) }
-        def self.lookup(name)
-          MAP.fetch(name.to_sym).call
-        rescue KeyError
-          raise(InvalidFrameStyleName, name)
+        class << self
+          extend T::Sig
+
+          # Lookup a frame style via its name
+          #
+          # ==== Attributes
+          #
+          # * +symbol+ - frame style name to lookup
+          sig { params(name: T.any(String, Symbol)).returns(FrameStyle) }
+          def lookup(name)
+            MAP.fetch(name.to_sym).call
+          rescue KeyError
+            raise(InvalidFrameStyleName, name)
+          end
         end
 
         sig { abstract.returns(Symbol) }

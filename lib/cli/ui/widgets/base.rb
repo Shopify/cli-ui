@@ -10,9 +10,13 @@ module CLI
         extend T::Helpers
         abstract!
 
-        sig { params(argstring: String).returns(String) }
-        def self.call(argstring)
-          new(argstring).render
+        class << self
+          extend T::Sig
+
+          sig { params(argstring: String).returns(String) }
+          def call(argstring)
+            new(argstring).render
+          end
         end
 
         sig { params(argstring: String).void }
@@ -27,8 +31,12 @@ module CLI
           end
         end
 
-        sig { abstract.returns(Regexp) }
-        def self.argparse_pattern; end
+        class << self
+          extend T::Sig
+
+          sig { abstract.returns(Regexp) }
+          def argparse_pattern; end
+        end
 
         sig { abstract.returns(String) }
         def render; end

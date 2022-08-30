@@ -90,24 +90,28 @@ module CLI
         @active_captures = 0
         @saved_stdin = nil
 
-        sig { type_parameters(:T).params(block: T.proc.returns(T.type_parameter(:T))).returns(T.type_parameter(:T)) }
-        def self.with_stdin_masked(&block)
-          @m.synchronize do
-            if @active_captures.zero?
-              @saved_stdin = $stdin
-              $stdin, w = IO.pipe
-              $stdin.close
-              w.close
-            end
-            @active_captures += 1
-          end
+        class << self
+          extend T::Sig
 
-          yield
-        ensure
-          @m.synchronize do
-            @active_captures -= 1
-            if @active_captures.zero?
-              $stdin = @saved_stdin
+          sig { type_parameters(:T).params(block: T.proc.returns(T.type_parameter(:T))).returns(T.type_parameter(:T)) }
+          def with_stdin_masked(&block)
+            @m.synchronize do
+              if @active_captures.zero?
+                @saved_stdin = $stdin
+                $stdin, w = IO.pipe
+                $stdin.close
+                w.close
+              end
+              @active_captures += 1
+            end
+
+            yield
+          ensure
+            @m.synchronize do
+              @active_captures -= 1
+              if @active_captures.zero?
+                $stdin = @saved_stdin
+              end
             end
           end
         end
