@@ -174,7 +174,7 @@ module CLI
           password = STDIN.noecho do
             # Chomp will remove the one new line character added by `gets`, without touching potential extra spaces:
             # " 123 \n".chomp => " 123 "
-            T.must(STDIN.gets).chomp
+            STDIN.gets.to_s.chomp
           end
 
           STDOUT.puts # Complete the line
