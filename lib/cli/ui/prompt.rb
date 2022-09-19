@@ -106,7 +106,7 @@ module CLI
             multiple: T::Boolean,
             filter_ui: T::Boolean,
             select_ui: T::Boolean,
-            options_proc: T.nilable(T.proc.params(handler: OptionsHandler).void)
+            options_proc: T.nilable(T.proc.params(handler: OptionsHandler).void),
           ).returns(T.any(String, T::Array[String]))
         end
         def ask(
@@ -236,7 +236,7 @@ module CLI
             multiple: T::Boolean,
             default: T.nilable(T.any(String, T::Array[String])),
             filter_ui: T::Boolean,
-            select_ui: T::Boolean
+            select_ui: T::Boolean,
           ).returns(T.any(String, T::Array[String]))
         end
         def ask_interactive(question, options = nil, multiple: false, default: nil, filter_ui: true, select_ui: true)
@@ -305,7 +305,7 @@ module CLI
               "\r" +
               CLI::UI::ANSI.cursor_forward(4) + # TODO: width
               default +
-              CLI::UI::Color::RESET.code
+              CLI::UI::Color::RESET.code,
             )
           end
         end

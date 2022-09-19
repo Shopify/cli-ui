@@ -100,7 +100,7 @@ module CLI
           multiple: T::Boolean,
           filter_ui: T::Boolean,
           select_ui: T::Boolean,
-          options_proc: T.nilable(T.proc.params(handler: Prompt::OptionsHandler).void)
+          options_proc: T.nilable(T.proc.params(handler: Prompt::OptionsHandler).void),
         ).returns(T.any(String, T::Array[String]))
       end
       def ask(
@@ -182,7 +182,7 @@ module CLI
           encoding: Encoding,
           format: T::Boolean,
           graceful: T::Boolean,
-          wrap: T::Boolean
+          wrap: T::Boolean,
         ).void
       end
       def puts(
@@ -220,7 +220,7 @@ module CLI
           success_text: T.nilable(String),
           timing: T.any(T::Boolean, Numeric),
           frame_style: FrameStylable,
-          block: T.nilable(T.proc.returns(T.type_parameter(:T)))
+          block: T.nilable(T.proc.returns(T.type_parameter(:T))),
         ).returns(T.nilable(T.type_parameter(:T)))
       end
       def frame(

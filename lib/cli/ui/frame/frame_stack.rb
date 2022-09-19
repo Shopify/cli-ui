@@ -62,7 +62,7 @@ module CLI
             params(
               item: T.nilable(StackItem),
               color: T.nilable(CLI::UI::Color),
-              style: T.nilable(CLI::UI::Frame::FrameStyle)
+              style: T.nilable(CLI::UI::Frame::FrameStyle),
             )
               .void
           end

@@ -339,7 +339,7 @@ module CLI
             end
           end
         end
-        # rubocop:enable Style/WhenThen,Layout/SpaceBeforeSemicolon
+        # rubocop:enable Style/WhenThen,Layout/SpaceBeforeSemicolon,Style/Semicolon
 
         sig { returns(T::Boolean) }
         def selecting?

@@ -276,7 +276,7 @@ module CLI
 
       def test_ask_multiple_with_default_values
         run_in_process(
-          'puts CLI::UI::Prompt.ask("q", options: (1..15).map(&:to_s), multiple: true, default: %w(2 3)).inspect'
+          'puts CLI::UI::Prompt.ask("q", options: (1..15).map(&:to_s), multiple: true, default: %w(2 3)).inspect',
         )
         write('120')
         assert_output_includes(['1', '3'].inspect)
@@ -292,7 +292,7 @@ module CLI
           '-r',
           'cli/ui',
           '-e',
-          "$stdout.sync = true; $stderr.sync = true; #{code}"
+          "$stdout.sync = true; $stderr.sync = true; #{code}",
         )
       end
 
