@@ -135,7 +135,7 @@ module CLI
             raise FormatError.new(
               "invalid format specifier: #{name}",
               @text,
-              -1
+              -1,
             )
           end
         end
@@ -154,7 +154,7 @@ module CLI
             raise FormatError.new(
               "invalid glyph handle at index #{index}: '#{glyph_handle}'",
               @text,
-              index
+              index,
             )
           end
         elsif (match = sc.scan(SCAN_WIDGET))
@@ -167,7 +167,7 @@ module CLI
             index = sc.pos - 2 # rewind past '}}'
             raise(FormatError.new(
               "invalid widget handle at index #{index}: '#{widget_handle}'",
-              @text, index,
+              @text, index
             ))
           end
         elsif (match = sc.scan(SCAN_FUNCNAME))

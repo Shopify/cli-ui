@@ -82,7 +82,7 @@ module CLI
             success_text: T.nilable(String),
             timing: T.any(T::Boolean, Numeric),
             frame_style: FrameStylable,
-            block: T.nilable(T.proc.returns(T.type_parameter(:T)))
+            block: T.nilable(T.proc.returns(T.type_parameter(:T))),
           ).returns(T.nilable(T.type_parameter(:T)))
         end
         def open(
@@ -209,7 +209,7 @@ module CLI
             text: T.nilable(String),
             color: T.nilable(Colorable),
             elapsed: T.nilable(Numeric),
-            frame_style: T.nilable(FrameStylable)
+            frame_style: T.nilable(FrameStylable),
           ).void
         end
         def close(text, color: nil, elapsed: nil, frame_style: nil)

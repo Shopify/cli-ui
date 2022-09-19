@@ -29,7 +29,7 @@ module CLI
         with_os_mock_and_reload(
           CLI::UI::OS::WINDOWS,
           :Glyph,
-          File.join(File.dirname(__FILE__), '../../../lib/cli/ui/glyph.rb')
+          File.join(File.dirname(__FILE__), '../../../lib/cli/ui/glyph.rb'),
         ) do
           assert_equal("\x1b[33m*\x1b[0m", Glyph::STAR.to_s)
           assert_equal("\x1b[94mi\x1b[0m", Glyph::INFO.to_s)
