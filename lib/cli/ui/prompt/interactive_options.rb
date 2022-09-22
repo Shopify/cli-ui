@@ -289,8 +289,7 @@ module CLI
           @last_char = char
 
           case char
-          when :timeout ; raise Interrupt # Timeout, use interrupt to simulate
-          when CTRL_C   ; raise Interrupt
+          when CTRL_C, nil ; raise Interrupt
           end
 
           max_digit = [@options.size, 9].min.to_s
@@ -376,12 +375,12 @@ module CLI
           @redraw = true
         end
 
-        sig { returns(String) }
+        sig { returns(T.nilable(String)) }
         def read_char
           if $stdin.tty? && !ENV['TEST']
             $stdin.getch # raw mode for tty
           else
-            $stdin.getc
+            $stdin.getc # returns nil at end of input
           end
         rescue IOError
           "\e"
