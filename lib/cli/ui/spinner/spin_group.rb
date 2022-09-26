@@ -256,13 +256,28 @@ module CLI
           if @auto_debrief
             debrief
           else
-            @m.synchronize do
-              @tasks.all?(&:success)
-            end
+            all_succeeded?
           end
         rescue Interrupt
           @tasks.each(&:interrupt)
           raise
+        end
+
+        # Provide an alternative debriefing for failed tasks
+        sig do
+          params(
+            block: T.proc.params(title: String, exception: T.nilable(Exception), out: String, err: String).void,
+          ).void
+        end
+        def failure_debrief(&block)
+          @failure_debrief = block
+        end
+
+        sig { returns(T::Boolean) }
+        def all_succeeded?
+          @m.synchronize do
+            @tasks.all?(&:success)
+          end
         end
 
         # Debriefs failed tasks is +auto_debrief+ is true
@@ -273,11 +288,14 @@ module CLI
             @tasks.each do |task|
               next if task.success
 
+              title = task.title
               e = task.exception
               out = task.stdout
               err = task.stderr
 
-              CLI::UI::Frame.open('Task Failed: ' + task.title, color: :red, timing: Time.new - @start) do
+              next @failure_debrief.call(title, e, out, err) if @failure_debrief
+
+              CLI::UI::Frame.open('Task Failed: ' + title, color: :red, timing: Time.new - @start) do
                 if e
                   puts "#{e.class}: #{e.message}"
                   puts "\tfrom #{e.backtrace.join("\n\tfrom ")}"
