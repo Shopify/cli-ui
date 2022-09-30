@@ -382,7 +382,7 @@ module CLI
           else
             $stdin.getc # returns nil at end of input
           end
-        rescue IOError
+        rescue Errno::EIO, Errno::EPIPE, IOError
           "\e"
         end
 
