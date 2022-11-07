@@ -23,7 +23,8 @@ GEM
       builder
       minitest (>= 5.0)
       ruby-progressbar
-    mocha (1.16.0)
+    mocha (2.0.1)
+      ruby2_keywords (>= 0.0.5)
     netrc (0.11.0)
     parallel (1.22.1)
     parser (3.1.2.1)
@@ -63,6 +64,7 @@ GEM
     rubocop-sorbet (0.6.11)
       rubocop (>= 0.90.0)
     ruby-progressbar (1.11.0)
+    ruby2_keywords (0.0.5)
     simplecov (0.21.2)
       docile (~> 1.1)
       simplecov-html (~> 0.11)
