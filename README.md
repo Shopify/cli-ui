@@ -175,6 +175,12 @@ end
 
 ---
 
+## Sorbet
+
+We make use of [Sorbet](https://sorbet.org/) in cli-ui. We provide stubs for Sorbet so that you can use this gem even
+if you aren't using Sorbet. We activate these stubs if `T` is undefined when the gem is loaded. For this reason, if you
+would like to use this gem and your project _does_ use Sorbet, ensure you load Sorbet _before_ loading cli-ui.
+
 ## Example Usage
 
 The following code makes use of nested-framing, multi-threaded spinners, formatted text, and more.
