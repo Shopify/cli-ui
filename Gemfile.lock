@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cli-ui (1.5.1)
+    cli-ui (2.0.0)
 
 GEM
   remote: https://rubygems.org/
