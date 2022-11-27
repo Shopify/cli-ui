@@ -33,6 +33,23 @@ module CLI
 
           assert_equal('', err)
         end
+
+        def test_spin_group_success_debrief
+          capture_io do
+            CLI::UI::StdoutRouter.ensure_activated
+
+            debriefer = ->(title, out, err) {}
+            sg = SpinGroup.new
+            sg.success_debrief(&debriefer)
+            debriefer.expects(:call).with('s', "Task output\n", '').once
+            sg.add('s') do
+              puts('Task output')
+              true
+            end
+
+            assert(sg.wait)
+          end
+        end
       end
     end
   end
