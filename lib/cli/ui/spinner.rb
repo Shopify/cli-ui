@@ -61,7 +61,7 @@ module CLI
         #
         # ==== Options
         #
-        # * +:auto_debrief+ - Automatically debrief exceptions? Default to true
+        # * +:auto_debrief+ - Automatically debrief exceptions or through success_debrief? Default to true
         #
         # ==== Block
         #

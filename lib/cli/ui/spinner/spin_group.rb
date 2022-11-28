@@ -11,7 +11,7 @@ module CLI
         #
         # ==== Options
         #
-        # * +:auto_debrief+ - Automatically debrief exceptions? Default to true
+        # * +:auto_debrief+ - Automatically debrief exceptions or through success_debrief? Default to true
         #
         # ==== Example Usage
         #
@@ -273,6 +273,16 @@ module CLI
           @failure_debrief = block
         end
 
+        # Provide a debriefing for successful tasks
+        sig do
+          params(
+            block: T.proc.params(title: String, out: String, err: String).void,
+          ).void
+        end
+        def success_debrief(&block)
+          @success_debrief = block
+        end
+
         sig { returns(T::Boolean) }
         def all_succeeded?
           @m.synchronize do
@@ -286,13 +296,15 @@ module CLI
         def debrief
           @m.synchronize do
             @tasks.each do |task|
-              next if task.success
-
               title = task.title
-              e = task.exception
               out = task.stdout
               err = task.stderr
 
+              if task.success
+                next @success_debrief&.call(title, out, err)
+              end
+
+              e = task.exception
               next @failure_debrief.call(title, e, out, err) if @failure_debrief
 
               CLI::UI::Frame.open('Task Failed: ' + title, color: :red, timing: Time.new - @start) do
