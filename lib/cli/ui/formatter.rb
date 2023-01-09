@@ -116,7 +116,7 @@ module CLI
         return content unless enable_color
         return content if stack == prev_fmt
 
-        unless stack.empty? && (@nodes.size.zero? || T.must(@nodes.last)[1].empty?)
+        unless stack.empty? && (@nodes.empty? || T.must(@nodes.last)[1].empty?)
           content << apply_format('', stack, sgr_map)
         end
         content
