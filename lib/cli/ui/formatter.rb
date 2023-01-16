@@ -167,7 +167,8 @@ module CLI
             index = sc.pos - 2 # rewind past '}}'
             raise(FormatError.new(
               "invalid widget handle at index #{index}: '#{widget_handle}'",
-              @text, index
+              @text,
+              index,
             ))
           end
         elsif (match = sc.scan(SCAN_FUNCNAME))
