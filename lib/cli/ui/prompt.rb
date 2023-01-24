@@ -197,6 +197,32 @@ module CLI
           ask_interactive(question, default ? ['yes', 'no'] : ['no', 'yes'], filter_ui: false) == 'yes'
         end
 
+        # Present the user with a message and wait for any key to be pressed, returning the pressed key.
+        #
+        # ==== Example Usage:
+        #
+        #   CLI::UI::Prompt.any_key # Press any key to continue...
+        #
+        #   CLI::UI::Prompt.any_key('Press RETURN to continue...') # Then check if that's what they pressed
+        sig { params(prompt: String).returns(T.nilable(String)) }
+        def any_key(prompt = 'Press any key to continue...')
+          puts_question(prompt)
+          read_char
+        end
+
+        # Wait for any key to be pressed, returning the pressed key.
+        sig { returns(T.nilable(String)) }
+        def read_char
+          if $stdin.tty? && !ENV['TEST']
+            require 'io/console'
+            $stdin.getch # raw mode for tty
+          else
+            $stdin.getc # returns nil at end of input
+          end
+        rescue Errno::EIO, Errno::EPIPE, IOError
+          "\e"
+        end
+
         private
 
         sig do
