@@ -285,7 +285,7 @@ module CLI
         # rubocop:disable Style/WhenThen,Layout/SpaceBeforeSemicolon,Style/Semicolon
         sig { void }
         def wait_for_user_input
-          char = read_char
+          char = Prompt.read_char
           @last_char = char
 
           case char
@@ -373,17 +373,6 @@ module CLI
           @state = :root
           @active = 1 if @active.zero?
           @redraw = true
-        end
-
-        sig { returns(T.nilable(String)) }
-        def read_char
-          if $stdin.tty? && !ENV['TEST']
-            $stdin.getch # raw mode for tty
-          else
-            $stdin.getc # returns nil at end of input
-          end
-        rescue Errno::EIO, Errno::EPIPE, IOError
-          "\e"
         end
 
         sig { params(recalculate: T::Boolean).returns(T::Array[[String, T.nilable(Integer)]]) }

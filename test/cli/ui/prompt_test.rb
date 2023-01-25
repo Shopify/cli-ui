@@ -282,6 +282,36 @@ module CLI
         assert_output_includes(['1', '3'].inspect)
       end
 
+      def test_any_key_presents_a_default_message_and_waits_for_any_key
+        run_in_process('p CLI::UI::Prompt.any_key')
+        write('c')
+        assert_output_includes("Press any key to continue...\n#{"c".inspect}")
+      end
+
+      def test_any_key_allows_a_custom_message
+        run_in_process('p CLI::UI::Prompt.any_key("Where is the any key?")')
+        write('c')
+        assert_output_includes("Where is the any key?\n#{"c".inspect}")
+      end
+
+      def test_any_key_allows_for_capturing_return
+        run_in_process('p CLI::UI::Prompt.any_key("Press RETURN to continue...")')
+        write("\r")
+        assert_output_includes("Press RETURN to continue...\n#{"\r".inspect}")
+      end
+
+      def test_read_char_returns_the_read_char
+        run_in_process('p CLI::UI::Prompt.read_char')
+        write('c')
+        assert_output_includes('c'.inspect)
+      end
+
+      def test_read_char_returns_only_the_next_read_char
+        run_in_process('p CLI::UI::Prompt.read_char')
+        write('char')
+        assert_output_includes('c'.inspect)
+      end
+
       private
 
       def run_in_process(code)
