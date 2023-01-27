@@ -133,6 +133,16 @@ module CLI
           cmd
         end
 
+        sig { returns(String) }
+        def enter_alternate_screen
+          control('?1049', 'h')
+        end
+
+        sig { returns(String) }
+        def exit_alternate_screen
+          control('?1049', 'l')
+        end
+
         # Show the cursor
         #
         sig { returns(String) }
