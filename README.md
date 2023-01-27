@@ -52,6 +52,11 @@ For large numbers of options, using `e`, `:`, or `G` will toggle "line select" m
 CLI::UI.ask('What language/framework do you use?', options: %w(rails go ruby python))
 ```
 
+To set the color of instruction text:
+```ruby
+CLI::UI::Prompt.instructions_color = CLI::UI::Color::GRAY
+```
+
 Can also assign callbacks to each option
 
 ```ruby
