@@ -4,9 +4,6 @@ module CLI
   module UI
     module Frame
       module FrameStack
-        COLOR_ENVVAR = 'CLI_FRAME_STACK'
-        STYLE_ENVVAR = 'CLI_STYLE_STACK'
-
         class StackItem
           extend T::Sig
 
@@ -32,12 +29,7 @@ module CLI
           # Fetch all items off the frame stack
           sig { returns(T::Array[StackItem]) }
           def items
-            colors = ENV.fetch(COLOR_ENVVAR, '').split(':').map(&:to_sym)
-            styles = ENV.fetch(STYLE_ENVVAR, '').split(':').map(&:to_sym)
-
-            colors.each_with_index.map do |color, i|
-              StackItem.new(color, styles[i] || Frame.frame_style)
-            end
+            Thread.current[:cliui_frame_stack] ||= []
           end
 
           # Push a new item onto the frame stack.
@@ -71,44 +63,13 @@ module CLI
               raise ArgumentError, 'Must give one of item or color: and style:'
             end
 
-            item ||= StackItem.new(T.must(color), T.must(style))
-
-            curr = items
-            curr << item
-
-            serialize(curr)
+            items.push(item || StackItem.new(T.must(color), T.must(style)))
           end
 
           # Removes and returns the last stack item off the stack
           sig { returns(T.nilable(StackItem)) }
           def pop
-            curr = items
-            ret = curr.pop
-
-            serialize(curr)
-
-            ret.nil? ? nil : ret
-          end
-
-          private
-
-          # Serializes the item stack into two ENV variables.
-          #
-          # This is done to preserve backward compatibility with earlier versions of cli/ui.
-          # This ensures that any code that relied upon previous stack behavior should continue
-          # to work.
-          sig { params(items: T::Array[StackItem]).void }
-          def serialize(items)
-            colors = []
-            styles = []
-
-            items.each do |item|
-              colors << item.color.name
-              styles << item.frame_style.style_name
-            end
-
-            ENV[COLOR_ENVVAR] = colors.join(':')
-            ENV[STYLE_ENVVAR] = styles.join(':')
+            items.pop
           end
         end
       end
