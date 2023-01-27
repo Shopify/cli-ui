@@ -29,6 +29,22 @@ module CLI
       class << self
         extend T::Sig
 
+        sig { returns(Color) }
+        def instructions_color
+          @instructions_color ||= Color::YELLOW
+        end
+
+        # Set the instructions color.
+        #
+        # ==== Attributes
+        #
+        # * +color+ - the color to use for prompt instructions
+        #
+        sig { params(color: Colorable).void }
+        def instructions_color=(color)
+          @instructions_color = CLI::UI.resolve_color(color)
+        end
+
         # Ask a user a question with either free form answer or a set of answers (multiple choice)
         # Can use arrows, y/n, numbers (1/2), and vim bindings to control multiple choice selection
         # Do not use this method for yes/no questions. Use +confirm+
@@ -285,7 +301,7 @@ module CLI
           instructions = (multiple ? 'Toggle options. ' : '') + navigate_text
           instructions += ", filter with 'f'" if filter_ui
           instructions += ", enter option with 'e'" if select_ui && (options.size > 9)
-          puts_question("#{question} {{yellow:(#{instructions})}}")
+          puts_question("#{question} " + instructions_color.code + "(#{instructions})" + Color::RESET.code)
           resp = interactive_prompt(options, multiple: multiple, default: default)
 
           # Clear the line

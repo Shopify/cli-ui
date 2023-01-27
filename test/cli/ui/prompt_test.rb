@@ -282,6 +282,15 @@ module CLI
         assert_output_includes(['1', '3'].inspect)
       end
 
+      def test_ask_instructions_color
+        run_in_process(<<~RUBY)
+          CLI::UI::Prompt.instructions_color = CLI::UI::Color::RED
+          puts CLI::UI::Prompt.ask("q", options: ['abcd', 'xyz'])
+        RUBY
+        write("\n")
+        assert_output_includes("\e[31m(Choose with")
+      end
+
       def test_any_key_presents_a_default_message_and_waits_for_any_key
         run_in_process('p CLI::UI::Prompt.any_key')
         write('c')
