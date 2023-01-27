@@ -4,6 +4,41 @@ module CLI
   module UI
     module Spinner
       class SpinGroup
+        DEFAULT_FINAL_GLYPH = ->(success) { success ? CLI::UI::Glyph::CHECK.to_s : CLI::UI::Glyph::X.to_s }
+
+        class << self
+          extend T::Sig
+
+          sig { returns(Mutex) }
+          attr_reader :pause_mutex
+
+          sig { returns(T::Boolean) }
+          def paused?
+            @paused
+          end
+
+          sig do
+            type_parameters(:T)
+              .params(block: T.proc.returns(T.type_parameter(:T)))
+              .returns(T.type_parameter(:T))
+          end
+          def pause_spinners(&block)
+            previous_paused = T.let(nil, T.nilable(T::Boolean))
+            @pause_mutex.synchronize do
+              previous_paused = @paused
+              @paused = true
+            end
+            block.call
+          ensure
+            @pause_mutex.synchronize do
+              @paused = previous_paused
+            end
+          end
+        end
+
+        @pause_mutex = Mutex.new
+        @paused = false
+
         extend T::Sig
 
         # Initializes a new spin group
@@ -57,12 +92,23 @@ module CLI
           # * +title+ - Title of the task
           # * +block+ - Block for the task, will be provided with an instance of the spinner
           #
-          sig { params(title: String, block: T.proc.params(task: Task).returns(T.untyped)).void }
-          def initialize(title, &block)
+          sig do
+            params(
+              title: String,
+              final_glyph: T.proc.params(success: T::Boolean).returns(String),
+              merged_output: T::Boolean,
+              duplicate_output_to: IO,
+              block: T.proc.params(task: Task).returns(T.untyped),
+            ).void
+          end
+          def initialize(title, final_glyph:, merged_output:, duplicate_output_to:, &block)
             @title = title
+            @final_glyph = final_glyph
             @always_full_render = title =~ Formatter::SCAN_WIDGET
             @thread = Thread.new do
-              cap = CLI::UI::StdoutRouter::Capture.new(with_frame_inset: false) { block.call(self) }
+              cap = CLI::UI::StdoutRouter::Capture.new(
+                merged_output: merged_output, duplicate_output_to: duplicate_output_to,
+              ) { block.call(self) }
               begin
                 cap.run
               ensure
@@ -173,7 +219,7 @@ module CLI
           sig { params(index: Integer).returns(String) }
           def glyph(index)
             if @done
-              @success ? CLI::UI::Glyph::CHECK.to_s : CLI::UI::Glyph::X.to_s
+              @final_glyph.call(@success)
             else
               GLYPHS[index]
             end
@@ -202,10 +248,30 @@ module CLI
         #   spin_group.add('Title') { |spinner| sleep 1.0 }
         #   spin_group.wait
         #
-        sig { params(title: String, block: T.proc.params(task: Task).void).void }
-        def add(title, &block)
+        sig do
+          params(
+            title: String,
+            final_glyph: T.proc.params(success: T::Boolean).returns(String),
+            merged_output: T::Boolean,
+            duplicate_output_to: IO,
+            block: T.proc.params(task: Task).void,
+          ).void
+        end
+        def add(
+          title,
+          final_glyph: DEFAULT_FINAL_GLYPH,
+          merged_output: false,
+          duplicate_output_to: File.new(File::NULL, 'w'),
+          &block
+        )
           @m.synchronize do
-            @tasks << Task.new(title, &block)
+            @tasks << Task.new(
+              title,
+              final_glyph: final_glyph,
+              merged_output: merged_output,
+              duplicate_output_to: duplicate_output_to,
+              &block
+            )
           end
         end
 
@@ -221,32 +287,36 @@ module CLI
           idx = 0
 
           loop do
-            all_done = T.let(true, T::Boolean)
+            done_count = 0
 
             width = CLI::UI::Terminal.width
 
-            @m.synchronize do
-              CLI::UI.raw do
-                @tasks.each.with_index do |task, int_index|
-                  nat_index = int_index + 1
-                  task_done = task.check
-                  all_done = false unless task_done
+            self.class.pause_mutex.synchronize do
+              next if self.class.paused?
 
-                  if nat_index > @consumed_lines
-                    print(task.render(idx, true, width: width) + "\n")
-                    @consumed_lines += 1
-                  else
-                    offset = @consumed_lines - int_index
-                    move_to = CLI::UI::ANSI.cursor_up(offset) + "\r"
-                    move_from = "\r" + CLI::UI::ANSI.cursor_down(offset)
+              @m.synchronize do
+                CLI::UI.raw do
+                  @tasks.each.with_index do |task, int_index|
+                    nat_index = int_index + 1
+                    task_done = task.check
+                    done_count += 1 if task_done
 
-                    print(move_to + task.render(idx, idx.zero?, width: width) + move_from)
+                    if nat_index > @consumed_lines
+                      print(task.render(idx, true, width: width) + "\n")
+                      @consumed_lines += 1
+                    else
+                      offset = @consumed_lines - int_index
+                      move_to = CLI::UI::ANSI.cursor_up(offset) + "\r"
+                      move_from = "\r" + CLI::UI::ANSI.cursor_down(offset)
+
+                      print(move_to + task.render(idx, idx.zero?, width: width) + move_from)
+                    end
                   end
                 end
               end
             end
 
-            break if all_done
+            break if done_count == @tasks.size
 
             idx = (idx + 1) % GLYPHS.size
             Spinner.index = idx

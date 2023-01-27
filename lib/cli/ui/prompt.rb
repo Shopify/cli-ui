@@ -222,18 +222,22 @@ module CLI
         #   CLI::UI::Prompt.any_key('Press RETURN to continue...') # Then check if that's what they pressed
         sig { params(prompt: String).returns(T.nilable(String)) }
         def any_key(prompt = 'Press any key to continue...')
-          puts_question(prompt)
-          read_char
+          CLI::UI::StdoutRouter::Capture.uncaptured do
+            puts_question(prompt)
+            read_char
+          end
         end
 
         # Wait for any key to be pressed, returning the pressed key.
         sig { returns(T.nilable(String)) }
         def read_char
-          if $stdin.tty? && !ENV['TEST']
-            require 'io/console'
-            $stdin.getch # raw mode for tty
-          else
-            $stdin.getc # returns nil at end of input
+          CLI::UI::StdoutRouter::Capture.uncaptured do
+            if $stdin.tty? && !ENV['TEST']
+              require 'io/console'
+              $stdin.getch # raw mode for tty
+            else
+              $stdin.getc # returns nil at end of input
+            end
           end
         rescue Errno::EIO, Errno::EPIPE, IOError
           "\e"
@@ -250,23 +254,25 @@ module CLI
             raise(ArgumentError, 'conflicting arguments: default enabled but allow_empty is false')
           end
 
-          if default
-            puts_question("#{question} (empty = #{default})")
-          else
-            puts_question(question)
-          end
-
-          # Ask a free form question
-          loop do
-            line = readline(is_file: is_file)
-
-            if line.empty? && default
-              write_default_over_empty_input(default)
-              return default
+          CLI::UI::StdoutRouter::Capture.uncaptured do
+            if default
+              puts_question("#{question} (empty = #{default})")
+            else
+              puts_question(question)
             end
 
-            if !line.empty? || allow_empty
-              return line
+            # Ask a free form question
+            loop do
+              line = readline(is_file: is_file)
+
+              if line.empty? && default
+                write_default_over_empty_input(default)
+                return default
+              end
+
+              if !line.empty? || allow_empty
+                return line
+              end
             end
           end
         end
@@ -301,33 +307,36 @@ module CLI
           instructions = (multiple ? 'Toggle options. ' : '') + navigate_text
           instructions += ", filter with 'f'" if filter_ui
           instructions += ", enter option with 'e'" if select_ui && (options.size > 9)
-          puts_question("#{question} " + instructions_color.code + "(#{instructions})" + Color::RESET.code)
-          resp = interactive_prompt(options, multiple: multiple, default: default)
 
-          # Clear the line
-          print(ANSI.previous_line + ANSI.clear_to_end_of_line)
-          # Force StdoutRouter to prefix
-          print(ANSI.previous_line + "\n")
+          CLI::UI::StdoutRouter::Capture.uncaptured do
+            puts_question("#{question} " + instructions_color.code + "(#{instructions})" + Color::RESET.code)
+            resp = interactive_prompt(options, multiple: multiple, default: default)
 
-          # reset the question to include the answer
-          resp_text = case resp
-          when Array
-            case resp.size
-            when 0
-              '<nothing>'
-            when 1..2
-              resp.join(' and ')
+            # Clear the line
+            print(ANSI.previous_line + ANSI.clear_to_end_of_line)
+            # Force StdoutRouter to prefix
+            print(ANSI.previous_line + "\n")
+
+            # reset the question to include the answer
+            resp_text = case resp
+            when Array
+              case resp.size
+              when 0
+                '<nothing>'
+              when 1..2
+                resp.join(' and ')
+              else
+                "#{resp.size} items"
+              end
             else
-              "#{resp.size} items"
+              resp
             end
-          else
+            puts_question("#{question} (You chose: {{italic:#{resp_text}}})")
+
+            return T.must(handler).call(resp) if block_given?
+
             resp
           end
-          puts_question("#{question} (You chose: {{italic:#{resp_text}}})")
-
-          return T.must(handler).call(resp) if block_given?
-
-          resp
         end
 
         # Useful for stubbing in tests
@@ -336,7 +345,9 @@ module CLI
             .returns(T.any(T::Array[String], String))
         end
         def interactive_prompt(options, multiple: false, default: nil)
-          InteractiveOptions.call(options, multiple: multiple, default: default)
+          CLI::UI::StdoutRouter::Capture.uncaptured do
+            InteractiveOptions.call(options, multiple: multiple, default: default)
+          end
         end
 
         sig { params(default: String).void }
