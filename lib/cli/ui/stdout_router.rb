@@ -91,7 +91,8 @@ module CLI
       class Capture
         extend T::Sig
 
-        @m = ReentrantMutex.new
+        @capture_mutex = Mutex.new
+        @stdin_mutex = ReentrantMutex.new
         @active_captures = 0
         @saved_stdin = nil
 
@@ -109,7 +110,7 @@ module CLI
           end
 
           sig { type_parameters(:T).params(block: T.proc.returns(T.type_parameter(:T))).returns(T.type_parameter(:T)) }
-          def uncaptured(&block)
+          def in_alternate_screen(&block)
             stdin_synchronize do
               previous_print_captured_output = current_capture&.print_captured_output
               current_capture&.print_captured_output = true
@@ -118,8 +119,9 @@ module CLI
                   begin
                     prev_hook = Thread.current[:cliui_output_hook]
                     Thread.current[:cliui_output_hook] = nil
+                    replay = current_capture!.stdout.gsub(ANSI.match_alternate_screen, '')
                     CLI::UI.raw do
-                      puts("#{ANSI.enter_alternate_screen}#{current_capture!.stdout}", wrap: false)
+                      print("#{ANSI.enter_alternate_screen}#{replay}")
                     end
                   ensure
                     Thread.current[:cliui_output_hook] = prev_hook
@@ -134,9 +136,9 @@ module CLI
             end
           end
 
-          sig { params(block: T.proc.void).void }
+          sig { type_parameters(:T).params(block: T.proc.returns(T.type_parameter(:T))).returns(T.type_parameter(:T)) }
           def stdin_synchronize(&block)
-            @m.synchronize do
+            @stdin_mutex.synchronize do
               case $stdin
               when BlockingInput
                 $stdin.synchronize do
@@ -150,20 +152,24 @@ module CLI
 
           sig { type_parameters(:T).params(block: T.proc.returns(T.type_parameter(:T))).returns(T.type_parameter(:T)) }
           def with_stdin_masked(&block)
-            @m.synchronize do
+            @capture_mutex.synchronize do
               if @active_captures.zero?
-                @saved_stdin = $stdin
-                $stdin = BlockingInput.new(@saved_stdin)
+                @stdin_mutex.synchronize do
+                  @saved_stdin = $stdin
+                  $stdin = BlockingInput.new(@saved_stdin)
+                end
               end
               @active_captures += 1
             end
 
             yield
           ensure
-            @m.synchronize do
+            @capture_mutex.synchronize do
               @active_captures -= 1
               if @active_captures.zero?
-                $stdin = @saved_stdin
+                @stdin_mutex.synchronize do
+                  $stdin = @saved_stdin
+                end
               end
             end
           end
@@ -172,7 +178,7 @@ module CLI
 
           sig { returns(T::Boolean) }
           def outermost_uncaptured?
-            @m.count == 1 && $stdin.is_a?(BlockingInput)
+            @stdin_mutex.count == 1 && $stdin.is_a?(BlockingInput)
           end
         end
 
@@ -195,6 +201,8 @@ module CLI
           @duplicate_output_to = duplicate_output_to
           @block = block
           @print_captured_output = false
+          @out = StringIO.new
+          @err = StringIO.new
         end
 
         sig { returns(T::Boolean) }
@@ -207,8 +215,6 @@ module CLI
           StdoutRouter.assert_enabled!
 
           Thread.current[:cliui_current_capture] = self
-          @out = StringIO.new
-          @err = StringIO.new
 
           prev_frame_inset = Thread.current[:no_cliui_frame_inset]
           prev_hook = Thread.current[:cliui_output_hook]
@@ -259,12 +265,12 @@ module CLI
             @m = ReentrantMutex.new
           end
 
-          sig { void }
-          def synchronize
+          sig { type_parameters(:T).params(block: T.proc.returns(T.type_parameter(:T))).returns(T.type_parameter(:T)) }
+          def synchronize(&block)
             @m.synchronize do
               previous_allowed_to_read = Thread.current[:cliui_allowed_to_read]
               Thread.current[:cliui_allowed_to_read] = true
-              yield
+              block.call
             ensure
               Thread.current[:cliui_allowed_to_read] = previous_allowed_to_read
             end

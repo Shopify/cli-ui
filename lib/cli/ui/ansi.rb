@@ -143,6 +143,11 @@ module CLI
           control('?1049', 'l')
         end
 
+        sig { returns(Regexp) }
+        def match_alternate_screen
+          /#{Regexp.escape(control('?1049', ''))}[hl]/
+        end
+
         # Show the cursor
         #
         sig { returns(String) }

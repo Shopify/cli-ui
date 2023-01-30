@@ -183,19 +183,21 @@ module CLI
         def ask_password(question)
           require 'io/console'
 
-          STDOUT.print(CLI::UI.fmt('{{?}} ' + question)) # Do not use puts_question to avoid the new line.
+          CLI::UI::StdoutRouter::Capture.in_alternate_screen do
+            STDOUT.print(CLI::UI.fmt('{{?}} ' + question)) # Do not use puts_question to avoid the new line.
 
-          # noecho interacts poorly with Readline under system Ruby, so do a manual `gets` here.
-          # No fancy Readline integration (like echoing back) is required for a password prompt anyway.
-          password = STDIN.noecho do
-            # Chomp will remove the one new line character added by `gets`, without touching potential extra spaces:
-            # " 123 \n".chomp => " 123 "
-            STDIN.gets.to_s.chomp
+            # noecho interacts poorly with Readline under system Ruby, so do a manual `gets` here.
+            # No fancy Readline integration (like echoing back) is required for a password prompt anyway.
+            password = STDIN.noecho do
+              # Chomp will remove the one new line character added by `gets`, without touching potential extra spaces:
+              # " 123 \n".chomp => " 123 "
+              STDIN.gets.to_s.chomp
+            end
+
+            STDOUT.puts # Complete the line
+
+            password
           end
-
-          STDOUT.puts # Complete the line
-
-          password
         end
 
         # Asks the user a yes/no question.
@@ -222,7 +224,7 @@ module CLI
         #   CLI::UI::Prompt.any_key('Press RETURN to continue...') # Then check if that's what they pressed
         sig { params(prompt: String).returns(T.nilable(String)) }
         def any_key(prompt = 'Press any key to continue...')
-          CLI::UI::StdoutRouter::Capture.uncaptured do
+          CLI::UI::StdoutRouter::Capture.in_alternate_screen do
             puts_question(prompt)
             read_char
           end
@@ -231,7 +233,7 @@ module CLI
         # Wait for any key to be pressed, returning the pressed key.
         sig { returns(T.nilable(String)) }
         def read_char
-          CLI::UI::StdoutRouter::Capture.uncaptured do
+          CLI::UI::StdoutRouter::Capture.in_alternate_screen do
             if $stdin.tty? && !ENV['TEST']
               require 'io/console'
               $stdin.getch # raw mode for tty
@@ -254,7 +256,7 @@ module CLI
             raise(ArgumentError, 'conflicting arguments: default enabled but allow_empty is false')
           end
 
-          CLI::UI::StdoutRouter::Capture.uncaptured do
+          CLI::UI::StdoutRouter::Capture.in_alternate_screen do
             if default
               puts_question("#{question} (empty = #{default})")
             else
@@ -308,7 +310,7 @@ module CLI
           instructions += ", filter with 'f'" if filter_ui
           instructions += ", enter option with 'e'" if select_ui && (options.size > 9)
 
-          CLI::UI::StdoutRouter::Capture.uncaptured do
+          CLI::UI::StdoutRouter::Capture.in_alternate_screen do
             puts_question("#{question} " + instructions_color.code + "(#{instructions})" + Color::RESET.code)
             resp = interactive_prompt(options, multiple: multiple, default: default)
 
@@ -333,9 +335,11 @@ module CLI
             end
             puts_question("#{question} (You chose: {{italic:#{resp_text}}})")
 
-            return T.must(handler).call(resp) if block_given?
-
-            resp
+            if block_given?
+              T.must(handler).call(resp)
+            else
+              resp
+            end
           end
         end
 
@@ -345,7 +349,7 @@ module CLI
             .returns(T.any(T::Array[String], String))
         end
         def interactive_prompt(options, multiple: false, default: nil)
-          CLI::UI::StdoutRouter::Capture.uncaptured do
+          CLI::UI::StdoutRouter::Capture.in_alternate_screen do
             InteractiveOptions.call(options, multiple: multiple, default: default)
           end
         end
