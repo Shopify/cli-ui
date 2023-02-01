@@ -154,4 +154,16 @@ module T
       def [](type); end
     end
   end
+
+  class << self
+    def const_added(name)
+      super
+      raise 'When using both cli-ui and sorbet, you must require sorbet before cli-ui'
+    end
+
+    def method_added(name)
+      super
+      raise 'When using both cli-ui and sorbet, you must require sorbet before cli-ui'
+    end
+  end
 end
