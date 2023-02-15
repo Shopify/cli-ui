@@ -89,6 +89,17 @@ module CLI
         CLI::UI::Prompt.confirm(question, default: default)
       end
 
+      # Convenience Method for +CLI::UI::Prompt.any_key+
+      #
+      # ==== Attributes
+      #
+      # * +prompt+ - prompt to present
+      #
+      sig { params(prompt: String).returns(T.nilable(String)) }
+      def any_key(prompt = 'Press any key to continue')
+        CLI::UI::Prompt.any_key(prompt)
+      end
+
       # Convenience Method for +CLI::UI::Prompt.ask+
       sig do
         params(
