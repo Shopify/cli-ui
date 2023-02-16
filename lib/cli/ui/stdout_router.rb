@@ -2,6 +2,7 @@
 
 require 'cli/ui'
 require 'stringio'
+require_relative '../../../vendor/reentrant_mutex'
 
 module CLI
   module UI
@@ -35,7 +36,11 @@ module CLI
 
           T.unsafe(@stream).write_without_cli_ui(*prepend_id(@stream, args))
           if (dup = StdoutRouter.duplicate_output_to)
-            T.unsafe(dup).write(*prepend_id(dup, args))
+            begin
+              T.unsafe(dup).write(*prepend_id(dup, args))
+            rescue IOError
+              # Ignore
+            end
           end
         end
 
@@ -86,48 +91,122 @@ module CLI
       class Capture
         extend T::Sig
 
-        @m = Mutex.new
+        @capture_mutex = Mutex.new
+        @stdin_mutex = ReentrantMutex.new
         @active_captures = 0
         @saved_stdin = nil
 
         class << self
           extend T::Sig
 
+          sig { returns(T.nilable(Capture)) }
+          def current_capture
+            Thread.current[:cliui_current_capture]
+          end
+
+          sig { returns(Capture) }
+          def current_capture!
+            T.must(current_capture)
+          end
+
+          sig { type_parameters(:T).params(block: T.proc.returns(T.type_parameter(:T))).returns(T.type_parameter(:T)) }
+          def in_alternate_screen(&block)
+            stdin_synchronize do
+              previous_print_captured_output = current_capture&.print_captured_output
+              current_capture&.print_captured_output = true
+              Spinner::SpinGroup.pause_spinners do
+                if outermost_uncaptured?
+                  begin
+                    prev_hook = Thread.current[:cliui_output_hook]
+                    Thread.current[:cliui_output_hook] = nil
+                    replay = current_capture!.stdout.gsub(ANSI.match_alternate_screen, '')
+                    CLI::UI.raw do
+                      print("#{ANSI.enter_alternate_screen}#{replay}")
+                    end
+                  ensure
+                    Thread.current[:cliui_output_hook] = prev_hook
+                  end
+                end
+                block.call
+              ensure
+                print(ANSI.exit_alternate_screen) if outermost_uncaptured?
+              end
+            ensure
+              current_capture&.print_captured_output = !!previous_print_captured_output
+            end
+          end
+
+          sig { type_parameters(:T).params(block: T.proc.returns(T.type_parameter(:T))).returns(T.type_parameter(:T)) }
+          def stdin_synchronize(&block)
+            @stdin_mutex.synchronize do
+              case $stdin
+              when BlockingInput
+                $stdin.synchronize do
+                  block.call
+                end
+              else
+                block.call
+              end
+            end
+          end
+
           sig { type_parameters(:T).params(block: T.proc.returns(T.type_parameter(:T))).returns(T.type_parameter(:T)) }
           def with_stdin_masked(&block)
-            @m.synchronize do
+            @capture_mutex.synchronize do
               if @active_captures.zero?
-                @saved_stdin = $stdin
-                $stdin, w = IO.pipe
-                $stdin.close
-                w.close
+                @stdin_mutex.synchronize do
+                  @saved_stdin = $stdin
+                  $stdin = BlockingInput.new(@saved_stdin)
+                end
               end
               @active_captures += 1
             end
 
             yield
           ensure
-            @m.synchronize do
+            @capture_mutex.synchronize do
               @active_captures -= 1
               if @active_captures.zero?
-                $stdin = @saved_stdin
+                @stdin_mutex.synchronize do
+                  $stdin = @saved_stdin
+                end
               end
             end
+          end
+
+          private
+
+          sig { returns(T::Boolean) }
+          def outermost_uncaptured?
+            @stdin_mutex.count == 1 && $stdin.is_a?(BlockingInput)
           end
         end
 
         sig do
-          params(with_frame_inset: T::Boolean, block: T.proc.void).void
+          params(
+            with_frame_inset: T::Boolean,
+            merged_output: T::Boolean,
+            duplicate_output_to: IO,
+            block: T.proc.void,
+          ).void
         end
-        def initialize(with_frame_inset: true, &block)
+        def initialize(
+          with_frame_inset: true,
+          merged_output: false,
+          duplicate_output_to: File.open(File::NULL, 'w'),
+          &block
+        )
           @with_frame_inset = with_frame_inset
+          @merged_output = merged_output
+          @duplicate_output_to = duplicate_output_to
           @block = block
-          @stdout = ''
-          @stderr = ''
+          @print_captured_output = false
+          @out = StringIO.new
+          @err = StringIO.new
         end
 
-        sig { returns(String) }
-        attr_reader :stdout, :stderr
+        sig { returns(T::Boolean) }
+        attr_accessor :print_captured_output
 
         sig { returns(T.untyped) }
         def run
@@ -135,8 +214,7 @@ module CLI
 
           StdoutRouter.assert_enabled!
 
-          out = StringIO.new
-          err = StringIO.new
+          Thread.current[:cliui_current_capture] = self
 
           prev_frame_inset = Thread.current[:no_cliui_frame_inset]
           prev_hook = Thread.current[:cliui_output_hook]
@@ -148,24 +226,90 @@ module CLI
           self.class.with_stdin_masked do
             Thread.current[:no_cliui_frame_inset] = !@with_frame_inset
             Thread.current[:cliui_output_hook] = ->(data, stream) do
+              stream = :stdout if @merged_output
               case stream
-              when :stdout then out.write(data)
-              when :stderr then err.write(data)
+              when :stdout
+                @out.write(data)
+                @duplicate_output_to.write(data)
+              when :stderr
+                @err.write(data)
               else raise
               end
-              false # suppress writing to terminal
+              print_captured_output # suppress writing to terminal by default
             end
 
-            begin
-              @block.call
-            ensure
-              @stdout = out.string
-              @stderr = err.string
-            end
+            @block.call
           end
         ensure
           Thread.current[:cliui_output_hook] = prev_hook
           Thread.current[:no_cliui_frame_inset] = prev_frame_inset
+          Thread.current[:cliui_current_capture] = nil
+        end
+
+        sig { returns(String) }
+        def stdout
+          @out.string
+        end
+
+        sig { returns(String) }
+        def stderr
+          @err.string
+        end
+
+        class BlockingInput
+          extend T::Sig
+
+          sig { params(stream: IO).void }
+          def initialize(stream)
+            @stream = stream
+            @m = ReentrantMutex.new
+          end
+
+          sig { type_parameters(:T).params(block: T.proc.returns(T.type_parameter(:T))).returns(T.type_parameter(:T)) }
+          def synchronize(&block)
+            @m.synchronize do
+              previous_allowed_to_read = Thread.current[:cliui_allowed_to_read]
+              Thread.current[:cliui_allowed_to_read] = true
+              block.call
+            ensure
+              Thread.current[:cliui_allowed_to_read] = previous_allowed_to_read
+            end
+          end
+
+          READING_METHODS = [
+            :each,
+            :each_byte,
+            :each_char,
+            :each_codepoint,
+            :each_line,
+            :getbyte,
+            :getc,
+            :getch,
+            :gets,
+            :read,
+            :read_nonblock,
+            :readbyte,
+            :readchar,
+            :readline,
+            :readlines,
+            :readpartial,
+          ]
+
+          NON_READING_METHODS = IO.instance_methods(false) - READING_METHODS
+
+          READING_METHODS.each do |method|
+            define_method(method) do |*args, **kwargs, &block|
+              raise(IOError, 'closed stream') unless Thread.current[:cliui_allowed_to_read]
+
+              @stream.send(method, *args, **kwargs, &block)
+            end
+          end
+
+          NON_READING_METHODS.each do |method|
+            define_method(method) do |*args, **kwargs, &block|
+              @stream.send(method, *args, **kwargs, &block)
+            end
+          end
         end
       end
 
