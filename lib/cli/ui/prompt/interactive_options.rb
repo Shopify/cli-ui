@@ -486,8 +486,10 @@ module CLI
             message = "  #{num}#{num ? "." : " "}#{padding}"
 
             format = '%s'
-            # If multiple, bold only selected. If not multiple, bold everything
-            format = "{{bold:#{format}}}" if !@multiple || is_chosen
+            # If multiple, bold selected. If not multiple, do not bold any options.
+            # Bolding options can cause confusion as some users may perceive bold white (default color) as selected
+            # rather than the actual selected color.
+            format = "{{bold:#{format}}}" if @multiple && is_chosen
             format = "{{cyan:#{format}}}" if @multiple && is_chosen && num != @active
             format = " #{format}"
 
