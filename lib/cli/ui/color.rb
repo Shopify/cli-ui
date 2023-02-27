@@ -88,7 +88,7 @@ module CLI
         def lookup(name)
           MAP.fetch(name.to_sym)
         rescue KeyError
-          raise InvalidColorName, name
+          raise InvalidColorName, name.to_sym
         end
 
         # All available colors by name
