@@ -184,17 +184,17 @@ module CLI
           require 'io/console'
 
           CLI::UI::StdoutRouter::Capture.in_alternate_screen do
-            STDOUT.print(CLI::UI.fmt('{{?}} ' + question)) # Do not use puts_question to avoid the new line.
+            $stdout.print(CLI::UI.fmt('{{?}} ' + question)) # Do not use puts_question to avoid the new line.
 
             # noecho interacts poorly with Readline under system Ruby, so do a manual `gets` here.
             # No fancy Readline integration (like echoing back) is required for a password prompt anyway.
-            password = STDIN.noecho do
+            password = $stdin.noecho do
               # Chomp will remove the one new line character added by `gets`, without touching potential extra spaces:
               # " 123 \n".chomp => " 123 "
-              STDIN.gets.to_s.chomp
+              $stdin.gets.to_s.chomp
             end
 
-            STDOUT.puts # Complete the line
+            $stdout.puts # Complete the line
 
             password
           end
@@ -357,7 +357,7 @@ module CLI
         sig { params(default: String).void }
         def write_default_over_empty_input(default)
           CLI::UI.raw do
-            STDERR.puts(
+            $stderr.puts(
               CLI::UI::ANSI.cursor_up(1) +
               "\r" +
               CLI::UI::ANSI.cursor_forward(4) + # TODO: width
@@ -369,7 +369,7 @@ module CLI
 
         sig { params(str: String).void }
         def puts_question(str)
-          STDOUT.puts(CLI::UI.fmt('{{?}} ' + str))
+          $stdout.puts(CLI::UI.fmt('{{?}} ' + str))
         end
 
         sig { params(is_file: T::Boolean).returns(String) }
@@ -397,7 +397,7 @@ module CLI
             print(CLI::UI::Color::RESET.code)
             line.to_s.chomp
           rescue Interrupt
-            CLI::UI.raw { STDERR.puts('^C' + CLI::UI::Color::RESET.code) }
+            CLI::UI.raw { $stderr.puts('^C' + CLI::UI::Color::RESET.code) }
             raise
           end
         end
