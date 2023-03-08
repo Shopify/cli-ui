@@ -54,6 +54,8 @@ module CLI
         # * +:success_text+ - If the block succeeds, what do we output? Defaults to nil
         # * +:timing+ - How long did the frame content take? Invalid for blockless. Defaults to true for the block form
         # * +frame_style+ - The frame style to use for this frame
+        # * +:to+ - Target stream, like $stdout or $stderr. Can be anything with print and puts methods,
+        #   or under Sorbet, IO or StringIO. Defaults to $stdout.
         #
         # ==== Example
         #
@@ -82,6 +84,7 @@ module CLI
             success_text: T.nilable(String),
             timing: T.any(T::Boolean, Numeric),
             frame_style: FrameStylable,
+            to: IOLike,
             block: T.nilable(T.proc.returns(T.type_parameter(:T))),
           ).returns(T.nilable(T.type_parameter(:T)))
         end
@@ -92,6 +95,7 @@ module CLI
           success_text: nil,
           timing: block_given?,
           frame_style: self.frame_style,
+          to: $stdout,
           &block
         )
           frame_style = CLI::UI.resolve_style(frame_style)
@@ -109,8 +113,8 @@ module CLI
 
           t_start = Time.now
           CLI::UI.raw do
-            print(prefix.chop)
-            puts frame_style.start(text, color: color)
+            to.print(prefix.chop)
+            to.puts(frame_style.start(text, color: color))
           end
           FrameStack.push(color: color, style: frame_style)
 
@@ -123,7 +127,7 @@ module CLI
           rescue
             closed = true
             t_diff = elapsed(t_start, timing)
-            close(failure_text, color: :red, elapsed: t_diff)
+            close(failure_text, color: :red, elapsed: t_diff, to: to)
             raise
           else
             success
@@ -131,9 +135,9 @@ module CLI
             unless closed
               t_diff = elapsed(t_start, timing)
               if T.unsafe(success) != false
-                close(success_text, color: color, elapsed: t_diff)
+                close(success_text, color: color, elapsed: t_diff, to: to)
               else
-                close(failure_text, color: :red, elapsed: t_diff)
+                close(failure_text, color: :red, elapsed: t_diff, to: to)
               end
             end
           end
@@ -150,6 +154,8 @@ module CLI
         #
         # * +:color+ - The color of the frame. Defaults to +DEFAULT_FRAME_COLOR+
         # * +frame_style+ - The frame style to use for this frame
+        # * +:to+ - Target stream, like $stdout or $stderr. Can be anything with print and puts methods,
+        #   or under Sorbet, IO or StringIO. Defaults to $stdout.
         #
         # ==== Example
         #
@@ -164,8 +170,15 @@ module CLI
         #
         # MUST be inside an open frame or it raises a +UnnestedFrameException+
         #
-        sig { params(text: T.nilable(String), color: T.nilable(Colorable), frame_style: T.nilable(FrameStylable)).void }
-        def divider(text, color: nil, frame_style: nil)
+        sig do
+          params(
+            text: T.nilable(String),
+            color: T.nilable(Colorable),
+            frame_style: T.nilable(FrameStylable),
+            to: IOLike,
+          ).void
+        end
+        def divider(text, color: nil, frame_style: nil, to: $stdout)
           fs_item = FrameStack.pop
           raise UnnestedFrameException, 'No frame nesting to unnest' unless fs_item
 
@@ -173,8 +186,8 @@ module CLI
           frame_style = CLI::UI.resolve_style(frame_style || fs_item.frame_style)
 
           CLI::UI.raw do
-            print(prefix.chop)
-            puts frame_style.divider(text.to_s, color: divider_color)
+            to.print(prefix.chop)
+            to.puts(frame_style.divider(text.to_s, color: divider_color))
           end
 
           FrameStack.push(fs_item)
@@ -192,6 +205,8 @@ module CLI
         # * +:color+ - The color of the frame. Defaults to nil
         # * +:elapsed+ - How long did the frame take? Defaults to nil
         # * +frame_style+ - The frame style to use for this frame.  Defaults to nil
+        # * +:to+ - Target stream, like $stdout or $stderr. Can be anything with print and puts methods,
+        #   or under Sorbet, IO or StringIO. Defaults to $stdout.
         #
         # ==== Example
         #
@@ -210,9 +225,10 @@ module CLI
             color: T.nilable(Colorable),
             elapsed: T.nilable(Numeric),
             frame_style: T.nilable(FrameStylable),
+            to: IOLike,
           ).void
         end
-        def close(text, color: nil, elapsed: nil, frame_style: nil)
+        def close(text, color: nil, elapsed: nil, frame_style: nil, to: $stdout)
           fs_item = FrameStack.pop
           raise UnnestedFrameException, 'No frame nesting to unnest' unless fs_item
 
@@ -221,8 +237,8 @@ module CLI
           elapsed_string = elapsed ? "(#{elapsed.round(2)}s)" : nil
 
           CLI::UI.raw do
-            print(prefix.chop)
-            puts frame_style.close(text.to_s, color: close_color, right_text: elapsed_string)
+            to.print(prefix.chop)
+            to.puts(frame_style.close(text.to_s, color: close_color, right_text: elapsed_string))
           end
         end
 
