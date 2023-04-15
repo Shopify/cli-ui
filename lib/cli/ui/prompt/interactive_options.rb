@@ -505,7 +505,7 @@ module CLI
             if num == @active
 
               color = filtering? || selecting? ? 'green' : 'blue'
-              message = message.split("\n").map { |l| "{{#{color}:> #{l.strip}}}" }.join("\n")
+              message = message.split("\n").map { |l| "{{#{color}:#{@marker} #{l.strip}}}" }.join("\n")
             end
 
             puts CLI::UI.fmt(message)
