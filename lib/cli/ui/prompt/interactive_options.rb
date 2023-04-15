@@ -113,14 +113,14 @@ module CLI
           # since lines may be longer than the terminal is wide, we need to
           # determine how many extra lines would be taken up by them.
           #
-          # To accomplish this we split the string by new lines and add the extra characters to the first line.
-          # Then we calculate how many lines would be needed to render the string based on the terminal width
-          extra_chars = @marker.length +
-            1 + # 1 space
-            @options.count.to_s.size + # Width of the displayed number
-            1 + # .
-            1 + # space after .
-            (@multiple ? 1 : 0) # Space for the checkbox, if rendered
+          # To accomplish this we split the string by new lines and add the
+          # extra characters to the first line.
+          # Then we calculate how many lines would be needed to render the string
+          # based on the terminal width
+          # 3 = space before the number, the . after the number, the space after the .
+          # multiple check is for the space for the checkbox, if rendered
+          # options.count.to_s.size gets us the max size of the number we will display
+          extra_chars = @marker.length + 3 + @options.count.to_s.size + (@multiple ? 1 : 0)
 
           @option_lengths = @options.map do |text|
             next 1 if text.empty?
