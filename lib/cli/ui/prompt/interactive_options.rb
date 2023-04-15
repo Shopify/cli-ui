@@ -124,9 +124,11 @@ module CLI
 
           @option_lengths = @options.map do |text|
             next 1 if text.empty?
-            
+
             # Find the length of all the lines in this string
-            non_empty_line_lengths = text.split("\n").reject(&:empty?).map { |l| CLI::UI.fmt(l, enable_color: false).length }
+            non_empty_line_lengths = text.split("\n").reject(&:empty?).map do |line|
+              CLI::UI.fmt(line, enable_color: false).length
+            end
             # The first line has the marker and number, so we add that so we can take it into account
             non_empty_line_lengths[0] += extra_chars
             # Finally, we need to calculate how many lines each one will take. We can do that by dividing each one
