@@ -111,21 +111,29 @@ module CLI
           # so to get the # of lines, you need to join then split
 
           # since lines may be longer than the terminal is wide, we need to
-          # determine how many extra lines would be taken up by them
-          max_width = (@terminal_width_at_calculation_time -
-                       @options.count.to_s.size - # Width of the displayed number
-                       5 -                        # Extra characters added during rendering
-                       (@multiple ? 1 : 0)        # Space for the checkbox, if rendered
-                      ).to_f
+          # determine how many extra lines would be taken up by them.
+          #
+          # To accomplish this we split the string by new lines and add the
+          # extra characters to the first line.
+          # Then we calculate how many lines would be needed to render the string
+          # based on the terminal width
+          # 3 = space before the number, the . after the number, the space after the .
+          # multiple check is for the space for the checkbox, if rendered
+          # options.count.to_s.size gets us the max size of the number we will display
+          extra_chars = @marker.length + 3 + @options.count.to_s.size + (@multiple ? 1 : 0)
 
           @option_lengths = @options.map do |text|
-            width = 1 if text.empty?
-            width ||= text
-              .split("\n")
-              .reject(&:empty?)
-              .sum { |l| (CLI::UI.fmt(l, enable_color: false).length / max_width).ceil }
+            next 1 if text.empty?
 
-            width
+            # Find the length of all the lines in this string
+            non_empty_line_lengths = text.split("\n").reject(&:empty?).map do |line|
+              CLI::UI.fmt(line, enable_color: false).length
+            end
+            # The first line has the marker and number, so we add that so we can take it into account
+            non_empty_line_lengths[0] += extra_chars
+            # Finally, we need to calculate how many lines each one will take. We can do that by dividing each one
+            # by the width of the terminal, rounding up to the nearest natural number
+            non_empty_line_lengths.sum { |length| (length.to_f / @terminal_width_at_calculation_time).ceil }
           end
         end
 
@@ -499,7 +507,7 @@ module CLI
             if num == @active
 
               color = filtering? || selecting? ? 'green' : 'blue'
-              message = message.split("\n").map { |l| "{{#{color}:> #{l.strip}}}" }.join("\n")
+              message = message.split("\n").map { |l| "{{#{color}:#{@marker} #{l.strip}}}" }.join("\n")
             end
 
             puts CLI::UI.fmt(message)
