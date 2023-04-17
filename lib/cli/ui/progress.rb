@@ -45,7 +45,7 @@ module CLI
           print(CLI::UI::ANSI.hide_cursor)
           yield(bar)
         ensure
-          puts bar.to_s
+          puts(bar)
           CLI::UI.raw do
             print(ANSI.show_cursor)
           end
@@ -83,7 +83,7 @@ module CLI
         @percent_done = set_percent if set_percent
         @percent_done = [@percent_done, 1.0].min # Make sure we can't go above 1.0
 
-        print(to_s)
+        print(self)
         print(CLI::UI::ANSI.previous_line + "\n")
       end
 
