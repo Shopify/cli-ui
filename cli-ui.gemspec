@@ -15,7 +15,7 @@ Gem::Specification.new do |spec|
   spec.homepage      = 'https://github.com/shopify/cli-ui'
   spec.license       = 'MIT'
 
-  spec.files         = Dir['lib/**/*.rb', 'README.md', 'LICENSE.txt']
+  spec.files         = Dir['lib/**/*.rb', 'vendor/**/*', 'README.md', 'LICENSE.txt']
   spec.bindir        = 'exe'
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
