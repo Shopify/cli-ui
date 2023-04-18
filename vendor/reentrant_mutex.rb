@@ -22,54 +22,57 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 # Sourced from https://github.com/dotboris/reentrant_mutex
+module CLI
+  module UI
+    class ReentrantMutex < Mutex
+      def initialize
+        @count_mutex = Mutex.new
+        @counts = Hash.new(0)
 
-class ReentrantMutex < Mutex
-  def initialize
-    @count_mutex = Mutex.new
-    @counts = Hash.new(0)
+        super
+      end
 
-    super
-  end
+      def synchronize
+        raise ThreadError, 'Must be called with a block' unless block_given?
 
-  def synchronize
-    raise ThreadError, 'Must be called with a block' unless block_given?
+        begin
+          lock
+          yield
+        ensure
+          unlock
+        end
+      end
 
-    begin
-      lock
-      yield
-    ensure
-      unlock
+      def lock
+        c = increase_count Thread.current
+        super if c <= 1
+      end
+
+      def unlock
+        c = decrease_count Thread.current
+        if c <= 0
+          super
+          delete_count Thread.current
+        end
+      end
+
+      def count
+        @count_mutex.synchronize { @counts[Thread.current] }
+      end
+
+      private
+
+      def increase_count(thread)
+        @count_mutex.synchronize { @counts[thread] += 1 }
+      end
+
+      def decrease_count(thread)
+        @count_mutex.synchronize { @counts[thread] -= 1 }
+      end
+
+      def delete_count(thread)
+        @count_mutex.synchronize { @counts.delete(thread) }
+      end
     end
-  end
-
-  def lock
-    c = increase_count Thread.current
-    super if c <= 1
-  end
-
-  def unlock
-    c = decrease_count Thread.current
-    if c <= 0
-      super
-      delete_count Thread.current
-    end
-  end
-
-  def count
-    @count_mutex.synchronize { @counts[Thread.current] }
-  end
-
-  private
-
-  def increase_count(thread)
-    @count_mutex.synchronize { @counts[thread] += 1 }
-  end
-
-  def decrease_count(thread)
-    @count_mutex.synchronize { @counts[thread] -= 1 }
-  end
-
-  def delete_count(thread)
-    @count_mutex.synchronize { @counts.delete(thread) }
   end
 end

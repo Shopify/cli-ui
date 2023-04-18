@@ -92,7 +92,7 @@ module CLI
         extend T::Sig
 
         @capture_mutex = Mutex.new
-        @stdin_mutex = ReentrantMutex.new
+        @stdin_mutex = CLI::UI::ReentrantMutex.new
         @active_captures = 0
         @saved_stdin = nil
 
@@ -262,7 +262,7 @@ module CLI
           sig { params(stream: IO).void }
           def initialize(stream)
             @stream = stream
-            @m = ReentrantMutex.new
+            @m = CLI::UI::ReentrantMutex.new
           end
 
           sig { type_parameters(:T).params(block: T.proc.returns(T.type_parameter(:T))).returns(T.type_parameter(:T)) }
