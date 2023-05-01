@@ -16,12 +16,12 @@ module CLI
           @name = name
         end
 
-        sig { params(args: String).void }
+        sig { params(args: Object).returns(Integer) }
         def write(*args)
           args = args.map do |str|
             if auto_frame_inset?
               str = str.dup # unfreeze
-              str = str.force_encoding(Encoding::UTF_8)
+              str = str.to_s.force_encoding(Encoding::UTF_8)
               apply_line_prefix(str, CLI::UI::Frame.prefix)
             else
               @pending_newline = false
@@ -31,10 +31,10 @@ module CLI
 
           # hook return of false suppresses output.
           if (hook = Thread.current[:cliui_output_hook])
-            return if hook.call(args.map(&:to_s).join, @name) == false
+            return 0 if hook.call(args.map(&:to_s).join, @name) == false
           end
 
-          T.unsafe(@stream).write_without_cli_ui(*prepend_id(@stream, args))
+          ret = T.unsafe(@stream).write_without_cli_ui(*prepend_id(@stream, args))
           if (dup = StdoutRouter.duplicate_output_to)
             begin
               T.unsafe(dup).write(*prepend_id(dup, args))
@@ -42,6 +42,7 @@ module CLI
               # Ignore
             end
           end
+          ret
         end
 
         private
