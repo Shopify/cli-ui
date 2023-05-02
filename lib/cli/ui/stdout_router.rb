@@ -18,7 +18,8 @@ module CLI
 
         sig { params(args: Object).returns(Integer) }
         def write(*args)
-          args = args.map do |str|
+          strs = args.map do |obj|
+            str = obj.to_s
             if auto_frame_inset?
               str = str.dup # unfreeze
               str = str.to_s.force_encoding(Encoding::UTF_8)
@@ -31,13 +32,13 @@ module CLI
 
           # hook return of false suppresses output.
           if (hook = Thread.current[:cliui_output_hook])
-            return 0 if hook.call(args.map(&:to_s).join, @name) == false
+            return 0 if hook.call(strs.join, @name) == false
           end
 
-          ret = T.unsafe(@stream).write_without_cli_ui(*prepend_id(@stream, args))
+          ret = T.unsafe(@stream).write_without_cli_ui(*prepend_id(@stream, strs))
           if (dup = StdoutRouter.duplicate_output_to)
             begin
-              T.unsafe(dup).write(*prepend_id(dup, args))
+              T.unsafe(dup).write(*prepend_id(dup, strs))
             rescue IOError
               # Ignore
             end
