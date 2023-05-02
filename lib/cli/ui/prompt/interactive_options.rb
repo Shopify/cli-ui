@@ -114,23 +114,20 @@ module CLI
           # determine how many extra lines would be taken up by them.
           #
           # To accomplish this we split the string by new lines and add the
-          # extra characters to the first line.
-          # Then we calculate how many lines would be needed to render the string
-          # based on the terminal width
-          # 3 = space before the number, the . after the number, the space after the .
-          # multiple check is for the space for the checkbox, if rendered
-          # options.count.to_s.size gets us the max size of the number we will display
-          extra_chars = @marker.length + 3 + @options.count.to_s.size + (@multiple ? 1 : 0)
+          # prefix to the first line. We use the options count as the number since
+          # it will be the widest number we will display, and we pad the others to
+          # align with it. Then we calculate how many lines would be needed to
+          # render the string based on the terminal width.
+          prefix = "#{@marker} #{@options.count}. #{@multiple ? "☐ " : ""}"
 
           @option_lengths = @options.map do |text|
             next 1 if text.empty?
 
             # Find the length of all the lines in this string
-            non_empty_line_lengths = text.split("\n").reject(&:empty?).map do |line|
+            non_empty_line_lengths = "#{prefix}#{text}".split("\n").reject(&:empty?).map do |line|
               CLI::UI.fmt(line, enable_color: false).length
             end
-            # The first line has the marker and number, so we add that so we can take it into account
-            non_empty_line_lengths[0] += extra_chars
+
             # Finally, we need to calculate how many lines each one will take. We can do that by dividing each one
             # by the width of the terminal, rounding up to the nearest natural number
             non_empty_line_lengths.sum { |length| (length.to_f / @terminal_width_at_calculation_time).ceil }
