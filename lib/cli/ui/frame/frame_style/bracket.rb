@@ -113,7 +113,7 @@ module CLI
               # extra-reliably, so we fall back to a less foolproof strategy. This
               # is probably better in general for cases with impoverished terminal
               # emulators and no active user.
-              unless [0, '', nil].include?(ENV['CI'])
+              unless [0, '', nil].include?(ENV['CI']) && [0, '', nil].include?(ENV['JOURNAL_STREAM'])
                 o << color.code << preamble
                 o << color.code << suffix
                 o << CLI::UI::Color::RESET.code

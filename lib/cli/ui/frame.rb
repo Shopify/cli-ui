@@ -261,8 +261,8 @@ module CLI
               final_color = color || item.color
               output << CLI::UI.resolve_color(final_color).code \
                 << item.frame_style.prefix \
-                << ' ' \
-                << CLI::UI::Color::RESET.code
+                << CLI::UI::Color::RESET.code \
+                << ' '
             end
           end
         end

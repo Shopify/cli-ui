@@ -25,7 +25,7 @@ module CLI
           end
         end
 
-        assert_equal("\e[31m┃ \e[0m\e[0mfoo\n", out)
+        assert_equal("\e[31m┃\e[0m \e[0mfoo\n", out)
       end
 
       def test_frame_with_long_texts
@@ -42,7 +42,7 @@ module CLI
           end
         end
 
-        assert_equal("\e[31m┃ \e[0m\e[0mfoo\n", out)
+        assert_equal("\e[31m┃\e[0m \e[0mfoo\n", out)
       end
 
       def test_puts_stream
