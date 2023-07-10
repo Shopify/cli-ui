@@ -21,6 +21,8 @@ jobs:
         ruby-version: ['2.7', '3.0']
 
     runs-on: ${{ matrix.os }}
+    env:
+      BUNDLE_WITHOUT: typecheck
     steps:
     - uses: actions/checkout@v2
     - name: Set up Ruby
