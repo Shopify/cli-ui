@@ -4,7 +4,7 @@ module CLI
   module UI
     module Spinner
       class SpinGroup
-        DEFAULT_FINAL_GLYPH = ->(success) { success ? CLI::UI::Glyph::CHECK.to_s : CLI::UI::Glyph::X.to_s }
+        DEFAULT_FINAL_GLYPH = ->(success) { success ? CLI::UI::Glyph::CHECK : CLI::UI::Glyph::X }
 
         class << self
           extend T::Sig
@@ -62,7 +62,6 @@ module CLI
         sig { params(auto_debrief: T::Boolean).void }
         def initialize(auto_debrief: true)
           @m = Mutex.new
-          @consumed_lines = 0
           @tasks = []
           @auto_debrief = auto_debrief
           @start = Time.new
@@ -95,7 +94,7 @@ module CLI
           sig do
             params(
               title: String,
-              final_glyph: T.proc.params(success: T::Boolean).returns(String),
+              final_glyph: T.proc.params(success: T::Boolean).returns(T.any(Glyph, String)),
               merged_output: T::Boolean,
               duplicate_output_to: IO,
               block: T.proc.params(task: Task).returns(T.untyped),
@@ -165,7 +164,7 @@ module CLI
           sig { params(index: Integer, force: T::Boolean, width: Integer).returns(String) }
           def render(index, force = true, width: CLI::UI::Terminal.width)
             @m.synchronize do
-              if force || @always_full_render || @force_full_render
+              if !CLI::UI.enable_cursor? || force || @always_full_render || @force_full_render
                 full_render(index, width)
               else
                 partial_render(index)
@@ -199,29 +198,43 @@ module CLI
 
           sig { params(index: Integer, terminal_width: Integer).returns(String) }
           def full_render(index, terminal_width)
-            prefix = inset +
-              glyph(index) +
-              CLI::UI::Color::RESET.code +
-              ' '
+            o = +''
 
-            truncation_width = terminal_width - CLI::UI::ANSI.printing_width(prefix)
+            o << inset
+            o << glyph(index)
+            o << ' '
 
-            prefix +
-              CLI::UI.resolve_text(title, truncate_to: truncation_width) +
-              "\e[K"
+            truncation_width = terminal_width - CLI::UI::ANSI.printing_width(o)
+
+            o << CLI::UI.resolve_text(title, truncate_to: truncation_width)
+            o << ANSI.clear_to_end_of_line if CLI::UI.enable_cursor?
+
+            o
           end
 
           sig { params(index: Integer).returns(String) }
           def partial_render(index)
-            CLI::UI::ANSI.cursor_forward(inset_width) + glyph(index) + CLI::UI::Color::RESET.code
+            o = +''
+
+            o << CLI::UI::ANSI.cursor_forward(inset_width)
+            o << glyph(index)
+
+            o
           end
 
           sig { params(index: Integer).returns(String) }
           def glyph(index)
             if @done
-              @final_glyph.call(@success)
+              final_glyph = @final_glyph.call(@success)
+              if final_glyph.is_a?(Glyph)
+                CLI::UI.enable_color? ? final_glyph.to_s : final_glyph.char
+              else
+                final_glyph
+              end
+            elsif CLI::UI.enable_cursor?
+              CLI::UI.enable_color? ? GLYPHS[index] : RUNES[index]
             else
-              GLYPHS[index]
+              Glyph::HOURGLASS.char
             end
           end
 
@@ -251,7 +264,7 @@ module CLI
         sig do
           params(
             title: String,
-            final_glyph: T.proc.params(success: T::Boolean).returns(String),
+            final_glyph: T.proc.params(success: T::Boolean).returns(T.any(Glyph, String)),
             merged_output: T::Boolean,
             duplicate_output_to: IO,
             block: T.proc.params(task: Task).void,
@@ -286,6 +299,11 @@ module CLI
         def wait
           idx = 0
 
+          consumed_lines = 0
+
+          tasks_seen = @tasks.map { false }
+          tasks_seen_done = @tasks.map { false }
+
           loop do
             done_count = 0
 
@@ -301,16 +319,23 @@ module CLI
                     task_done = task.check
                     done_count += 1 if task_done
 
-                    if nat_index > @consumed_lines
-                      print(task.render(idx, true, width: width) + "\n")
-                      @consumed_lines += 1
-                    else
-                      offset = @consumed_lines - int_index
-                      move_to = CLI::UI::ANSI.cursor_up(offset) + "\r"
-                      move_from = "\r" + CLI::UI::ANSI.cursor_down(offset)
+                    if CLI::UI.enable_cursor?
+                      if nat_index > consumed_lines
+                        print(task.render(idx, true, width: width) + "\n")
+                        consumed_lines += 1
+                      else
+                        offset = consumed_lines - int_index
+                        move_to = CLI::UI::ANSI.cursor_up(offset) + "\r"
+                        move_from = "\r" + CLI::UI::ANSI.cursor_down(offset)
 
-                      print(move_to + task.render(idx, idx.zero?, width: width) + move_from)
+                        print(move_to + task.render(idx, idx.zero?, width: width) + move_from)
+                      end
+                    elsif !tasks_seen[int_index] || (task_done && !tasks_seen_done[int_index])
+                      print(task.render(idx, true, width: width) + "\n")
                     end
+
+                    tasks_seen[int_index] = true
+                    tasks_seen_done[int_index] ||= task_done
                   end
                 end
               end

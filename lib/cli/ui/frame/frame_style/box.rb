@@ -94,7 +94,8 @@ module CLI
 
               preamble = +''
 
-              preamble << color.code << first << (HORIZONTAL * 2)
+              preamble << color.code if CLI::UI.enable_color?
+              preamble << first << (HORIZONTAL * 2)
 
               unless text.empty?
                 preamble << ' ' << CLI::UI.resolve_text("{{#{color.name}:#{text}}}") << ' '
@@ -128,18 +129,17 @@ module CLI
 
               o = +''
 
-              # Shopify's CI system supports terminal emulation, but not some of
-              # the fancier features that we normally use to draw frames
-              # extra-reliably, so we fall back to a less foolproof strategy. This
-              # is probably better in general for cases with impoverished terminal
-              # emulators and no active user.
-              unless [0, '', nil].include?(ENV['CI']) && [0, '', nil].include?(ENV['JOURNAL_STREAM'])
+              unless CLI::UI.enable_cursor?
                 linewidth = [0, termwidth - (preamble_end + suffix_width + 1)].max
 
-                o << color.code << preamble
-                o << color.code << (HORIZONTAL * linewidth)
-                o << color.code << suffix
-                o << CLI::UI::Color::RESET.code << "\n"
+                o << color.code if CLI::UI.enable_color?
+                o << preamble
+                o << color.code if CLI::UI.enable_color?
+                o << (HORIZONTAL * linewidth)
+                o << color.code if CLI::UI.enable_color?
+                o << suffix
+                o << CLI::UI::Color::RESET.code if CLI::UI.enable_color?
+                o << "\n"
                 return o
               end
 
@@ -158,12 +158,12 @@ module CLI
               # |                 |                    |            | |
               # V                 V                    V            V V
               # --- Preamble text --------------------- suffix text --
-              o << color.code
+              o << color.code if CLI::UI.enable_color?
               o << print_at_x(preamble_start, HORIZONTAL * (termwidth - preamble_start)) # draw a full line
               o << print_at_x(preamble_start, preamble)
-              o << color.code
+              o << color.code if CLI::UI.enable_color?
               o << print_at_x(suffix_start, suffix)
-              o << CLI::UI::Color::RESET.code
+              o << CLI::UI::Color::RESET.code if CLI::UI.enable_color?
               o << CLI::UI::ANSI.show_cursor
               o << "\n"
 
