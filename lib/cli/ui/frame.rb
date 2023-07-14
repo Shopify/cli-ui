@@ -254,15 +254,17 @@ module CLI
             items = FrameStack.items
 
             items[0..-2].to_a.each do |item|
-              output << item.color.code << item.frame_style.prefix
+              output << item.color.code if CLI::UI.enable_color?
+              output << item.frame_style.prefix
+              output << CLI::UI::Color::RESET.code if CLI::UI.enable_color?
             end
 
             if (item = items.last)
               final_color = color || item.color
-              output << CLI::UI.resolve_color(final_color).code \
-                << item.frame_style.prefix \
-                << CLI::UI::Color::RESET.code \
-                << ' '
+              output << CLI::UI.resolve_color(final_color).code if CLI::UI.enable_color?
+              output << item.frame_style.prefix
+              output << CLI::UI::Color::RESET.code if CLI::UI.enable_color?
+              output << ' '
             end
           end
         end

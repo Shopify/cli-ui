@@ -22,7 +22,7 @@ module CLI
 
       colors = [CLI::UI::Color::CYAN.code] * (RUNES.size / 2).ceil +
         [CLI::UI::Color::MAGENTA.code] * (RUNES.size / 2).to_i
-      GLYPHS = colors.zip(RUNES).map(&:join)
+      GLYPHS = colors.zip(RUNES).map { |c, r| c + r + CLI::UI::Color::RESET.code }.freeze
 
       class << self
         extend T::Sig

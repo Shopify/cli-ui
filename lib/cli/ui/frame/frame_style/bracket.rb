@@ -94,7 +94,8 @@ module CLI
 
               preamble = +''
 
-              preamble << color.code << first << (HORIZONTAL * 2)
+              preamble << color.code if CLI::UI.enable_color?
+              preamble << first << (HORIZONTAL * 2)
 
               unless text.empty?
                 preamble << ' ' << CLI::UI.resolve_text("{{#{color.name}:#{text}}}") << ' '
@@ -108,15 +109,12 @@ module CLI
 
               o = +''
 
-              # Shopify's CI system supports terminal emulation, but not some of
-              # the fancier features that we normally use to draw frames
-              # extra-reliably, so we fall back to a less foolproof strategy. This
-              # is probably better in general for cases with impoverished terminal
-              # emulators and no active user.
-              unless [0, '', nil].include?(ENV['CI']) && [0, '', nil].include?(ENV['JOURNAL_STREAM'])
-                o << color.code << preamble
-                o << color.code << suffix
-                o << CLI::UI::Color::RESET.code
+              unless CLI::UI.enable_cursor?
+                o << color.code if CLI::UI.enable_color?
+                o << preamble
+                o << color.code if CLI::UI.enable_color?
+                o << suffix
+                o << CLI::UI::Color::RESET.code if CLI::UI.enable_color?
                 o << "\n"
 
                 return o
@@ -134,9 +132,11 @@ module CLI
               # reset to column 1 so that things like ^C don't ruin formatting
               o << "\r"
 
-              o << color.code
-              o << print_at_x(preamble_start, preamble + color.code + suffix)
-              o << CLI::UI::Color::RESET.code
+              o << color.code if CLI::UI.enable_color?
+              o << print_at_x(preamble_start, preamble)
+              o << color.code if CLI::UI.enable_color?
+              o << suffix
+              o << CLI::UI::Color::RESET.code if CLI::UI.enable_color?
               o << CLI::UI::ANSI.show_cursor
               o << "\n"
 

@@ -9,6 +9,7 @@ require 'cli/ui'
 
 # Otherwise, results will vary depending on the context in which we run tests.
 CLI::UI.enable_color = true
+CLI::UI.enable_cursor = true
 
 module CLI
   module UI
