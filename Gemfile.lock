@@ -18,7 +18,7 @@ GEM
     language_server-protocol (3.17.0.3)
     method_source (1.0.0)
     minitest (5.18.1)
-    minitest-reporters (1.6.0)
+    minitest-reporters (1.6.1)
       ansi
       builder
       minitest (>= 5.0)
