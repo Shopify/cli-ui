@@ -145,7 +145,7 @@ module CLI
 
         sig { returns(Regexp) }
         def match_alternate_screen
-          /#{Regexp.escape(control('?1049', ''))}[hl]/
+          /#{Regexp.escape(control("?1049", ""))}[hl]/
         end
 
         # Show the cursor
