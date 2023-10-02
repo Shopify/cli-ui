@@ -40,7 +40,7 @@ GEM
       yarp (>= 0.11.0)
     regexp_parser (2.8.1)
     rexml (3.2.6)
-    rubocop (1.56.3)
+    rubocop (1.56.4)
       base64 (~> 0.1.1)
       json (~> 2.3)
       language_server-protocol (>= 3.17.0)
@@ -102,7 +102,7 @@ GEM
       thor (>= 1.2.0)
       yard-sorbet
     thor (1.2.2)
-    unicode-display_width (2.4.2)
+    unicode-display_width (2.5.0)
     yard (0.9.34)
     yard-sorbet (0.8.1)
       sorbet-runtime (>= 0.5)
