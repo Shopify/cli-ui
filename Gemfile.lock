@@ -58,7 +58,7 @@ GEM
       rubocop (~> 1.0)
     rubocop-shopify (2.14.0)
       rubocop (~> 1.51)
-    rubocop-sorbet (0.7.3)
+    rubocop-sorbet (0.7.4)
       rubocop (>= 0.90.0)
     ruby-progressbar (1.13.0)
     ruby2_keywords (0.0.5)
@@ -102,7 +102,7 @@ GEM
       thor (>= 1.2.0)
       yard-sorbet
     thor (1.2.2)
-    unicode-display_width (2.4.2)
+    unicode-display_width (2.5.0)
     yard (0.9.34)
     yard-sorbet (0.8.1)
       sorbet-runtime (>= 0.5)
