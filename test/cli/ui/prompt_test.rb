@@ -155,9 +155,6 @@ module CLI
       end
 
       def test_ask_invalid_kwargs
-        error = assert_raises(ArgumentError) { Prompt.ask('q', options: ['a'], default: 'a') }
-        assert_equal('conflicting arguments: default may not be provided with options when not multiple', error.message)
-
         error = assert_raises(ArgumentError) { Prompt.ask('q', options: ['a'], is_file: true) }
         assert_equal('conflicting arguments: is_file is only useful when options are not provided', error.message)
 
@@ -169,7 +166,7 @@ module CLI
         error = assert_raises(ArgumentError) do
           Prompt.ask('q', default: 'b') {}
         end
-        assert_equal('conflicting arguments: default may not be provided with options when not multiple', error.message)
+        assert_equal('insufficient options', error.message)
       end
 
       def test_ask_interactive_conflicting_arguments
@@ -280,6 +277,14 @@ module CLI
         )
         write('120')
         assert_output_includes(['1', '3'].inspect)
+      end
+
+      def test_ask_with_default_values
+        run_in_process(
+          'puts CLI::UI::Prompt.ask("q", options: (1..15).map(&:to_s), default: \'2\').inspect',
+        )
+        write("\n")
+        assert_output_includes('You chose: 2')
       end
 
       def test_ask_instructions_color
