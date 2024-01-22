@@ -26,7 +26,7 @@ GEM
       ruby2_keywords (>= 0.0.5)
     netrc (0.11.0)
     parallel (1.24.0)
-    parser (3.3.0.4)
+    parser (3.3.0.5)
       ast (~> 2.4.1)
       racc
     prettier_print (1.2.1)
@@ -40,7 +40,7 @@ GEM
       sorbet-runtime (>= 0.5.9204)
     regexp_parser (2.9.0)
     rexml (3.2.6)
-    rubocop (1.60.0)
+    rubocop (1.60.1)
       json (~> 2.3)
       language_server-protocol (>= 3.17.0)
       parallel (~> 1.10)
