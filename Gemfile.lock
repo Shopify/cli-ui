@@ -55,7 +55,7 @@ GEM
       parser (>= 3.2.1.0)
     rubocop-rake (0.6.0)
       rubocop (~> 1.0)
-    rubocop-shopify (2.14.0)
+    rubocop-shopify (2.15.1)
       rubocop (~> 1.51)
     rubocop-sorbet (0.7.7)
       rubocop (>= 0.90.0)

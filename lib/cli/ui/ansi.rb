@@ -45,7 +45,7 @@ module CLI
         #
         sig { params(str: String).returns(String) }
         def strip_codes(str)
-          str.gsub(/\x1b\[[\d;]+[A-z]|\r/, '')
+          str.gsub(/\x1b\[[\d;]+[A-Za-z]|\r/, '')
         end
 
         # Returns an ANSI control sequence

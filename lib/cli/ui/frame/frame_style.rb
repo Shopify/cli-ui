@@ -106,8 +106,8 @@ module CLI
           sig { returns(String) }
           def message
             keys = FrameStyle::MAP.keys.map(&:inspect).join(', ')
-            "invalid frame style: #{@name.inspect}" \
-              ' -- must be one of CLI::UI::Frame::FrameStyle::MAP ' \
+            "invalid frame style: #{@name.inspect} " \
+              '-- must be one of CLI::UI::Frame::FrameStyle::MAP ' \
               "(#{keys})"
           end
         end
