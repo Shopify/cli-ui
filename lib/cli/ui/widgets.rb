@@ -80,7 +80,7 @@ module CLI
 
         sig { params(argstring: String, pattern: Regexp).void }
         def initialize(argstring, pattern)
-          super
+          super(nil)
           @argstring = argstring
           @pattern   = pattern
         end
