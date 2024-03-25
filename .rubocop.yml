@@ -10,7 +10,6 @@ require:
 AllCops:
   Exclude:
     - vendor/**/*
-  TargetRubyVersion: 2.7
   NewCops: disable
 
 Style/FrozenStringLiteralComment:
