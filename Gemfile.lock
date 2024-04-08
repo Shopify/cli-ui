@@ -33,7 +33,7 @@ GEM
     racc (1.7.3)
     racc (1.7.3-java)
     rainbow (3.1.1)
-    rake (13.1.0)
+    rake (13.2.1)
     rbi (0.1.9)
       prism (>= 0.18.0, < 0.25)
       sorbet-runtime (>= 0.5.9204)
