@@ -3,21 +3,11 @@
 # typed: true
 
 require 'cli/ui'
-require 'readline'
-
-module Readline
-  unless const_defined?(:FILENAME_COMPLETION_PROC)
-    FILENAME_COMPLETION_PROC = proc do |input|
-      directory = input[-1] == '/' ? input : File.dirname(input)
-      filename = input[-1] == '/' ? '' : File.basename(input)
-
-      (Dir.entries(directory).select do |fp|
-        fp.start_with?(filename)
-      end - (input[-1] == '.' ? [] : ['.', '..'])).map do |fp|
-        File.join(directory, fp).gsub(/\A\.\//, '')
-      end
-    end
-  end
+begin
+  require 'reline' # For 2.7+
+rescue LoadError
+  require 'readline' # For 2.6
+  Object.const_set(:Reline, Readline)
 end
 
 module CLI
@@ -375,11 +365,20 @@ module CLI
         sig { params(is_file: T::Boolean).returns(String) }
         def readline(is_file: false)
           if is_file
-            Readline.completion_proc = Readline::FILENAME_COMPLETION_PROC
-            Readline.completion_append_character = ''
+            Reline.completion_proc = proc do |input|
+              directory = input[-1] == '/' ? input : File.dirname(input)
+              filename = input[-1] == '/' ? '' : File.basename(input)
+
+              (Dir.entries(directory).select do |fp|
+                fp.start_with?(filename)
+              end - (input[-1] == '.' ? [] : ['.', '..'])).map do |fp|
+                File.join(directory, fp).gsub(/\A\.\//, '')
+              end
+            end
+            Reline.completion_append_character = ''
           else
-            Readline.completion_proc = proc { |*| nil }
-            Readline.completion_append_character = ' '
+            Reline.completion_proc = proc { |*| nil }
+            Reline.completion_append_character = ' '
           end
 
           # because Readline is a C library, CLI::UI's hooks into $stdout don't
@@ -393,7 +392,7 @@ module CLI
           prompt += CLI::UI::Color::YELLOW.code if CLI::UI::OS.current.use_color_prompt?
 
           begin
-            line = Readline.readline(prompt, true)
+            line = Reline.readline(prompt, true)
             print(CLI::UI::Color::RESET.code)
             line.to_s.chomp
           rescue Interrupt
