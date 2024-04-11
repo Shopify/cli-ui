@@ -8,3 +8,6 @@ updates:
     time: "07:00"
     timezone: America/Toronto
   open-pull-requests-limit: 99
+  groups:
+    dev-dependencies:
+      dependency-type: "development"
