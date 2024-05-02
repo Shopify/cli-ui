@@ -162,7 +162,7 @@ CLI::UI.frame_style = :box
 To style an individual frame:
 
 ```ruby
-CLI::UI.frame('New Style!', frame_style: :bracket) { puts 'It's pretty cool!' }
+CLI::UI.frame('New Style!', frame_style: :bracket) { puts "It's pretty cool!" }
 ```
 
 The default style - `:box` - is what has been used up until now.  The other style - `:bracket` - looks like this:
