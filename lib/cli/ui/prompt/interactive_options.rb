@@ -59,7 +59,11 @@ module CLI
         end
         def initialize(options, multiple: false, default: nil)
           @options = options
-          @active = 1
+          @active = if default && (i = options.index(default))
+            i + 1
+          else
+            1
+          end
           @marker = '>'
           @answer = nil
           @state = :root
