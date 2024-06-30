@@ -15,6 +15,8 @@ module CLI
 
         assert_equal(3, ANSI.printing_width('>🔧<'))
         assert_equal(1, ANSI.printing_width('👩‍💻'))
+
+        assert_equal(4, ANSI.printing_width(UI.link('url', 'text')))
       end
 
       def test_line_skip_with_shift
