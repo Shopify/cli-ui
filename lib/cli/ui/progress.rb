@@ -35,13 +35,23 @@ module CLI
         #   CLI::UI::Progress.progress do |bar|
         #     bar.tick(percent: 0.05)
         #   end
+        #
+        # Update the title
+        #   CLI::UI::Progress.progress('Title') do |bar|
+        #     bar.tick(percent: 0.05)
+        #     bar.update_title('New title')
+        #   end
         sig do
           type_parameters(:T)
-            .params(width: Integer, block: T.proc.params(bar: Progress).returns(T.type_parameter(:T)))
+            .params(
+              title: T.nilable(String),
+              width: Integer,
+              block: T.proc.params(bar: Progress).returns(T.type_parameter(:T)),
+            )
             .returns(T.type_parameter(:T))
         end
-        def progress(width: Terminal.width, &block)
-          bar = Progress.new(width: width)
+        def progress(title = nil, width: Terminal.width, &block)
+          bar = Progress.new(title, width: width)
           print(CLI::UI::ANSI.hide_cursor)
           yield(bar)
         ensure
@@ -55,13 +65,14 @@ module CLI
       # Initialize a progress bar. Typically used in a +Progress.progress+ block
       #
       # ==== Options
-      # One of the follow can be used, but not both together
       #
+      # * +:title+ - The title of the progress bar
       # * +:width+ - The width of the terminal
       #
-      sig { params(width: Integer).void }
-      def initialize(width: Terminal.width)
+      sig { params(title: T.nilable(String), width: Integer).void }
+      def initialize(title = nil, width: Terminal.width)
         @percent_done = T.let(0, Numeric)
+        @title = title
         @max_width = width
       end
 
@@ -84,7 +95,20 @@ module CLI
         @percent_done = [@percent_done, 1.0].min # Make sure we can't go above 1.0
 
         print(self)
-        print(CLI::UI::ANSI.previous_line + "\n")
+
+        printed_lines = @title ? 2 : 1
+        print(CLI::UI::ANSI.previous_lines(printed_lines) + "\n")
+      end
+
+      # Update the progress bar title
+      #
+      # ==== Attributes
+      #
+      # * +new_title+ - title to change the progress bar to
+      #
+      sig { params(new_title: String).void }
+      def update_title(new_title)
+        @title = new_title
       end
 
       # Format the progress bar to be printed to terminal
@@ -96,11 +120,14 @@ module CLI
         filled = [(@percent_done * workable_width.to_f).ceil, 0].max
         unfilled = [workable_width - filled, 0].max
 
-        CLI::UI.resolve_text([
+        title = CLI::UI.resolve_text(@title, truncate_to: @max_width - Frame.prefix_width) if @title
+        bar = CLI::UI.resolve_text([
           FILLED_BAR + ' ' * filled,
           UNFILLED_BAR + ' ' * unfilled,
           CLI::UI::Color::RESET.code + suffix,
         ].join)
+
+        [title, bar].compact.join("\n")
       end
     end
   end

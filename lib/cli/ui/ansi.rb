@@ -187,7 +187,18 @@ module CLI
         #
         sig { returns(String) }
         def previous_line
-          cursor_up + cursor_horizontal_absolute
+          previous_lines(1)
+        end
+
+        # Move to the previous n lines
+        #
+        # ==== Attributes
+        #
+        # * +n+ - number of lines by which to move the cursor up
+        #
+        sig { params(n: Integer).returns(String) }
+        def previous_lines(n = 1)
+          cursor_up(n) + cursor_horizontal_absolute
         end
 
         sig { returns(String) }
