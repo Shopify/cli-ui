@@ -321,6 +321,21 @@ module CLI
         assert_output_includes('c'.inspect)
       end
 
+      def test_spinner_inside_prompt
+        run_in_process(<<~RUBY)
+          CLI::UI::Prompt.ask('question') do |handler|
+            handler.option('option') do
+              CLI::UI::Spinner.spin('spinner') do
+                puts 'spinner'
+              end
+            end
+          end
+        RUBY
+
+        write("option\n")
+        assert_output_includes('spinner')
+      end
+
       private
 
       def run_in_process(code)
