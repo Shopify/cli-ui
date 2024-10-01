@@ -16,9 +16,9 @@ module CLI
         @input = input
       end
 
-      sig { returns(String) }
-      def wrap
-        max_width = Terminal.width - Frame.prefix_width
+      sig { params(total_width: Integer).returns(String) }
+      def wrap(total_width = Terminal.width)
+        max_width = total_width - Frame.prefix_width
         width = T.let(0, Integer)
         final = []
         # Create an alternation of format codes of parameter lengths 1-20, since + and {1,n} not allowed in lookbehind
