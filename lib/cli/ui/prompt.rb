@@ -127,10 +127,6 @@ module CLI
           &options_proc
         )
           has_options = !!(options || block_given?)
-          if has_options && default && !multiple
-            raise(ArgumentError, 'conflicting arguments: default may not be provided with options when not multiple')
-          end
-
           if has_options && is_file
             raise(ArgumentError, 'conflicting arguments: is_file is only useful when options are not provided')
           end
