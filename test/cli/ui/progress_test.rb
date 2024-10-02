@@ -26,20 +26,49 @@ module CLI
         end
       end
 
-      def assert_bar(percent: nil, set_percent: nil, expected_filled: 0, expected_unfilled: 0, suffix: '')
-        expected_bar = "\e[0m\e[46m#{" " * expected_filled}\e[1;47m#{" " * expected_unfilled}\e[0m#{suffix}"
+      def test_with_title
+        assert_bar(title: 'Title', set_percent: 0.1, expected_filled: 1, expected_unfilled: 9, suffix: ' 10% ')
+      end
+
+      def test_updating_title
+        out, err = capture_io do
+          CLI::UI::StdoutRouter.ensure_activated
+          Progress.progress do |bar|
+            3.times do |i|
+              bar.update_title("Title #{i}")
+              bar.tick
+            end
+          end
+        end
+
+        assert_empty(err)
+        assert_match(/Title 0/, out)
+        assert_match(/Title 1/, out)
+        assert_match(/Title 2/, out)
+      end
+
+      private
+
+      def assert_bar(title: nil, percent: nil, set_percent: nil, expected_filled: 0, expected_unfilled: 0, suffix: '')
+        expected_bar = +''
+        expected_bar << "\e[0m#{title}\n" if title
+        expected_bar << "\e[0m\e[46m#{" " * expected_filled}\e[1;47m#{" " * expected_unfilled}\e[0m#{suffix}"
 
         params = {}
         params[:percent] = percent if percent
         params[:set_percent] = set_percent if set_percent
 
         out, = capture_io do
-          bar = Progress.new(width: 10 + suffix.size) # each 10% is one box with this width
+          bar = Progress.new(title, width: 10 + suffix.size) # each 10% is one box with this width
           bar.tick(**params)
           assert_equal(expected_bar, bar.to_s)
         end
 
-        assert_equal(expected_bar + "\e[1A\e[1G\n", out)
+        if title
+          assert_equal(expected_bar + "\e[2A\e[1G\n", out)
+        else
+          assert_equal(expected_bar + "\e[1A\e[1G\n", out)
+        end
       end
     end
   end
