@@ -296,7 +296,7 @@ module CLI
           instructions += ", filter with 'f'" if filter_ui
           instructions += ", enter option with 'e'" if select_ui && (options.size > 9)
 
-          resp = nil
+          resp = T.let([], T.any(String, T::Array[String]))
 
           CLI::UI::StdoutRouter::Capture.in_alternate_screen do
             puts_question("#{question} " + instructions_color.code + "(#{instructions})" + Color::RESET.code)
