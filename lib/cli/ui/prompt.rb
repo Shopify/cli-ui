@@ -296,6 +296,8 @@ module CLI
           instructions += ", filter with 'f'" if filter_ui
           instructions += ", enter option with 'e'" if select_ui && (options.size > 9)
 
+          resp = nil
+
           CLI::UI::StdoutRouter::Capture.in_alternate_screen do
             puts_question("#{question} " + instructions_color.code + "(#{instructions})" + Color::RESET.code)
             resp = interactive_prompt(options, multiple: multiple, default: default)
@@ -320,12 +322,12 @@ module CLI
               resp
             end
             puts_question("#{question} (You chose: {{italic:#{resp_text}}})")
+          end
 
-            if block_given?
-              T.must(handler).call(resp)
-            else
-              resp
-            end
+          if block_given?
+            T.must(handler).call(resp)
+          else
+            resp
           end
         end
 
