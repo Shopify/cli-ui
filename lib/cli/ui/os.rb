@@ -45,6 +45,8 @@ module CLI
             MAC
           when /linux/
             LINUX
+          when /freebsd/
+            FREEBSD
           else
             if RUBY_PLATFORM !~ /cygwin/ && ENV['OS'] == 'Windows_NT'
               WINDOWS
@@ -57,6 +59,7 @@ module CLI
 
       MAC = OS.new
       LINUX = OS.new
+      FREEBSD = OS.new
       WINDOWS = OS.new(emoji: false, color_prompt: false, arrow_keys: false, shift_cursor: true)
     end
   end
