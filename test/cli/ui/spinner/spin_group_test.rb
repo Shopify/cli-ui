@@ -50,6 +50,71 @@ module CLI
             assert(sg.wait)
           end
         end
+
+        def test_spin_group_with_custom_work_queue
+          capture_io do
+            CLI::UI::StdoutRouter.ensure_activated
+            work_queue = CLI::UI::WorkQueue.new(2)
+            sg = SpinGroup.new(work_queue: work_queue)
+
+            tasks_executed = 0
+            3.times do |i|
+              sg.add("Task #{i + 1}") do
+                tasks_executed += 1
+                sleep(0.1)
+                true
+              end
+            end
+
+            assert(sg.wait)
+            assert_equal(3, tasks_executed)
+          end
+        end
+
+        def test_spin_group_with_max_concurrent
+          capture_io do
+            CLI::UI::StdoutRouter.ensure_activated
+            sg = SpinGroup.new(max_concurrent: 2)
+
+            start_times = []
+            3.times do |i|
+              sg.add("Task #{i + 1}") do
+                start_times << Time.now
+                sleep(0.2)
+                true
+              end
+            end
+
+            assert(sg.wait)
+            assert_equal(3, start_times.size)
+            assert(start_times[2] - start_times[0] >= 0.2, 'Third task should start after the first one finishes')
+          end
+        end
+
+        def test_spin_group_interrupt
+          capture_io do
+            CLI::UI::StdoutRouter.ensure_activated
+            sg = SpinGroup.new
+            task_completed = false
+            task_interrupted = false
+
+            sg.add('Interruptible task') do
+              sleep(1)
+              task_completed = true
+            rescue Interrupt
+              task_interrupted = true
+              raise
+            end
+
+            t = Thread.new { sg.wait }
+            sleep(0.1)
+            t.raise(Interrupt)
+
+            assert_raises(Interrupt) { t.join }
+            refute(task_completed, 'Task should not have completed')
+            assert(task_interrupted, 'Task should have been interrupted')
+          end
+        end
       end
     end
   end
