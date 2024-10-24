@@ -77,7 +77,6 @@ module CLI
         @condition = T.let(ConditionVariable.new, ConditionVariable)
         @workers = T.let([], T::Array[Thread])
         @futures = T.let([], T::Array[Future])
-        start_workers
       end
 
       sig { params(block: T.proc.returns(T.untyped)).returns(Future) }
@@ -85,6 +84,8 @@ module CLI
         future = Future.new
         @mutex.synchronize do
           @futures << future
+          # Start a new worker if we haven't reached max_concurrent
+          start_worker if @workers.size < @max_concurrent
         end
         @queue.push([future, block])
         future
@@ -110,36 +111,39 @@ module CLI
       private
 
       sig { void }
-      def start_workers
-        @max_concurrent.times do
-          @workers << Thread.new do
-            loop do
-              work = @queue.pop
-              break if work.nil?
+      def start_worker
+        @workers << Thread.new do
+          loop do
+            work = @queue.pop
+            break if work.nil?
 
-              future, block = work
+            future, block = work
 
+            @mutex.synchronize do
+              @condition.wait(@mutex) while @running >= @max_concurrent
+              @running += 1
+            end
+
+            begin
+              future.start
+              result = block.call
+              future.complete(result)
+            rescue StandardError, Interrupt => e
+              future.fail(e)
+            ensure
               @mutex.synchronize do
-                @condition.wait(@mutex) while @running >= @max_concurrent
-                @running += 1
-              end
-
-              begin
-                future.start
-                result = block.call
-                future.complete(result)
-              rescue StandardError, Interrupt => e
-                future.fail(e)
-              ensure
-                @mutex.synchronize do
-                  @running -= 1
-                  @condition.signal
-                  @futures.delete(future)
-                end
+                @running -= 1
+                @condition.signal
+                @futures.delete(future)
               end
             end
-          rescue Interrupt
-            # Handle interrupt error
+          end
+        rescue Interrupt
+          # Handle interrupt error
+        ensure
+          # Clean up the worker thread reference when it exits
+          @mutex.synchronize do
+            @workers.delete(Thread.current)
           end
         end
       end
