@@ -9,9 +9,6 @@ module CLI
       class Future
         extend T::Sig
 
-        sig { returns(T.nilable(Thread)) }
-        attr_accessor :worker_thread
-
         sig { void }
         def initialize
           @mutex = T.let(Mutex.new, Mutex)
@@ -34,6 +31,8 @@ module CLI
         sig { params(error: Exception).void }
         def fail(error)
           @mutex.synchronize do
+            return if @completed
+
             @completed = true
             @error = error
             @condition.broadcast
@@ -65,19 +64,6 @@ module CLI
           @mutex.synchronize do
             @started = true
             @condition.broadcast
-          end
-        end
-
-        sig { void }
-        def interrupt
-          @mutex.synchronize do
-            if @started && !@completed
-              @worker_thread&.raise(Interrupt)
-            elsif !@started
-              @completed = true
-              @error = Interrupt.new
-              @condition.broadcast
-            end
           end
         end
       end
@@ -114,9 +100,9 @@ module CLI
       def interrupt
         @mutex.synchronize do
           @queue.clear
-          @futures.each(&:interrupt)
           @workers.each { |worker| worker.raise(Interrupt) }
           @workers.clear
+          @futures.each { |future| future.fail(Interrupt.new) }
           @futures.clear
         end
       end
@@ -139,14 +125,12 @@ module CLI
               end
 
               begin
-                future.worker_thread = Thread.current
                 future.start
                 result = block.call
                 future.complete(result)
-              rescue StandardError => e
+              rescue StandardError, Interrupt => e
                 future.fail(e)
               ensure
-                future.worker_thread = nil
                 @mutex.synchronize do
                   @running -= 1
                   @condition.signal
@@ -154,6 +138,8 @@ module CLI
                 end
               end
             end
+          rescue Interrupt
+            # Handle interrupt error
           end
         end
       end

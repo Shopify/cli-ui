@@ -204,11 +204,6 @@ module CLI
             end
           end
 
-          sig { void }
-          def interrupt
-            @future.interrupt
-          end
-
           private
 
           sig { params(index: Integer, terminal_width: Integer).returns(String) }

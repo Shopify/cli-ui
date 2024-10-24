@@ -130,6 +130,21 @@ module CLI
         assert(elapsed_time >= delay, "Expected future.value to block for at least #{delay} seconds")
         assert(elapsed_time < delay + 0.1, 'Expected future.value to unblock soon after the task completes')
       end
+
+      def test_interrupt
+        interrupted = false
+        future = @work_queue.enqueue do
+          sleep(1)
+          interrupted = true
+        end
+
+        sleep(0.1) # Give some time for the task to start
+        @work_queue.interrupt
+
+        assert_raises(Interrupt) { future.value }
+        refute(interrupted, 'Task should not complete after interrupt')
+        assert(future.completed?, 'Future should be marked as completed after interrupt')
+      end
     end
   end
 end
