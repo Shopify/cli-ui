@@ -232,6 +232,7 @@ module CLI
           success_text: T.nilable(String),
           timing: T.any(T::Boolean, Numeric),
           frame_style: FrameStylable,
+          to: IOLike,
           block: T.nilable(T.proc.returns(T.type_parameter(:T))),
         ).returns(T.nilable(T.type_parameter(:T)))
       end
@@ -242,6 +243,7 @@ module CLI
         success_text: nil,
         timing: block_given?,
         frame_style: Frame.frame_style,
+        to: $stdout,
         &block
       )
         CLI::UI::Frame.open(
@@ -251,6 +253,7 @@ module CLI
           success_text: success_text,
           timing: timing,
           frame_style: frame_style,
+          to: to,
           &block
         )
       end
