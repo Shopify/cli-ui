@@ -98,7 +98,11 @@ module CLI
             task_completed = false
             task_interrupted = false
 
+            # Use Queue for thread-safe signaling
+            started_queue = Queue.new
+
             sg.add('Interruptible task') do
+              started_queue.push(true)
               sleep(1)
               task_completed = true
             rescue Interrupt
@@ -107,7 +111,10 @@ module CLI
             end
 
             t = Thread.new { sg.wait }
-            sleep(0.1)
+
+            # Wait for task to start
+            started_queue.pop
+            sleep(0.1) # Small delay to ensure we're in sleep
             t.raise(Interrupt)
 
             assert_raises(Interrupt) { t.join }
