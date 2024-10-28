@@ -20,7 +20,6 @@ module CLI
           1
         end
         futures << @work_queue.enqueue do
-          sleep(0.05)
           results << 2
           2
         end
