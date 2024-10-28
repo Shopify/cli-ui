@@ -119,9 +119,11 @@ module CLI
 
             future, block = work
 
-            @mutex.synchronize do
-              @condition.wait(@mutex) while @running >= @max_concurrent
-              @running += 1
+            Thread.handle_interrupt(Interrupt => :never) do
+              @mutex.synchronize do
+                @condition.wait(@mutex) while @running >= @max_concurrent
+                @running += 1
+              end
             end
 
             begin
@@ -131,10 +133,12 @@ module CLI
             rescue StandardError, Interrupt => e
               future.fail(e)
             ensure
-              @mutex.synchronize do
-                @running -= 1
-                @condition.signal
-                @futures.delete(future)
+              Thread.handle_interrupt(Interrupt => :never) do
+                @mutex.synchronize do
+                  @running -= 1
+                  @condition.signal
+                  @futures.delete(future)
+                end
               end
             end
           end
