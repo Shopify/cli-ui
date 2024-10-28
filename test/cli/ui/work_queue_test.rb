@@ -38,18 +38,18 @@ module CLI
 
       def test_future_started
         future = @work_queue.enqueue do
-          sleep(0.1)
+          sleep(0.2)
           42
         end
 
-        refute(future.started?)
-        sleep(0.05)
-        assert(future.started?)
-        refute(future.completed?)
+        refute(future.started?, 'not started')
+        sleep(0.1)
+        assert(future.started?, 'started')
+        refute(future.completed?, 'not completed')
 
         @work_queue.wait
 
-        assert(future.completed?)
+        assert(future.completed?, 'completed')
         assert_equal(42, future.value)
       end
 
