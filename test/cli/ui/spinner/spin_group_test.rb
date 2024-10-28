@@ -103,7 +103,7 @@ module CLI
 
             sg.add('Interruptible task') do
               started_queue.push(true)
-              sleep(1)
+              10.times { sleep(0.1) }
               task_completed = true
             rescue Interrupt
               task_interrupted = true
@@ -116,6 +116,7 @@ module CLI
             started_queue.pop
             sleep(0.1) # Small delay to ensure we're in sleep
             t.raise(Interrupt)
+            sleep(0.1) # Small delay to react to Interrupt
 
             assert_raises(Interrupt) { t.join }
             refute(task_completed, 'Task should not have completed')

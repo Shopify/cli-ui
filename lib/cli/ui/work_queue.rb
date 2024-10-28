@@ -72,7 +72,6 @@ module CLI
       def initialize(max_concurrent)
         @max_concurrent = max_concurrent
         @queue = T.let(Queue.new, Queue)
-        @running = T.let(0, Integer)
         @mutex = T.let(Mutex.new, Mutex)
         @condition = T.let(ConditionVariable.new, ConditionVariable)
         @workers = T.let([], T::Array[Thread])
@@ -99,14 +98,10 @@ module CLI
         @mutex.synchronize do
           # Fail any remaining tasks in the queue
           until @queue.empty?
-            begin
-              future, _block = @queue.pop(true)
-            rescue
-              nil
-            end
+            future, _block = @queue.pop(true)
             future&.fail(Interrupt.new)
           end
-          @queue.clear
+          # Interrupt all worker threads
           @workers.each { |worker| worker.raise(Interrupt) }
           @workers.clear
         end
@@ -118,38 +113,21 @@ module CLI
       def start_worker
         @workers << Thread.new do
           loop do
-            # First synchronize to check if we can run more tasks
-            Thread.handle_interrupt(Interrupt => :never) do
-              @mutex.synchronize do
-                @condition.wait(@mutex) while @running >= @max_concurrent
-                @running += 1
-              end
-            end
+            work = @queue.pop
+            break if work.nil?
+
+            future, block = work
 
             begin
-              # Then pop from queue after we've confirmed we can run more tasks
-              work = @queue.pop
-              break if work.nil?
-
-              future, block = work
-
               future.start
-              # Allow interrupts during block execution
               result = block.call
               future.complete(result)
             rescue Interrupt => e
-              future&.fail(e)
+              future.fail(e)
               raise # Always re-raise interrupts to terminate the worker
             rescue StandardError => e
-              future&.fail(e)
+              future.fail(e)
               # Don't re-raise standard errors - allow worker to continue
-            ensure
-              Thread.handle_interrupt(Interrupt => :never) do
-                @mutex.synchronize do
-                  @running -= 1
-                  @condition.signal
-                end
-              end
             end
           end
         rescue Interrupt
