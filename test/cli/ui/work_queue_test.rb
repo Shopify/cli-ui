@@ -13,18 +13,19 @@ module CLI
       def test_enqueue_and_wait
         results = []
         futures = []
+        mutex = Mutex.new
 
         futures << @work_queue.enqueue do
           sleep(0.1)
-          results << 1
+          mutex.synchronize { results << 1 }
           1
         end
         futures << @work_queue.enqueue do
-          results << 2
+          mutex.synchronize { results << 2 }
           2
         end
         futures << @work_queue.enqueue do
-          results << 3
+          mutex.synchronize { results << 3 }
           3
         end
 
