@@ -126,24 +126,22 @@ module CLI
               end
             end
 
-            # Then pop from queue after we've confirmed we can run more tasks
-            work = @queue.pop
-            break if work.nil?
-
-            future, block = work
-
             begin
+              # Then pop from queue after we've confirmed we can run more tasks
+              work = @queue.pop
+              break if work.nil?
+
+              future, block = work
+
               future.start
               # Allow interrupts during block execution
-              Thread.handle_interrupt(Interrupt => :immediate) do
-                result = block.call
-                future.complete(result)
-              end
+              result = block.call
+              future.complete(result)
             rescue Interrupt => e
-              future.fail(e)
+              future&.fail(e)
               raise # Always re-raise interrupts to terminate the worker
             rescue StandardError => e
-              future.fail(e)
+              future&.fail(e)
               # Don't re-raise standard errors - allow worker to continue
             ensure
               Thread.handle_interrupt(Interrupt => :never) do
