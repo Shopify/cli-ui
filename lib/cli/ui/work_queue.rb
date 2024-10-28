@@ -76,15 +76,12 @@ module CLI
         @mutex = T.let(Mutex.new, Mutex)
         @condition = T.let(ConditionVariable.new, ConditionVariable)
         @workers = T.let([], T::Array[Thread])
-        @futures = T.let([], T::Array[Future])
       end
 
       sig { params(block: T.proc.returns(T.untyped)).returns(Future) }
       def enqueue(&block)
         future = Future.new
         @mutex.synchronize do
-          @futures << future
-          # Start a new worker if we haven't reached max_concurrent
           start_worker if @workers.size < @max_concurrent
         end
         @queue.push([future, block])
@@ -100,11 +97,18 @@ module CLI
       sig { void }
       def interrupt
         @mutex.synchronize do
+          # Fail any remaining tasks in the queue
+          until @queue.empty?
+            begin
+              future, _block = @queue.pop(true)
+            rescue
+              nil
+            end
+            future&.fail(Interrupt.new)
+          end
           @queue.clear
           @workers.each { |worker| worker.raise(Interrupt) }
           @workers.clear
-          @futures.each { |future| future.fail(Interrupt.new) }
-          @futures.clear
         end
       end
 
@@ -114,17 +118,19 @@ module CLI
       def start_worker
         @workers << Thread.new do
           loop do
-            work = @queue.pop
-            break if work.nil?
-
-            future, block = work
-
+            # First synchronize to check if we can run more tasks
             Thread.handle_interrupt(Interrupt => :never) do
               @mutex.synchronize do
                 @condition.wait(@mutex) while @running >= @max_concurrent
                 @running += 1
               end
             end
+
+            # Then pop from queue after we've confirmed we can run more tasks
+            work = @queue.pop
+            break if work.nil?
+
+            future, block = work
 
             begin
               future.start
@@ -144,7 +150,6 @@ module CLI
                 @mutex.synchronize do
                   @running -= 1
                   @condition.signal
-                  @futures.delete(future)
                 end
               end
             end
