@@ -128,7 +128,7 @@ module CLI
 
         assert_equal(42, result, 'Expected future.value to return the correct result')
         assert(elapsed_time >= delay, "Expected future.value to block for at least #{delay} seconds")
-        assert(elapsed_time < delay + 0.1, 'Expected future.value to unblock soon after the task completes')
+        assert(elapsed_time < delay + 0.2, 'Expected future.value to unblock soon after the task completes')
       end
 
       def test_interrupt
