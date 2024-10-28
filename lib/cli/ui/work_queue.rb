@@ -102,7 +102,7 @@ module CLI
             future&.fail(Interrupt.new)
           end
           # Interrupt all worker threads
-          @workers.each { |worker| worker.raise(Interrupt) }
+          @workers.each { |worker| worker.raise(Interrupt) if worker.alive? }
           @workers.clear
         end
       end
@@ -132,10 +132,6 @@ module CLI
           end
         rescue Interrupt
           # Clean exit on interrupt
-        ensure
-          @mutex.synchronize do
-            @workers.delete(Thread.current)
-          end
         end
       end
     end
