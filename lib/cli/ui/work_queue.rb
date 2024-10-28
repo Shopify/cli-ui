@@ -128,10 +128,17 @@ module CLI
 
             begin
               future.start
-              result = block.call
-              future.complete(result)
-            rescue StandardError, Interrupt => e
+              # Allow interrupts during block execution
+              Thread.handle_interrupt(Interrupt => :immediate) do
+                result = block.call
+                future.complete(result)
+              end
+            rescue Interrupt => e
               future.fail(e)
+              raise # Always re-raise interrupts to terminate the worker
+            rescue StandardError => e
+              future.fail(e)
+              # Don't re-raise standard errors - allow worker to continue
             ensure
               Thread.handle_interrupt(Interrupt => :never) do
                 @mutex.synchronize do
@@ -143,9 +150,8 @@ module CLI
             end
           end
         rescue Interrupt
-          # Handle interrupt error
+          # Clean exit on interrupt
         ensure
-          # Clean up the worker thread reference when it exits
           @mutex.synchronize do
             @workers.delete(Thread.current)
           end
