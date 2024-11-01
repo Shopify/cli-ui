@@ -375,7 +375,7 @@ module CLI
             end
             Reline.completion_append_character = ''
           else
-            Reline.completion_proc = proc { |*| nil }
+            Reline.completion_proc = proc {}
             Reline.completion_append_character = ' '
           end
 
