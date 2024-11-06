@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 
 module CLI
@@ -86,7 +88,7 @@ module CLI
       end
 
       def test_encoding
-        msg = 'é'.force_encoding(Encoding::ISO_8859_1)
+        msg = 'é'.dup.force_encoding(Encoding::ISO_8859_1)
         out, _ = capture_io do
           assert(Printer.puts(msg, encoding: nil, format: false))
         end
@@ -95,7 +97,7 @@ module CLI
       end
 
       def test_encoding_ut8
-        msg = 'é'.force_encoding(Encoding::ISO_8859_1)
+        msg = 'é'.dup.force_encoding(Encoding::ISO_8859_1)
         out, _ = capture_io do
           assert(Printer.puts(msg, format: false))
         end

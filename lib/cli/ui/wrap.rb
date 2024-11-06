@@ -1,6 +1,6 @@
 # coding: utf-8
-
 # typed: true
+# frozen_string_literal: true
 
 require 'cli/ui'
 require 'cli/ui/frame/frame_stack'
