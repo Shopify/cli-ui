@@ -114,7 +114,6 @@ module CLI
             CLI::UI::Spinner::TASK_FAILED
           end
         end
-
         assert_match(/✗/, out)
         assert_match(/Task Failed: broken/, out)
         assert_match(/STDERR[^\n]*\n[^\n]*not empty/, out)
