@@ -1,6 +1,5 @@
-# coding: utf-8
-
 # typed: true
+# frozen_string_literal: true
 
 require 'cli/ui'
 require 'cli/ui/frame/frame_stack'
@@ -250,7 +249,7 @@ module CLI
         #
         sig { params(color: T.nilable(Colorable)).returns(String) }
         def prefix(color: Thread.current[:cliui_frame_color_override])
-          +''.tap do |output|
+          (+'').tap do |output|
             items = FrameStack.items
 
             items[0..-2].to_a.each do |item|

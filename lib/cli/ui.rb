@@ -1,4 +1,5 @@
 # typed: true
+# frozen_string_literal: true
 
 unless defined?(T)
   require('cli/ui/sorbet_runtime_stub')
