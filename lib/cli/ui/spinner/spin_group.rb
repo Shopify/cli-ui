@@ -66,6 +66,7 @@ module CLI
           @tasks = []
           @auto_debrief = auto_debrief
           @start = Time.new
+          @messages = Queue.new
           if block_given?
             yield self
             wait
@@ -95,14 +96,16 @@ module CLI
           sig do
             params(
               title: String,
+              messages: Queue,
               final_glyph: T.proc.params(success: T::Boolean).returns(T.any(Glyph, String)),
               merged_output: T::Boolean,
               duplicate_output_to: IO,
               block: T.proc.params(task: Task).returns(T.untyped),
             ).void
           end
-          def initialize(title, final_glyph:, merged_output:, duplicate_output_to:, &block)
+          def initialize(title, messages:, final_glyph:, merged_output:, duplicate_output_to:, &block)
             @title = title
+            @messages = messages
             @final_glyph = final_glyph
             @always_full_render = title =~ Formatter::SCAN_WIDGET
             @thread = Thread.new do
@@ -195,6 +198,11 @@ module CLI
             @thread.raise(Interrupt)
           end
 
+          sig { params(message: String).void }
+          def puts(message)
+            @messages << message
+          end
+
           private
 
           sig { params(index: Integer, terminal_width: Integer).returns(String) }
@@ -281,6 +289,7 @@ module CLI
           @m.synchronize do
             @tasks << Task.new(
               title,
+              messages: @messages,
               final_glyph: final_glyph,
               merged_output: merged_output,
               duplicate_output_to: duplicate_output_to,
@@ -315,6 +324,19 @@ module CLI
 
               @m.synchronize do
                 CLI::UI.raw do
+                  unless @messages.empty?
+                    print(CLI::UI::ANSI.cursor_up(consumed_lines) + CLI::UI::ANSI.insert_line) if CLI::UI.enable_cursor?
+                    loop do
+                      message = begin
+                        @messages.pop(true)
+                      rescue ThreadError
+                        break
+                      end
+                      print(CLI::UI::Frame.prefix + CLI::UI.fmt(message) + "\n")
+                    end
+                    print(CLI::UI::ANSI.cursor_down(consumed_lines - 1) + "\n") if CLI::UI.enable_cursor?
+                  end
+
                   @tasks.each.with_index do |task, int_index|
                     nat_index = int_index + 1
                     task_done = task.check
@@ -405,17 +427,17 @@ module CLI
 
               CLI::UI::Frame.open('Task Failed: ' + title, color: :red, timing: Time.new - @start) do
                 if e
-                  puts "#{e.class}: #{e.message}"
-                  puts "\tfrom #{e.backtrace.join("\n\tfrom ")}"
+                  $stdout.puts("#{e.class}: #{e.message}")
+                  $stdout.puts("\tfrom #{e.backtrace.join("\n\tfrom ")}")
                 end
 
                 CLI::UI::Frame.divider('STDOUT')
                 out = '(empty)' if out.nil? || out.strip.empty?
-                puts out
+                $stdout.puts(out)
 
                 CLI::UI::Frame.divider('STDERR')
                 err = '(empty)' if err.nil? || err.strip.empty?
-                puts err
+                $stdout.puts(err)
               end
             end
             @tasks.all?(&:success)
