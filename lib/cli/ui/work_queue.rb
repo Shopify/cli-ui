@@ -104,6 +104,7 @@ module CLI
           end
           # Interrupt all worker threads
           @workers.each { |worker| worker.raise(Interrupt) if worker.alive? }
+          @workers.each(&:join)
           @workers.clear
         end
       end
