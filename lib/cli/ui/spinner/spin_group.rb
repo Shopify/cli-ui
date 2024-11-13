@@ -317,6 +317,8 @@ module CLI
 
           consumed_lines = 0
 
+          @work_queue.close if @internal_work_queue
+
           tasks_seen = @tasks.map { false }
           tasks_seen_done = @tasks.map { false }
 
@@ -364,7 +366,6 @@ module CLI
             sleep(PERIOD)
           end
 
-          @work_queue.wait if @internal_work_queue
           if @auto_debrief
             debrief
           else

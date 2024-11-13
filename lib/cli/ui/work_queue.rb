@@ -88,6 +88,11 @@ module CLI
       end
 
       sig { void }
+      def close
+        @queue.close
+      end
+
+      sig { void }
       def wait
         @queue.close
         @workers.each(&:join)
