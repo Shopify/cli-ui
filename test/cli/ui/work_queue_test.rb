@@ -37,18 +37,21 @@ module CLI
       end
 
       def test_future_started
+        startup_queue = Queue.new
+        shutdown_queue = Queue.new
         future = @work_queue.enqueue do
-          sleep(0.2)
+          startup_queue.push(:started)
+          shutdown_queue.pop # Block until signaled to continue
           42
         end
 
         refute(future.started?, 'not started')
-        sleep(0.1)
+        startup_queue.pop # Wait for task to actually start
         assert(future.started?, 'started')
         refute(future.completed?, 'not completed')
 
+        shutdown_queue.push(:continue)
         @work_queue.wait
-
         assert(future.completed?, 'completed')
         assert_equal(42, future.value)
       end
@@ -67,6 +70,8 @@ module CLI
         @work_queue = WorkQueue.new(max_concurrent)
 
         mutex = Mutex.new
+        startup_queue = Queue.new
+        shutdown_queue = Queue.new
         current_count = 0
         max_observed = 0
 
@@ -75,9 +80,10 @@ module CLI
             mutex.synchronize do
               current_count += 1
               max_observed = [max_observed, current_count].max
+              startup_queue.push(:ready)
             end
 
-            sleep(0.01) # Small delay to increase chance of concurrency
+            shutdown_queue.pop # Block until signaled to continue
 
             mutex.synchronize do
               current_count -= 1
@@ -85,6 +91,11 @@ module CLI
           end
         end
 
+        # Wait for max_concurrent tasks to start
+        max_concurrent.times { startup_queue.pop }
+
+        # Let all tasks complete
+        10.times { shutdown_queue.push(:continue) }
         @work_queue.wait
 
         assert_equal(
@@ -106,39 +117,39 @@ module CLI
       end
 
       def test_future_value_blocks_until_result_available
-        start_time = Time.now
-        delay = 0.2
+        startup_queue = Queue.new
+        shutdown_queue = Queue.new
+
         future = @work_queue.enqueue do
-          sleep(delay)
+          startup_queue.push(:ready)
+          shutdown_queue.pop # Block until signaled to continue
           42
         end
 
-        # Start a new thread to call future.value
         value_thread = Thread.new { future.value }
 
-        # Assert that the value_thread is alive (blocked) shortly after starting
-        sleep(0.05)
+        # Wait for work thread to actually start
+        startup_queue.pop
+
         assert(value_thread.alive?, 'Expected future.value to block')
 
-        # Wait for the future to complete
+        # Signal work thread to complete
+        shutdown_queue.push(:continue)
         result = value_thread.value
 
-        end_time = Time.now
-        elapsed_time = end_time - start_time
-
         assert_equal(42, result, 'Expected future.value to return the correct result')
-        assert(elapsed_time >= delay, "Expected future.value to block for at least #{delay} seconds")
-        assert(elapsed_time < delay + 0.2, 'Expected future.value to unblock soon after the task completes')
       end
 
       def test_interrupt
+        startup_queue = Queue.new
         interrupted = false
         future = @work_queue.enqueue do
+          startup_queue.push(:started)
           sleep(1)
           interrupted = true
         end
 
-        sleep(0.1) # Give some time for the task to start
+        startup_queue.pop # Wait for task to actually start
         @work_queue.interrupt
 
         assert_raises(Interrupt) { future.value }
