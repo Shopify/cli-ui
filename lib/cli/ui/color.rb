@@ -42,6 +42,8 @@ module CLI
 
       # 240 is very dark gray; 255 is very light gray. 244 is somewhat dark.
       GRAY = new('38;5;244', :gray)
+      # Using color 214 from the 256-color palette for a more distinct orange
+      ORANGE = new('38;5;214', :orange)
 
       MAP = {
         red: RED,

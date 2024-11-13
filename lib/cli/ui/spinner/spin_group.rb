@@ -244,7 +244,7 @@ module CLI
               end
             elsif CLI::UI.enable_cursor?
               if !@future.started?
-                CLI::UI.enable_color? ? Glyph::CHEVRON.to_s : Glyph::CHEVRON.char
+                CLI::UI.enable_color? ? Glyph::HOURGLASS.to_s : Glyph::HOURGLASS.char
               else
                 CLI::UI.enable_color? ? GLYPHS[index] : RUNES[index]
               end
