@@ -52,6 +52,109 @@ module CLI
             assert(sg.wait)
           end
         end
+
+        def test_spin_group_with_custom_work_queue
+          capture_io do
+            CLI::UI::StdoutRouter.ensure_activated
+            work_queue = CLI::UI::WorkQueue.new(2)
+            sg = SpinGroup.new(work_queue: work_queue)
+
+            startup_queue = Queue.new
+            shutdown_queue = Queue.new
+            tasks_executed = 0
+
+            3.times do |i|
+              sg.add("Task #{i + 1}") do
+                tasks_executed += 1
+                startup_queue.push(:started)
+                shutdown_queue.pop
+                true
+              end
+            end
+
+            # Wait for first two tasks to start (since work_queue size is 2)
+            2.times { startup_queue.pop }
+
+            # Let first two tasks complete
+            2.times { shutdown_queue.push(:continue) }
+
+            # Now wait for the third task to start and complete
+            startup_queue.pop
+            shutdown_queue.push(:continue)
+
+            assert(sg.wait)
+            assert_equal(3, tasks_executed)
+          end
+        end
+
+        def test_spin_group_with_max_concurrent
+          capture_io do
+            CLI::UI::StdoutRouter.ensure_activated
+            sg = SpinGroup.new(max_concurrent: 2)
+
+            startup_queue = Queue.new
+            shutdown_queue = Queue.new
+            task_count = 3
+
+            task_count.times do |i|
+              sg.add("Task #{i + 1}") do
+                startup_queue.push(:started)
+                shutdown_queue.pop
+                true
+              end
+            end
+
+            # Wait for first two tasks to start
+            2.times { startup_queue.pop }
+
+            # Third task shouldn't have started yet
+            assert_equal(0, startup_queue.size, 'Third task should not have started')
+
+            # Let first task complete
+            shutdown_queue.push(:continue)
+
+            # Wait for third task to start
+            startup_queue.pop
+
+            # Let remaining tasks complete
+            2.times { shutdown_queue.push(:continue) }
+
+            assert(sg.wait)
+          end
+        end
+
+        def test_spin_group_interrupt
+          capture_io do
+            CLI::UI::StdoutRouter.ensure_activated
+            sg = SpinGroup.new
+            task_completed = false
+            task_interrupted = false
+
+            # Use Queue for thread-safe signaling
+            started_queue = Queue.new
+
+            sg.add('Interruptible task') do
+              started_queue.push(true)
+              10.times { sleep(0.1) }
+              task_completed = true
+            rescue Interrupt
+              task_interrupted = true
+              raise
+            end
+
+            t = Thread.new { sg.wait }
+
+            # Wait for task to start
+            started_queue.pop
+            sleep(0.1) # Small delay to ensure we're in sleep
+            t.raise(Interrupt)
+            sleep(0.1) # Small delay to react to Interrupt
+
+            assert_raises(Interrupt) { t.join }
+            refute(task_completed, 'Task should not have completed')
+            assert(task_interrupted, 'Task should have been interrupted')
+          end
+        end
       end
     end
   end

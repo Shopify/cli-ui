@@ -1,6 +1,8 @@
 # typed: true
 # frozen_string_literal: true
 
+require_relative '../work_queue'
+
 module CLI
   module UI
     module Spinner
@@ -48,6 +50,8 @@ module CLI
         # ==== Options
         #
         # * +:auto_debrief+ - Automatically debrief exceptions or through success_debrief? Default to true
+        # * +:max_concurrent+ - Maximum number of concurrent tasks. Default is 0 (effectively unlimited)
+        # * +:work_queue+ - Custom WorkQueue instance. If not provided, a new one will be created
         #
         # ==== Example Usage
         #
@@ -60,12 +64,23 @@ module CLI
         #
         # https://user-images.githubusercontent.com/3074765/33798558-c452fa26-dce8-11e7-9e90-b4b34df21a46.gif
         #
-        sig { params(auto_debrief: T::Boolean).void }
-        def initialize(auto_debrief: true)
+        sig do
+          params(
+            auto_debrief: T::Boolean,
+            max_concurrent: Integer,
+            work_queue: T.nilable(WorkQueue),
+          ).void
+        end
+        def initialize(auto_debrief: true, max_concurrent: 0, work_queue: nil)
           @m = Mutex.new
           @tasks = []
           @auto_debrief = auto_debrief
           @start = Time.new
+          @internal_work_queue = work_queue.nil?
+          @work_queue = T.let(
+            work_queue || WorkQueue.new(max_concurrent.zero? ? 1024 : max_concurrent),
+            WorkQueue,
+          )
           if block_given?
             yield self
             wait
@@ -98,14 +113,15 @@ module CLI
               final_glyph: T.proc.params(success: T::Boolean).returns(T.any(Glyph, String)),
               merged_output: T::Boolean,
               duplicate_output_to: IO,
+              work_queue: WorkQueue,
               block: T.proc.params(task: Task).returns(T.untyped),
             ).void
           end
-          def initialize(title, final_glyph:, merged_output:, duplicate_output_to:, &block)
+          def initialize(title, final_glyph:, merged_output:, duplicate_output_to:, work_queue:, &block)
             @title = title
             @final_glyph = final_glyph
             @always_full_render = title =~ Formatter::SCAN_WIDGET
-            @thread = Thread.new do
+            @future = work_queue.enqueue do
               cap = CLI::UI::StdoutRouter::Capture.new(
                 merged_output: merged_output, duplicate_output_to: duplicate_output_to,
               ) { block.call(self) }
@@ -121,7 +137,7 @@ module CLI
             @force_full_render = false
             @done = false
             @exception = nil
-            @success   = false
+            @success = false
           end
 
           # Checks if a task is finished
@@ -129,13 +145,13 @@ module CLI
           sig { returns(T::Boolean) }
           def check
             return true if @done
-            return false if @thread.alive?
+            return false unless @future.completed?
 
             @done = true
             begin
-              status = @thread.join.status
-              @success = (status == false)
-              @success = false if @thread.value == TASK_FAILED
+              result = @future.value
+              @success = true
+              @success = false if result == TASK_FAILED
             rescue => exc
               @exception = exc
               @success = false
@@ -190,11 +206,6 @@ module CLI
             end
           end
 
-          sig { void }
-          def interrupt
-            @thread.raise(Interrupt)
-          end
-
           private
 
           sig { params(index: Integer, terminal_width: Integer).returns(String) }
@@ -233,7 +244,11 @@ module CLI
                 final_glyph
               end
             elsif CLI::UI.enable_cursor?
-              CLI::UI.enable_color? ? GLYPHS[index] : RUNES[index]
+              if !@future.started?
+                CLI::UI.enable_color? ? Glyph::HOURGLASS.to_s : Glyph::HOURGLASS.char
+              else
+                CLI::UI.enable_color? ? GLYPHS[index] : RUNES[index]
+              end
             else
               Glyph::HOURGLASS.char
             end
@@ -284,6 +299,7 @@ module CLI
               final_glyph: final_glyph,
               merged_output: merged_output,
               duplicate_output_to: duplicate_output_to,
+              work_queue: @work_queue,
               &block
             )
           end
@@ -301,6 +317,8 @@ module CLI
           idx = 0
 
           consumed_lines = 0
+
+          @work_queue.close if @internal_work_queue
 
           tasks_seen = @tasks.map { false }
           tasks_seen_done = @tasks.map { false }
@@ -355,7 +373,7 @@ module CLI
             all_succeeded?
           end
         rescue Interrupt
-          @tasks.each(&:interrupt)
+          @work_queue.interrupt
           raise
         end
 
