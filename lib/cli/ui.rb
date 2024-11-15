@@ -17,6 +17,7 @@ module CLI
     autoload :Printer,   'cli/ui/printer'
     autoload :Progress,  'cli/ui/progress'
     autoload :Prompt,    'cli/ui/prompt'
+    autoload :Table,     'cli/ui/table'
     autoload :Terminal,  'cli/ui/terminal'
     autoload :Truncater, 'cli/ui/truncater'
     autoload :Formatter, 'cli/ui/formatter'
