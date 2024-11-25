@@ -50,6 +50,7 @@ module CLI
         # ==== Options
         #
         # * +:auto_debrief+ - Automatically debrief exceptions or through success_debrief? Default to true
+        # * +:interrupt_debrief+ - Automatically debrief on interrupt. Default to false
         # * +:max_concurrent+ - Maximum number of concurrent tasks. Default is 0 (effectively unlimited)
         # * +:work_queue+ - Custom WorkQueue instance. If not provided, a new one will be created
         #
@@ -67,15 +68,18 @@ module CLI
         sig do
           params(
             auto_debrief: T::Boolean,
+            interrupt_debrief: T::Boolean,
             max_concurrent: Integer,
             work_queue: T.nilable(WorkQueue),
           ).void
         end
-        def initialize(auto_debrief: true, max_concurrent: 0, work_queue: nil)
+        def initialize(auto_debrief: true, interrupt_debrief: false, max_concurrent: 0, work_queue: nil)
           @m = Mutex.new
           @tasks = []
           @auto_debrief = auto_debrief
+          @interrupt_debrief = interrupt_debrief
           @start = Time.new
+          @stopped = false
           @internal_work_queue = work_queue.nil?
           @work_queue = T.let(
             work_queue || WorkQueue.new(max_concurrent.zero? ? 1024 : max_concurrent),
@@ -95,6 +99,9 @@ module CLI
 
           sig { returns(T::Boolean) }
           attr_reader :success
+
+          sig { returns(T::Boolean) }
+          attr_reader :done
 
           sig { returns(T.nilable(Exception)) }
           attr_reader :exception
@@ -140,6 +147,11 @@ module CLI
             @success = false
           end
 
+          sig { params(block: T.proc.params(task: Task).void).void }
+          def on_done(&block)
+            @on_done = block
+          end
+
           # Checks if a task is finished
           #
           sig { returns(T::Boolean) }
@@ -156,6 +168,8 @@ module CLI
               @exception = exc
               @success = false
             end
+
+            @on_done&.call(self)
 
             @done
           end
@@ -305,6 +319,34 @@ module CLI
           end
         end
 
+        sig { void }
+        def stop
+          # If we already own the mutex (called from within another synchronized block),
+          # set stopped directly to avoid deadlock
+          if @m.owned?
+            return if @stopped
+
+            @stopped = true
+          else
+            @m.synchronize do
+              return if @stopped
+
+              @stopped = true
+            end
+          end
+          # Interrupt is thread-safe on its own, so we can call it outside the mutex
+          @work_queue.interrupt
+        end
+
+        sig { returns(T::Boolean) }
+        def stopped?
+          if @m.owned?
+            @stopped
+          else
+            @m.synchronize { @stopped }
+          end
+        end
+
         # Tells the group you're done adding tasks and to wait for all of them to finish
         #
         # ==== Example Usage:
@@ -324,6 +366,8 @@ module CLI
           tasks_seen_done = @tasks.map { false }
 
           loop do
+            break if stopped?
+
             done_count = 0
 
             width = CLI::UI::Terminal.width
@@ -374,7 +418,8 @@ module CLI
           end
         rescue Interrupt
           @work_queue.interrupt
-          raise
+          debrief if @interrupt_debrief
+          stopped? ? false : raise
         end
 
         # Provide an alternative debriefing for failed tasks
@@ -410,6 +455,8 @@ module CLI
         def debrief
           @m.synchronize do
             @tasks.each do |task|
+              next unless task.done
+
               title = task.title
               out = task.stdout
               err = task.stderr
@@ -418,6 +465,7 @@ module CLI
                 next @success_debrief&.call(title, out, err)
               end
 
+              # exception will not be set if the wait loop is stopped before the task is checked
               e = task.exception
               next @failure_debrief.call(title, e, out, err) if @failure_debrief
 
