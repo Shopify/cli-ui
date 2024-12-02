@@ -76,6 +76,7 @@ module CLI
         def initialize(auto_debrief: true, interrupt_debrief: false, max_concurrent: 0, work_queue: nil)
           @m = Mutex.new
           @tasks = []
+          @puts_above = []
           @auto_debrief = auto_debrief
           @interrupt_debrief = interrupt_debrief
           @start = Time.new
@@ -377,6 +378,24 @@ module CLI
 
               @m.synchronize do
                 CLI::UI.raw do
+                  force_full_render = false
+
+                  unless @puts_above.empty?
+                    print(CLI::UI::ANSI.cursor_up(consumed_lines)) if CLI::UI.enable_cursor?
+                    while (message = @puts_above.shift)
+                      print(CLI::UI::ANSI.insert_lines(message.lines.count)) if CLI::UI.enable_cursor?
+                      message.lines.each do |line|
+                        print(CLI::UI::Frame.prefix + CLI::UI.fmt(line))
+                      end
+                      print("\n")
+                    end
+                    # we descend with newlines rather than ANSI.cursor_down as the inserted lines may've
+                    # pushed the spinner off the front of the buffer, so we can't move back down below it
+                    print("\n" * consumed_lines) if CLI::UI.enable_cursor?
+
+                    force_full_render = true
+                  end
+
                   @tasks.each.with_index do |task, int_index|
                     nat_index = int_index + 1
                     task_done = task.check
@@ -391,7 +410,7 @@ module CLI
                         move_to = CLI::UI::ANSI.cursor_up(offset) + "\r"
                         move_from = "\r" + CLI::UI::ANSI.cursor_down(offset)
 
-                        print(move_to + task.render(idx, idx.zero?, width: width) + move_from)
+                        print(move_to + task.render(idx, idx.zero? || force_full_render, width: width) + move_from)
                       end
                     elsif !tasks_seen[int_index] || (task_done && !tasks_seen_done[int_index])
                       print(task.render(idx, true, width: width) + "\n")
@@ -420,6 +439,13 @@ module CLI
           @work_queue.interrupt
           debrief if @interrupt_debrief
           stopped? ? false : raise
+        end
+
+        sig { params(message: String).void }
+        def puts_above(message)
+          @m.synchronize do
+            @puts_above << message
+          end
         end
 
         # Provide an alternative debriefing for failed tasks
@@ -471,17 +497,17 @@ module CLI
 
               CLI::UI::Frame.open('Task Failed: ' + title, color: :red, timing: Time.new - @start) do
                 if e
-                  puts "#{e.class}: #{e.message}"
-                  puts "\tfrom #{e.backtrace.join("\n\tfrom ")}"
+                  $stdout.puts("#{e.class}: #{e.message}")
+                  $stdout.puts("\tfrom #{e.backtrace.join("\n\tfrom ")}")
                 end
 
                 CLI::UI::Frame.divider('STDOUT')
                 out = '(empty)' if out.nil? || out.strip.empty?
-                puts out
+                $stdout.puts(out)
 
                 CLI::UI::Frame.divider('STDERR')
                 err = '(empty)' if err.nil? || err.strip.empty?
-                puts err
+                $stdout.puts(err)
               end
             end
             @tasks.all?(&:success)

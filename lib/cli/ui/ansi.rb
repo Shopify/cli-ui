@@ -206,6 +206,16 @@ module CLI
         def clear_to_end_of_line
           control('', 'K')
         end
+
+        sig { returns(String) }
+        def insert_line
+          insert_lines(1)
+        end
+
+        sig { params(n: Integer).returns(String) }
+        def insert_lines(n = 1)
+          control(n.to_s, 'L')
+        end
       end
     end
   end
