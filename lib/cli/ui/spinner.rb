@@ -62,6 +62,8 @@ module CLI
         # ==== Options
         #
         # * +:auto_debrief+ - Automatically debrief exceptions or through success_debrief? Default to true
+        # * +:to+ - Target stream, like $stdout or $stderr. Can be anything with print and puts methods,
+        #   or under Sorbet, IO or StringIO. Defaults to $stdout.
         #
         # ==== Block
         #
@@ -72,13 +74,17 @@ module CLI
         #   CLI::UI::Spinner.spin('Title') { sleep 1.0 }
         #
         sig do
-          params(title: String, auto_debrief: T::Boolean, block: T.proc.params(task: SpinGroup::Task).void)
-            .returns(T::Boolean)
+          params(
+            title: String,
+            auto_debrief: T::Boolean,
+            to: IOLike,
+            block: T.proc.params(task: SpinGroup::Task).void,
+          ).returns(T::Boolean)
         end
-        def spin(title, auto_debrief: true, &block)
+        def spin(title, auto_debrief: true, to: $stdout, &block)
           sg = SpinGroup.new(auto_debrief: auto_debrief)
           sg.add(title, &block)
-          sg.wait
+          sg.wait(to: to)
         end
       end
     end
