@@ -53,6 +53,8 @@ module CLI
         # * +:interrupt_debrief+ - Automatically debrief on interrupt. Default to false
         # * +:max_concurrent+ - Maximum number of concurrent tasks. Default is 0 (effectively unlimited)
         # * +:work_queue+ - Custom WorkQueue instance. If not provided, a new one will be created
+        # * +:to+ - Target stream, like $stdout or $stderr. Can be anything with print and puts methods,
+        #   or under Sorbet, IO or StringIO. Defaults to $stdout
         #
         # ==== Example Usage
         #
@@ -71,9 +73,10 @@ module CLI
             interrupt_debrief: T::Boolean,
             max_concurrent: Integer,
             work_queue: T.nilable(WorkQueue),
+            to: IOLike,
           ).void
         end
-        def initialize(auto_debrief: true, interrupt_debrief: false, max_concurrent: 0, work_queue: nil)
+        def initialize(auto_debrief: true, interrupt_debrief: false, max_concurrent: 0, work_queue: nil, to: $stdout)
           @m = Mutex.new
           @tasks = []
           @puts_above = []
@@ -88,7 +91,7 @@ module CLI
           )
           if block_given?
             yield self
-            wait
+            wait(to: to)
           end
         end
 
@@ -350,13 +353,18 @@ module CLI
 
         # Tells the group you're done adding tasks and to wait for all of them to finish
         #
+        # ==== Options
+        #
+        # * +:to+ - Target stream, like $stdout or $stderr. Can be anything with print and puts methods,
+        #   or under Sorbet, IO or StringIO. Defaults to $stdout
+        #
         # ==== Example Usage:
         #   spin_group = CLI::UI::SpinGroup.new
         #   spin_group.add('Title') { |spinner| sleep 1.0 }
         #   spin_group.wait
         #
-        sig { returns(T::Boolean) }
-        def wait
+        sig { params(to: IOLike).returns(T::Boolean) }
+        def wait(to: $stdout)
           idx = 0
 
           consumed_lines = 0
@@ -381,17 +389,17 @@ module CLI
                   force_full_render = false
 
                   unless @puts_above.empty?
-                    print(CLI::UI::ANSI.cursor_up(consumed_lines)) if CLI::UI.enable_cursor?
+                    to.print(CLI::UI::ANSI.cursor_up(consumed_lines)) if CLI::UI.enable_cursor?
                     while (message = @puts_above.shift)
-                      print(CLI::UI::ANSI.insert_lines(message.lines.count)) if CLI::UI.enable_cursor?
+                      to.print(CLI::UI::ANSI.insert_lines(message.lines.count)) if CLI::UI.enable_cursor?
                       message.lines.each do |line|
-                        print(CLI::UI::Frame.prefix + CLI::UI.fmt(line))
+                        to.print(CLI::UI::Frame.prefix + CLI::UI.fmt(line))
                       end
-                      print("\n")
+                      to.print("\n")
                     end
                     # we descend with newlines rather than ANSI.cursor_down as the inserted lines may've
                     # pushed the spinner off the front of the buffer, so we can't move back down below it
-                    print("\n" * consumed_lines) if CLI::UI.enable_cursor?
+                    to.print("\n" * consumed_lines) if CLI::UI.enable_cursor?
 
                     force_full_render = true
                   end
@@ -403,17 +411,17 @@ module CLI
 
                     if CLI::UI.enable_cursor?
                       if nat_index > consumed_lines
-                        print(task.render(idx, true, width: width) + "\n")
+                        to.print(task.render(idx, true, width: width) + "\n")
                         consumed_lines += 1
                       else
                         offset = consumed_lines - int_index
                         move_to = CLI::UI::ANSI.cursor_up(offset) + "\r"
                         move_from = "\r" + CLI::UI::ANSI.cursor_down(offset)
 
-                        print(move_to + task.render(idx, idx.zero? || force_full_render, width: width) + move_from)
+                        to.print(move_to + task.render(idx, idx.zero? || force_full_render, width: width) + move_from)
                       end
                     elsif !tasks_seen[int_index] || (task_done && !tasks_seen_done[int_index])
-                      print(task.render(idx, true, width: width) + "\n")
+                      to.print(task.render(idx, true, width: width) + "\n")
                     end
 
                     tasks_seen[int_index] = true
@@ -431,13 +439,13 @@ module CLI
           end
 
           if @auto_debrief
-            debrief
+            debrief(to: to)
           else
             all_succeeded?
           end
         rescue Interrupt
           @work_queue.interrupt
-          debrief if @interrupt_debrief
+          debrief(to: to) if @interrupt_debrief
           stopped? ? false : raise
         end
 
@@ -477,8 +485,13 @@ module CLI
 
         # Debriefs failed tasks is +auto_debrief+ is true
         #
-        sig { returns(T::Boolean) }
-        def debrief
+        # ==== Options
+        #
+        # * +:to+ - Target stream, like $stdout or $stderr. Can be anything with print and puts methods,
+        #   or under Sorbet, IO or StringIO. Defaults to $stdout
+        #
+        sig { params(to: IOLike).returns(T::Boolean) }
+        def debrief(to: $stdout)
           @m.synchronize do
             @tasks.each do |task|
               next unless task.done
@@ -497,17 +510,17 @@ module CLI
 
               CLI::UI::Frame.open('Task Failed: ' + title, color: :red, timing: Time.new - @start) do
                 if e
-                  $stdout.puts("#{e.class}: #{e.message}")
-                  $stdout.puts("\tfrom #{e.backtrace.join("\n\tfrom ")}")
+                  to.puts("#{e.class}: #{e.message}")
+                  to.puts("\tfrom #{e.backtrace.join("\n\tfrom ")}")
                 end
 
                 CLI::UI::Frame.divider('STDOUT')
                 out = '(empty)' if out.nil? || out.strip.empty?
-                $stdout.puts(out)
+                to.puts(out)
 
                 CLI::UI::Frame.divider('STDERR')
                 err = '(empty)' if err.nil? || err.strip.empty?
-                $stdout.puts(err)
+                to.puts(err)
               end
             end
             @tasks.all?(&:success)
