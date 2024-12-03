@@ -157,6 +157,26 @@ module CLI
           end
         end
 
+        def test_spin_group_exceptions
+          capture_io do
+            CLI::UI::StdoutRouter.ensure_activated
+            sg = SpinGroup.new
+
+            sg.add('Just a task') do
+            end
+
+            sg.add('Raising task') do
+              raise 'Error'
+            end
+
+            t = Thread.new { sg.wait }
+
+            t.join
+
+            assert_equal(['Error'], sg.all_exceptions.map(&:message))
+          end
+        end
+
         def test_spin_group_stop
           capture_io do
             CLI::UI::StdoutRouter.ensure_activated

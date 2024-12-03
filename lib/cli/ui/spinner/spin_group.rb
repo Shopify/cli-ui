@@ -475,6 +475,13 @@ module CLI
           end
         end
 
+        sig { returns(T::Array[Exception]) }
+        def all_exceptions
+          @m.synchronize do
+            @tasks.filter_map(&:exception)
+          end
+        end
+
         # Debriefs failed tasks is +auto_debrief+ is true
         #
         sig { returns(T::Boolean) }
