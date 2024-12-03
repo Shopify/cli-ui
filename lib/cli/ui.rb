@@ -268,11 +268,15 @@ module CLI
       # * +block+ - block for +Spinner.open+
       #
       sig do
-        params(title: String, auto_debrief: T::Boolean, block: T.proc.params(task: Spinner::SpinGroup::Task).void)
-          .returns(T::Boolean)
+        params(
+          title: String,
+          auto_debrief: T::Boolean,
+          to: IOLike,
+          block: T.proc.params(task: Spinner::SpinGroup::Task).void,
+        ).returns(T::Boolean)
       end
-      def spinner(title, auto_debrief: true, &block)
-        CLI::UI::Spinner.spin(title, auto_debrief: auto_debrief, &block)
+      def spinner(title, auto_debrief: true, to: $stdout, &block)
+        CLI::UI::Spinner.spin(title, auto_debrief: auto_debrief, to: to, &block)
       end
 
       # Convenience Method to override frame color using +CLI::UI::Frame.with_frame_color+
