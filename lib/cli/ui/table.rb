@@ -35,8 +35,8 @@ module CLI
         #   really_long_cell short
         #   row2             row2
         #
-        sig { params(table: T::Array[T::Array[String]], col_spacing: Integer, to: IOLike).void }
-        def puts_table(table, col_spacing: 1, to: $stdout)
+        sig { params(table: T::Array[T::Array[String]], col_spacing: Integer, to: IOLike, spacer: String).void }
+        def puts_table(table, col_spacing: 1, to: $stdout, spacer: '')
           col_sizes = table.transpose.map do |col|
             col.map { |cell| CLI::UI::ANSI.printing_width(CLI::UI.resolve_text(cell)) }.max
           end
@@ -45,9 +45,10 @@ module CLI
             padded_row = row.each_with_index.map do |cell, i|
               col_size = T.must(col_sizes[i]) # guaranteed to be non-nil
               cell_size = CLI::UI::ANSI.printing_width(CLI::UI.resolve_text(cell))
-              padded_cell = cell + ' ' * (col_size - cell_size)
+              padded_cell = spacer + cell + ' ' * (col_size - cell_size)
               padded_cell
             end
+            padded_row << spacer
             CLI::UI.puts(padded_row.join(' ' * col_spacing), to: to)
           end
         end
