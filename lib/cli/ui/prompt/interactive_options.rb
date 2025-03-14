@@ -247,16 +247,14 @@ module CLI
         sig { params(n: Integer).returns(T::Boolean) }
         def should_enter_select_mode?(n)
           # If we have less than 10 options, we don't need to enter select mode
-          # and we can just select the option directly
+          # and we can just select the option directly. This just keeps the code easier
+          # by making the cases simpler to understand
           return false if @options.length <= 9
 
-          # If we have 1 and more than 9, we always need to enter select mode as the user
-          # may want to select 10-19
-          return true if n == 1
-
-          # Otherwise we need to check if we have the range of options needed
-          # for a given `n` (e.g. 2 would require 20+ options, etc).
-          # This can be simplified to >= `n * 10` (e.g. 2 => 20, 3 => 30, etc)
+          # At this point we have 10+ options so always need to check if we should run.
+          # This can be simplified to checking if the length of options is >= to the option selected * 10:
+          # n == 1 && options.length >= 10 (1 * 10), n == 2 && options.length >= 20 (2 * 10), etc.
+          # which can be further simplified to just:
           @options.length >= (n * 10)
         end
 
