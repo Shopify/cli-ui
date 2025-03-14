@@ -9,6 +9,34 @@ require 'open3'
 module CLI
   module UI
     class PromptTest < Minitest::Test
+      def test_interactive_options_with_more_than_9_options_enters_select_mode
+        run_in_process(<<~RUBY)
+          options = ("a".."j").to_a
+          CLI::UI::Prompt.ask('question', options: options)
+        RUBY
+
+        write('1')
+        wait_for_output_to_include('Select: 1')
+      end
+
+      def test_interactive_options_with_more_than_19_options_enters_select_mode
+        run_in_process(<<~RUBY)
+          options = ("a".."t").to_a
+          CLI::UI::Prompt.ask('question', options: options)
+        RUBY
+
+        write('2')
+        wait_for_output_to_include('Select: 2')
+      end
+
+      def test_interactive_options_with_more_than_9_options_doesnt_enter_select_mode_when_not_needed
+        run_in_process(<<~RUBY)
+          CLI::UI::Prompt.ask('question', options: (1..15).map(&:to_s))
+        RUBY
+        write('2')
+        assert_output_includes('You chose: 2')
+      end
+
       # ^C is not handled; raises Interrupt, which may be handled by caller.
       def test_confirm_sigint
         jruby_skip('SIGINT shuts down the JVM instead of raising Interrupt')
