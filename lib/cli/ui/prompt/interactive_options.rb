@@ -237,7 +237,6 @@ module CLI
             start_line_select
             @active = n
           else
-       
             @active = n
             @answer = n
           end
