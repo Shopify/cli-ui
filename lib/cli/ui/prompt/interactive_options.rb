@@ -230,11 +230,31 @@ module CLI
             end
           elsif n == 0
             # Ignore pressing "0" when not in multiple mode
+          elsif should_enter_select_mode?(n)
+            # When we have more than 9 options, we need to enter select mode
+            # to avoid pre-selecting (e.g) 1 when the user wanted 10.
+            # This also applies to 2 and 20+ options, 3/30+, etc.
+            start_line_select
+            @active = n
           else
             @active = n
             @answer = n
           end
           @redraw = true
+        end
+
+        sig { params(n: Integer).returns(T::Boolean) }
+        def should_enter_select_mode?(n)
+          # If we have less than 10 options, we don't need to enter select mode
+          # and we can just select the option directly. This just keeps the code easier
+          # by making the cases simpler to understand
+          return false if @options.length <= 9
+
+          # At this point we have 10+ options so always need to check if we should run.
+          # This can be simplified to checking if the length of options is >= to the option selected * 10:
+          # n == 1 && options.length >= 10 (1 * 10), n == 2 && options.length >= 20 (2 * 10), etc.
+          # which can be further simplified to just:
+          @options.length >= (n * 10)
         end
 
         sig { params(char: String).void }
