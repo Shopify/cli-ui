@@ -226,31 +226,6 @@ Output:
 - Run tests using `bundle exec rake test`. All code should be tested.
 - No code, outside of development and tests needs, should use dependencies. This is a self contained library
 
-### Building
-
-```shell
-gem build cli-ui.gemspec
-```
-
-### Testing Manually
-```shell
-gem install --local cli-ui-*.gem
-irb
-```
-
-Try it:
-
-```Ruby
-require "cli/ui"
-CLI::UI::StdoutRouter.enable
-
-CLI::UI.frame("Example") do 
-  CLI::UI.write("Start Example")
-  CLI::UI.puts("...")
-  CLI::UI.puts("End Example")
-end
-```
-
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/Shopify/cli-ui.
