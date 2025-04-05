@@ -214,6 +214,41 @@ module CLI
           @redraw = true
         end
 
+        sig { void }
+        def first_option
+          @active = @filtered_options.first&.last || -1
+          @redraw = true
+        end
+
+        sig { void }
+        def last_option
+          @active = @filtered_options.last&.last || -1
+          @redraw = true
+        end
+
+        sig { void }
+        def next_page
+          active_index = @filtered_options.index { |_, num| num == @active } || 0
+
+          previous_visible = @filtered_options[active_index + max_lines]
+          previous_visible ||= @filtered_options.last
+
+          @active = previous_visible ? previous_visible.last : -1
+          @redraw = true
+        end
+
+        sig { void }
+        def previous_page
+          active_index = @filtered_options.index { |_, num| num == @active } || 0
+
+          # do not jump into the end of the options if the subtraction result is non-positive
+          previous_visible = @filtered_options[active_index - max_lines] if active_index - max_lines >= 0
+          previous_visible ||= @filtered_options.first
+
+          @active = previous_visible ? previous_visible.last : -1
+          @redraw = true
+        end
+
         # n is 1-indexed selection
         # n == 0 if "Done" was selected in @multiple mode
         sig { params(n: Integer).void }
@@ -363,6 +398,11 @@ module CLI
             when 'B'      ; down
             when 'C'      ; # Ignore right key
             when 'D'      ; # Ignore left key
+            when '3'      ; print("\a")
+            when '5'      ; previous_page
+            when '6'      ; next_page
+            when 'H'      ; first_option
+            when 'F'      ; last_option
             else          ; raise Interrupt # unhandled escape sequence.
             end
           end
