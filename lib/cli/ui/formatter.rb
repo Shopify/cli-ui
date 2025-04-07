@@ -24,6 +24,7 @@ module CLI
         'magenta' => '35',
         'cyan' => '36',
         'gray' => '38;5;244',
+        'orange' => '38;5;214',
         'white' => '97',
         'bold' => '1',
         'italic' => '3',

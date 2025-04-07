@@ -76,6 +76,17 @@ module CLI
         actual = CLI::UI::Formatter.new(input).format
         assert_equal(expected, actual)
       end
+
+      def test_formatter_with_all_colors
+        CLI::UI::Color.available.each do |color_name|
+          input = "test {{#{color_name}:this is #{color_name} text}}"
+          color = CLI::UI::Color.lookup(color_name)
+          expected = "\e[0mtest \e[0;#{color.sgr}mthis is #{color_name} text\e[0m"
+
+          actual = CLI::UI::Formatter.new(input).format
+          assert_equal(expected, actual, "Color #{color_name} did not format correctly")
+        end
+      end
     end
   end
 end
