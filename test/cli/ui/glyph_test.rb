@@ -13,18 +13,8 @@ module CLI
         assert_equal("\x1b[31m✗\x1b[0m", Glyph::X.to_s)
         assert_equal("\x1b[97m🐛\x1b[0m", Glyph::BUG.to_s)
         assert_equal("\x1b[33m»\x1b[0m", Glyph::CHEVRON.to_s)
-
-        assert_equal(Glyph::STAR,     Glyph.lookup('*'))
-        assert_equal(Glyph::INFO,     Glyph.lookup('i'))
-        assert_equal(Glyph::QUESTION, Glyph.lookup('?'))
-        assert_equal(Glyph::CHECK,    Glyph.lookup('v'))
-        assert_equal(Glyph::X,        Glyph.lookup('x'))
-        assert_equal(Glyph::BUG,      Glyph.lookup('b'))
-        assert_equal(Glyph::CHEVRON,  Glyph.lookup('>'))
-
-        assert_raises(Glyph::InvalidGlyphHandle) do
-          Glyph.lookup('$')
-        end
+        assert_equal("\x1b[38;5;214m⧖\x1b[0m", Glyph::HOURGLASS.to_s)
+        assert_equal("\x1b[33m⚠️\x1b[0m", Glyph::WARNING.to_s)
       end
 
       def test_plain_glyphs
@@ -40,18 +30,24 @@ module CLI
           assert_equal("\x1b[31mX\x1b[0m", Glyph::X.to_s)
           assert_equal("\x1b[97m!\x1b[0m", Glyph::BUG.to_s)
           assert_equal("\x1b[33m»\x1b[0m", Glyph::CHEVRON.to_s)
+          assert_equal("\x1b[38;5;214mH\x1b[0m", Glyph::HOURGLASS.to_s)
+          assert_equal("\x1b[33m!\x1b[0m", Glyph::WARNING.to_s)
+        end
+      end
 
-          assert_equal(Glyph::STAR,     Glyph.lookup('*'))
-          assert_equal(Glyph::INFO,     Glyph.lookup('i'))
-          assert_equal(Glyph::QUESTION, Glyph.lookup('?'))
-          assert_equal(Glyph::CHECK,    Glyph.lookup('v'))
-          assert_equal(Glyph::X,        Glyph.lookup('x'))
-          assert_equal(Glyph::BUG,      Glyph.lookup('b'))
-          assert_equal(Glyph::CHEVRON,  Glyph.lookup('>'))
+      def test_glyph_lookup
+        assert_equal(Glyph::STAR,      Glyph.lookup('*'))
+        assert_equal(Glyph::INFO,      Glyph.lookup('i'))
+        assert_equal(Glyph::QUESTION,  Glyph.lookup('?'))
+        assert_equal(Glyph::CHECK,     Glyph.lookup('v'))
+        assert_equal(Glyph::X,         Glyph.lookup('x'))
+        assert_equal(Glyph::BUG,       Glyph.lookup('b'))
+        assert_equal(Glyph::CHEVRON,   Glyph.lookup('>'))
+        assert_equal(Glyph::HOURGLASS, Glyph.lookup('H'))
+        assert_equal(Glyph::WARNING,   Glyph.lookup('!'))
 
-          assert_raises(Glyph::InvalidGlyphHandle) do
-            Glyph.lookup('$')
-          end
+        assert_raises(Glyph::InvalidGlyphHandle) do
+          Glyph.lookup('$')
         end
       end
 
