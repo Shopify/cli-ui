@@ -15,12 +15,14 @@ module CLI
         assert_equal("\x1b[0m",  Color::RESET.code)
         assert_equal("\x1b[1m",  Color::BOLD.code)
         assert_equal("\x1b[97m", Color::WHITE.code)
+        assert_equal("\x1b[38;5;214m", Color::ORANGE.code)
 
         assert_equal('36',  Color::CYAN.sgr)
         assert_equal(:bold, Color::BOLD.name)
 
         assert_equal(Color::BLUE, Color.lookup(:blue))
         assert_equal(Color::RESET, Color.lookup(:reset))
+        assert_equal(Color::ORANGE, Color.lookup(:orange))
 
         assert_raises(Color::InvalidColorName) do
           Color.lookup(:foobar)

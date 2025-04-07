@@ -56,6 +56,7 @@ module CLI
         reset: RESET,
         bold: BOLD,
         gray: GRAY,
+        orange: ORANGE,
       }.freeze
 
       class InvalidColorName < ArgumentError
