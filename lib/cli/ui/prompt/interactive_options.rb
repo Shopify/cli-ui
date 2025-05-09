@@ -216,8 +216,8 @@ module CLI
 
         # n is 1-indexed selection
         # n == 0 if "Done" was selected in @multiple mode
-        sig { params(n: Integer).void }
-        def select_n(n)
+        sig { params(n: Integer, final: T::Boolean).void }
+        def select_n(n, final: false)
           if @multiple
             if n == 0
               @answer = []
@@ -230,7 +230,7 @@ module CLI
             end
           elsif n == 0
             # Ignore pressing "0" when not in multiple mode
-          elsif should_enter_select_mode?(n)
+          elsif !final && should_enter_select_mode?(n)
             # When we have more than 9 options, we need to enter select mode
             # to avoid pre-selecting (e.g) 1 when the user wanted 10.
             # This also applies to 2 and 20+ options, 3/30+, etc.
@@ -302,7 +302,7 @@ module CLI
           # Prevent selection of invisible options
           return unless presented_options.any? { |_, num| num == @active }
 
-          select_n(@active)
+          select_n(@active, final: true)
         end
 
         sig { void }

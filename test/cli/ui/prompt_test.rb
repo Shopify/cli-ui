@@ -37,6 +37,16 @@ module CLI
         assert_output_includes('You chose: 2')
       end
 
+      def test_interactive_options_with_more_than_9_options_allows_enter
+        run_in_process(<<~RUBY)
+          options = ('a'..'j').map { |o| o + ' was selected' }
+          CLI::UI::Prompt.ask('question', options: options)
+        RUBY
+
+        write("\n") # Choose option 1
+        assert_output_includes('a was selected')
+      end
+
       # ^C is not handled; raises Interrupt, which may be handled by caller.
       def test_confirm_sigint
         jruby_skip('SIGINT shuts down the JVM instead of raising Interrupt')
