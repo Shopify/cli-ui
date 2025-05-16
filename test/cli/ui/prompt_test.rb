@@ -183,6 +183,12 @@ module CLI
         assert_output_includes('--zxcv--')
       end
 
+      def test_ask_without_question_or_default
+        run_in_process('puts "--#{CLI::UI::Prompt.ask}--"')
+        write("user input\n")
+        assert_output_includes('--user input--')
+      end
+
       def test_ask_invalid_kwargs
         error = assert_raises(ArgumentError) { Prompt.ask('q', options: ['a'], is_file: true) }
         assert_equal('conflicting arguments: is_file is only useful when options are not provided', error.message)

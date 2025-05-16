@@ -105,7 +105,7 @@ module CLI
       # Convenience Method for +CLI::UI::Prompt.ask+
       sig do
         params(
-          question: String,
+          question: T.nilable(String),
           options: T.nilable(T::Array[String]),
           default: T.nilable(T.any(String, T::Array[String])),
           is_file: T::Boolean,
@@ -117,7 +117,7 @@ module CLI
         ).returns(T.any(String, T::Array[String]))
       end
       def ask(
-        question,
+        question = nil,
         options: nil,
         default: nil,
         is_file: false,
