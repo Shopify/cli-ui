@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cli-ui (2.3.1)
+    cli-ui (2.4.0)
 
 GEM
   remote: https://rubygems.org/
@@ -14,6 +14,7 @@ GEM
     docile (1.4.0)
     erubi (1.13.0)
     json (2.9.1)
+    json (2.9.1-java)
     language_server-protocol (3.17.0.4)
     method_source (1.1.0)
     minitest (5.25.4)
@@ -31,6 +32,7 @@ GEM
       racc
     prism (1.2.0)
     racc (1.8.1)
+    racc (1.8.1-java)
     rainbow (3.1.1)
     rake (13.2.1)
     rbi (0.2.1)
@@ -66,6 +68,7 @@ GEM
     sorbet (0.5.11781)
       sorbet-static (= 0.5.11781)
     sorbet-runtime (0.5.11781)
+    sorbet-static (0.5.11781-java)
     sorbet-static (0.5.11781-universal-darwin)
     sorbet-static (0.5.11781-x86_64-linux)
     sorbet-static-and-runtime (0.5.11781)

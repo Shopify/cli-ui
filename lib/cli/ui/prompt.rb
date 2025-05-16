@@ -48,7 +48,7 @@ module CLI
         #
         # ==== Attributes
         #
-        # * +question+ - (required) The question to ask the user
+        # * +question+ - (optional) The question to ask the user
         #
         # ==== Options
         #
@@ -104,7 +104,7 @@ module CLI
         #
         sig do
           params(
-            question: String,
+            question: T.nilable(String),
             options: T.nilable(T::Array[String]),
             default: T.nilable(T.any(String, T::Array[String])),
             is_file: T::Boolean,
@@ -116,7 +116,7 @@ module CLI
           ).returns(T.any(String, T::Array[String]))
         end
         def ask(
-          question,
+          question = nil,
           options: nil,
           default: nil,
           is_file: false,
@@ -234,7 +234,7 @@ module CLI
         private
 
         sig do
-          params(question: String, default: T.nilable(String), is_file: T::Boolean, allow_empty: T::Boolean)
+          params(question: T.nilable(String), default: T.nilable(String), is_file: T::Boolean, allow_empty: T::Boolean)
             .returns(String)
         end
         def ask_free_form(question, default, is_file, allow_empty)
@@ -245,7 +245,7 @@ module CLI
           CLI::UI::StdoutRouter::Capture.in_alternate_screen do
             if default
               puts_question("#{question} (empty = #{default})")
-            else
+            elsif question
               puts_question(question)
             end
 
@@ -267,7 +267,7 @@ module CLI
 
         sig do
           params(
-            question: String,
+            question: T.nilable(String),
             options: T.nilable(T::Array[String]),
             multiple: T::Boolean,
             default: T.nilable(T.any(String, T::Array[String])),
@@ -299,7 +299,9 @@ module CLI
           resp = T.let([], T.any(String, T::Array[String]))
 
           CLI::UI::StdoutRouter::Capture.in_alternate_screen do
-            puts_question("#{question} " + instructions_color.code + "(#{instructions})" + Color::RESET.code)
+            if question
+              puts_question("#{question} " + instructions_color.code + "(#{instructions})" + Color::RESET.code)
+            end
             resp = interactive_prompt(options, multiple: multiple, default: default)
 
             # Clear the line
