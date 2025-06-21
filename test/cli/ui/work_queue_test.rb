@@ -1,7 +1,6 @@
 # typed: false
 
 require 'test_helper'
-require 'cli/ui/work_queue'
 
 module CLI
   module UI

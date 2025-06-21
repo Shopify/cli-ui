@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'test_helper'
-require 'cli/ui/prompt/options_handler'
 
 module CLI
   module UI
