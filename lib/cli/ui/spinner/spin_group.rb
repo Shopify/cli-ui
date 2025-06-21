@@ -1,8 +1,6 @@
 # typed: true
 # frozen_string_literal: true
 
-require_relative '../work_queue'
-
 module CLI
   module UI
     module Spinner

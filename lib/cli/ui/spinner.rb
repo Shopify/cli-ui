@@ -1,15 +1,10 @@
 # typed: true
 # frozen_string_literal: true
 
-require 'cli/ui'
-
 module CLI
   module UI
     module Spinner
       extend T::Sig
-
-      autoload :Async,      'cli/ui/spinner/async'
-      autoload :SpinGroup,  'cli/ui/spinner/spin_group'
 
       PERIOD = 0.1 # seconds
       TASK_FAILED = :task_failed

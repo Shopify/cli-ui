@@ -1,7 +1,6 @@
 # typed: true
 # frozen_string_literal: true
 
-require 'cli/ui'
 require 'stringio'
 require_relative '../../../vendor/reentrant_mutex'
 
@@ -123,8 +122,13 @@ module CLI
                     prev_hook = Thread.current[:cliui_output_hook]
                     Thread.current[:cliui_output_hook] = nil
                     replay = current_capture!.stdout.gsub(ANSI.match_alternate_screen, '')
-                    CLI::UI.raw do
+                    # Inline implementation of CLI::UI.raw to avoid circular dependency
+                    prev_no_frame_inset = Thread.current[:no_cliui_frame_inset]
+                    Thread.current[:no_cliui_frame_inset] = true
+                    begin
                       print("#{ANSI.enter_alternate_screen}#{replay}")
+                    ensure
+                      Thread.current[:no_cliui_frame_inset] = prev_no_frame_inset
                     end
                   ensure
                     Thread.current[:cliui_output_hook] = prev_hook

@@ -1,8 +1,6 @@
 # typed: true
 # frozen_string_literal: true
 
-require('cli/ui')
-
 module CLI
   module UI
     module Widgets
