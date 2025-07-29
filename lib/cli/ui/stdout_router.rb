@@ -47,6 +47,16 @@ module CLI
           ret
         end
 
+        sig { void }
+        def flush_streams
+          [*StdoutRouter.current_streams, @stream]
+            .each do |stream|
+              stream.flush
+            rescue IOError, SystemCallError
+              # Continue to next stream.
+            end
+        end
+
         private
 
         sig { params(stream: IOLike, args: T::Array[String]).returns(T::Array[String]) }
@@ -346,6 +356,11 @@ module CLI
         sig { returns(T.nilable(T::Hash[Symbol, T.any(String, IOLike)])) }
         def current_id
           Thread.current[:cliui_output_id]
+        end
+
+        sig { returns(T::Array[IOLike]) }
+        def current_streams
+          Thread.current[:cliui_output_id]&.dig(:streams) || []
         end
 
         sig { void }
