@@ -404,10 +404,10 @@ module CLI
       end
     end
 
-    self.enable_color = $stdout.tty?
+    self.enable_color = T.must($stdout.tty? && ENV['TERM'] != 'dumb')
 
     # Shopify's CI system supports color, but not cursor control
-    self.enable_cursor = T.must($stdout.tty? && ENV['CI'].nil? && ENV['JOURNAL_STREAM'].nil?)
+    self.enable_cursor = T.must($stdout.tty? && ENV['TERM'] != 'dumb' && ENV['CI'].nil? && ENV['JOURNAL_STREAM'].nil?)
   end
 end
 
