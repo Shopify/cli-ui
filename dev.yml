@@ -1,3 +1,5 @@
+nix: true
+
 up:
   - packages:
     - fswatch
