@@ -110,6 +110,9 @@ module CLI
           sig { returns(T.nilable(Exception)) }
           attr_reader :exception
 
+          sig { returns(T.nilable(Integer)) }
+          attr_reader :progress_percentage
+
           # Initializes a new Task
           # This is managed entirely internally by +SpinGroup+
           #
@@ -149,6 +152,8 @@ module CLI
             @done = false
             @exception = nil
             @success = false
+            @progress_percentage = nil
+            @wants_progress_mode = false
           end
 
           sig { params(block: T.proc.params(task: Task).void).void }
@@ -222,6 +227,36 @@ module CLI
               @title = new_title
               @force_full_render = true
             end
+          end
+
+          # Set progress percentage (0-100) and switch to progress mode
+          sig { params(percentage: Integer).void }
+          def set_progress(percentage) # rubocop:disable Naming/AccessorMethodName
+            @m.synchronize do
+              @progress_percentage = percentage.clamp(0, 100)
+              @wants_progress_mode = true
+            end
+          end
+
+          # Switch back to indeterminate mode
+          sig { void }
+          def clear_progress
+            @m.synchronize do
+              @progress_percentage = nil
+              @wants_progress_mode = false
+            end
+          end
+
+          # Check if this task wants progress mode
+          sig { returns(T::Boolean) }
+          def wants_progress_mode?
+            @m.synchronize { @wants_progress_mode }
+          end
+
+          # Get current progress percentage
+          sig { returns(T.nilable(Integer)) }
+          def current_progress
+            @m.synchronize { @progress_percentage }
           end
 
           private
@@ -365,84 +400,79 @@ module CLI
         #
         sig { params(to: IOLike).returns(T::Boolean) }
         def wait(to: $stdout)
-          idx = 0
+          result = T.let(false, T::Boolean)
 
-          consumed_lines = 0
+          CLI::UI::ProgressReporter.with_progress(mode: :indeterminate, to: to, delay_start: true) do |reporter|
+            idx = 0
+            consumed_lines = 0
 
-          @work_queue.close if @internal_work_queue
+            @work_queue.close if @internal_work_queue
 
-          tasks_seen = @tasks.map { false }
-          tasks_seen_done = @tasks.map { false }
+            tasks_seen = @tasks.map { false }
+            tasks_seen_done = @tasks.map { false }
 
-          loop do
-            break if stopped?
+            current_mode = T.let(:indeterminate, Symbol)
+            first_render = T.let(true, T::Boolean)
 
-            done_count = 0
+            loop do
+              break if stopped?
 
-            width = CLI::UI::Terminal.width
+              done_count = 0
+              width = CLI::UI::Terminal.width
 
-            self.class.pause_mutex.synchronize do
-              next if self.class.paused?
+              # Update progress mode based on task states
+              current_mode = update_progress_mode(reporter, current_mode, first_render)
 
-              @m.synchronize do
-                CLI::UI.raw do
-                  force_full_render = false
+              self.class.pause_mutex.synchronize do
+                next if self.class.paused?
 
-                  unless @puts_above.empty?
-                    to.print(CLI::UI::ANSI.cursor_up(consumed_lines)) if CLI::UI.enable_cursor?
-                    while (message = @puts_above.shift)
-                      to.print(CLI::UI::ANSI.insert_lines(message.lines.count)) if CLI::UI.enable_cursor?
-                      message.lines.each do |line|
-                        to.print(CLI::UI::Frame.prefix + CLI::UI.fmt(line))
-                      end
-                      to.print("\n")
-                    end
-                    # we descend with newlines rather than ANSI.cursor_down as the inserted lines may've
-                    # pushed the spinner off the front of the buffer, so we can't move back down below it
-                    to.print("\n" * consumed_lines) if CLI::UI.enable_cursor?
+                @m.synchronize do
+                  CLI::UI.raw do
+                    # Render any messages above the spinner
+                    force_full_render = render_puts_above(to, consumed_lines)
 
-                    force_full_render = true
-                  end
-
-                  @tasks.each.with_index do |task, int_index|
-                    nat_index = int_index + 1
-                    task_done = task.check
-                    done_count += 1 if task_done
-
-                    if CLI::UI.enable_cursor?
-                      if nat_index > consumed_lines
-                        to.print(task.render(idx, true, width: width) + "\n")
-                        consumed_lines += 1
-                      else
-                        offset = consumed_lines - int_index
-                        move_to = CLI::UI::ANSI.cursor_up(offset) + "\r"
-                        move_from = "\r" + CLI::UI::ANSI.cursor_down(offset)
-
-                        to.print(move_to + task.render(idx, idx.zero? || force_full_render, width: width) + move_from)
-                      end
-                    elsif !tasks_seen[int_index] || (task_done && !tasks_seen_done[int_index])
-                      to.print(task.render(idx, true, width: width) + "\n")
-                    end
-
-                    tasks_seen[int_index] = true
-                    tasks_seen_done[int_index] ||= task_done
+                    # Render all tasks
+                    done_count, consumed_lines = render_tasks(
+                      to: to,
+                      tasks_seen: tasks_seen,
+                      tasks_seen_done: tasks_seen_done,
+                      consumed_lines: consumed_lines,
+                      idx: idx,
+                      force_full_render: force_full_render,
+                      width: width,
+                    )
                   end
                 end
               end
+
+              break if done_count == @tasks.size
+
+              # After first render, start the progress reporter in indeterminate mode
+              if first_render
+                reporter.force_set_indeterminate
+                first_render = false
+              end
+
+              idx = (idx + 1) % GLYPHS.size
+              Spinner.index = idx
+              sleep(PERIOD)
             end
 
-            break if done_count == @tasks.size
+            # Show error state briefly if tasks failed
+            success = all_succeeded?
+            unless success
+              reporter.set_error
+              sleep(0.5)
+            end
 
-            idx = (idx + 1) % GLYPHS.size
-            Spinner.index = idx
-            sleep(PERIOD)
+            result = if @auto_debrief
+              debrief(to: to)
+            else
+              all_succeeded?
+            end
           end
 
-          if @auto_debrief
-            debrief(to: to)
-          else
-            all_succeeded?
-          end
+          result
         rescue Interrupt
           @work_queue.interrupt
           debrief(to: to) if @interrupt_debrief
@@ -481,6 +511,108 @@ module CLI
           @m.synchronize do
             @tasks.all?(&:success)
           end
+        end
+
+        private
+
+        # Update progress reporter mode based on task progress states
+        sig do
+          params(
+            reporter: CLI::UI::ProgressReporter::Reporter,
+            current_mode: Symbol,
+            first_render: T::Boolean,
+          ).returns(Symbol)
+        end
+        def update_progress_mode(reporter, current_mode, first_render)
+          # Don't emit OSC on first iteration
+          return current_mode if first_render
+
+          # Check if any task wants progress mode
+          task_with_progress = @tasks.find(&:wants_progress_mode?)
+
+          if task_with_progress
+            progress = task_with_progress.current_progress
+            if progress
+              reporter.force_set_progress(progress)
+              if current_mode != :progress
+                # Switch to progress mode
+                :progress
+              else
+                # Update progress
+                current_mode
+              end
+            else
+              current_mode
+            end
+          elsif current_mode != :indeterminate
+            # No task wants progress, switch back to indeterminate
+            reporter.force_set_indeterminate
+            :indeterminate
+          else
+            current_mode
+          end
+        end
+
+        # Render messages that should appear above the spinner
+        sig { params(to: IOLike, consumed_lines: Integer).returns(T::Boolean) }
+        def render_puts_above(to, consumed_lines)
+          return false if @puts_above.empty?
+
+          to.print(CLI::UI::ANSI.cursor_up(consumed_lines)) if CLI::UI.enable_cursor?
+          while (message = @puts_above.shift)
+            to.print(CLI::UI::ANSI.insert_lines(message.lines.count)) if CLI::UI.enable_cursor?
+            message.lines.each do |line|
+              to.print(CLI::UI::Frame.prefix + CLI::UI.fmt(line))
+            end
+            to.print("\n")
+          end
+          # we descend with newlines rather than ANSI.cursor_down as the inserted lines may've
+          # pushed the spinner off the front of the buffer, so we can't move back down below it
+          to.print("\n" * consumed_lines) if CLI::UI.enable_cursor?
+
+          true # force full render needed
+        end
+
+        # Render all tasks
+        sig do
+          params(
+            to: IOLike,
+            tasks_seen: T::Array[T::Boolean],
+            tasks_seen_done: T::Array[T::Boolean],
+            consumed_lines: Integer,
+            idx: Integer,
+            force_full_render: T::Boolean,
+            width: Integer,
+          ).returns([Integer, Integer]) # [done_count, consumed_lines]
+        end
+        def render_tasks(to:, tasks_seen:, tasks_seen_done:, consumed_lines:, idx:, force_full_render:, width:)
+          done_count = 0
+
+          @tasks.each.with_index do |task, int_index|
+            nat_index = int_index + 1
+            task_done = task.check
+            done_count += 1 if task_done
+
+            if CLI::UI.enable_cursor?
+              if nat_index > consumed_lines
+                to.print(task.render(idx, true, width: width) + "\n")
+                consumed_lines += 1
+              else
+                offset = consumed_lines - int_index
+                move_to = CLI::UI::ANSI.cursor_up(offset) + "\r"
+                move_from = "\r" + CLI::UI::ANSI.cursor_down(offset)
+
+                to.print(move_to + task.render(idx, idx.zero? || force_full_render, width: width) + move_from)
+              end
+            elsif !tasks_seen[int_index] || (task_done && !tasks_seen_done[int_index])
+              to.print(task.render(idx, true, width: width) + "\n")
+            end
+
+            tasks_seen[int_index] = true
+            tasks_seen_done[int_index] ||= task_done
+          end
+
+          [done_count, consumed_lines]
         end
 
         # Debriefs failed tasks is +auto_debrief+ is true

@@ -52,11 +52,15 @@ module CLI
             .returns(T.type_parameter(:T))
         end
         def progress(title = nil, width: Terminal.width, &block)
-          bar = Progress.new(title, width: width)
-          print(CLI::UI::ANSI.hide_cursor)
-          yield(bar)
+          bar = T.let(nil, T.nilable(Progress))
+          CLI::UI::ProgressReporter.with_progress(mode: :progress) do |reporter|
+            bar = Progress.new(title, width: width, reporter: reporter)
+            print(CLI::UI::ANSI.hide_cursor)
+            yield(bar)
+          end
         ensure
-          puts(bar)
+          puts(bar) if bar
+
           CLI::UI.raw do
             print(ANSI.show_cursor)
           end
@@ -69,12 +73,14 @@ module CLI
       #
       # * +:title+ - The title of the progress bar
       # * +:width+ - The width of the terminal
+      # * +:reporter+ - The progress reporter instance
       #
-      sig { params(title: T.nilable(String), width: Integer).void }
-      def initialize(title = nil, width: Terminal.width)
+      sig { params(title: T.nilable(String), width: Integer, reporter: T.nilable(ProgressReporter::Reporter)).void }
+      def initialize(title = nil, width: Terminal.width, reporter: nil)
         @percent_done = T.let(0, Numeric)
         @title = title
         @max_width = width
+        @reporter = reporter
       end
 
       # Set the progress of the bar. Typically used in a +Progress.progress+ block
@@ -94,6 +100,9 @@ module CLI
         @percent_done += percent || 0.01
         @percent_done = set_percent if set_percent
         @percent_done = [@percent_done, 1.0].min # Make sure we can't go above 1.0
+
+        # Update terminal progress reporter with current percentage
+        @reporter&.set_progress((@percent_done * 100).floor)
 
         print(self)
 
