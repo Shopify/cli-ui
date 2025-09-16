@@ -6,6 +6,11 @@ up:
   - ruby
   - bundler
 
+check:
+  test: rake
+  style: rubocop
+  typecheck: srb
+
 commands:
   test:
     run: |

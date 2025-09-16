@@ -9,21 +9,22 @@ module CLI
   module UI
     extend T::Sig
 
-    autoload :ANSI,      'cli/ui/ansi'
-    autoload :Glyph,     'cli/ui/glyph'
-    autoload :Color,     'cli/ui/color'
-    autoload :Frame,     'cli/ui/frame'
-    autoload :OS,        'cli/ui/os'
-    autoload :Printer,   'cli/ui/printer'
-    autoload :Progress,  'cli/ui/progress'
-    autoload :Prompt,    'cli/ui/prompt'
-    autoload :Table,     'cli/ui/table'
-    autoload :Terminal,  'cli/ui/terminal'
-    autoload :Truncater, 'cli/ui/truncater'
-    autoload :Formatter, 'cli/ui/formatter'
-    autoload :Spinner,   'cli/ui/spinner'
-    autoload :Widgets,   'cli/ui/widgets'
-    autoload :Wrap,      'cli/ui/wrap'
+    autoload :ANSI,             'cli/ui/ansi'
+    autoload :Glyph,            'cli/ui/glyph'
+    autoload :Color,            'cli/ui/color'
+    autoload :Frame,            'cli/ui/frame'
+    autoload :OS,               'cli/ui/os'
+    autoload :Printer,          'cli/ui/printer'
+    autoload :Progress,         'cli/ui/progress'
+    autoload :ProgressReporter, 'cli/ui/progress_reporter'
+    autoload :Prompt,           'cli/ui/prompt'
+    autoload :Table,            'cli/ui/table'
+    autoload :Terminal,         'cli/ui/terminal'
+    autoload :Truncater,        'cli/ui/truncater'
+    autoload :Formatter,        'cli/ui/formatter'
+    autoload :Spinner,          'cli/ui/spinner'
+    autoload :Widgets,          'cli/ui/widgets'
+    autoload :Wrap,             'cli/ui/wrap'
 
     # Convenience accessor to +CLI::UI::Spinner::SpinGroup+
     SpinGroup = Spinner::SpinGroup
