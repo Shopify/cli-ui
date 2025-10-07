@@ -6,11 +6,7 @@ require 'cli/ui'
 module CLI
   module UI
     class Printer
-      extend T::Sig
-
       class << self
-        extend T::Sig
-
         # Print a message to a stream with common utilities.
         # Allows overriding the color, encoding, and target stream.
         # By default, it formats the string using CLI:UI and rescues common stream errors.
@@ -36,17 +32,7 @@ module CLI
         #
         #   CLI::UI::Printer.puts('{{x}} Ouch', to: $stderr)
         #
-        sig do
-          params(
-            msg: String,
-            frame_color: T.nilable(Colorable),
-            to: IOLike,
-            encoding: T.nilable(Encoding),
-            format: T::Boolean,
-            graceful: T::Boolean,
-            wrap: T::Boolean,
-          ).returns(T::Boolean)
-        end
+        #: (String msg, ?frame_color: colorable?, ?to: io_like, ?encoding: Encoding?, ?format: bool, ?graceful: bool, ?wrap: bool) -> bool
         def puts(
           msg,
           frame_color: nil,

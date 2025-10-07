@@ -4,8 +4,7 @@ inherit_gem:
 inherit_from:
   - .rubocop.sorbet.yml
 
-require:
-  - rubocop-sorbet
+plugins: rubocop-sorbet
 
 AllCops:
   Exclude:

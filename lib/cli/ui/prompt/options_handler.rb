@@ -6,24 +6,22 @@ module CLI
     module Prompt
       # A class that handles the various options of an InteractivePrompt and their callbacks
       class OptionsHandler
-        extend T::Sig
-
-        sig { void }
+        #: -> void
         def initialize
           @options = {}
         end
 
-        sig { returns(T::Array[String]) }
+        #: -> Array[String]
         def options
           @options.keys
         end
 
-        sig { params(option: String, handler: T.proc.params(option: String).returns(String)).void }
+        #: (String option) { (String option) -> String } -> void
         def option(option, &handler)
           @options[option] = handler
         end
 
-        sig { params(options: T.any(T::Array[String], String)).returns(String) }
+        #: ((Array[String] | String) options) -> String
         def call(options)
           case options
           when Array

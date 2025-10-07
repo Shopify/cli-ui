@@ -2,7 +2,6 @@
 # frozen_string_literal: true
 
 require 'bundler/setup'
-require 'sorbet-runtime' unless RUBY_ENGINE.include?('jruby')
 require 'cli/ui'
 
 # You can add fixtures and/or initialization code here to make experimenting

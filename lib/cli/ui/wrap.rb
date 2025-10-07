@@ -9,17 +9,15 @@ require 'cli/ui/frame/frame_style'
 module CLI
   module UI
     class Wrap
-      extend T::Sig
-
-      sig { params(input: String).void }
+      #: (String input) -> void
       def initialize(input)
         @input = input
       end
 
-      sig { params(total_width: Integer).returns(String) }
+      #: (?Integer total_width) -> String
       def wrap(total_width = Terminal.width)
         max_width = total_width - Frame.prefix_width
-        width = T.let(0, Integer)
+        width = 0 #: Integer
         final = []
         # Create an alternation of format codes of parameter lengths 1-20, since + and {1,n} not allowed in lookbehind
         format_codes = (1..20).map { |n| /\x1b\[[\d;]{#{n}}m/ }.join('|')

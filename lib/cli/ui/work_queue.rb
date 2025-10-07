@@ -4,22 +4,18 @@
 module CLI
   module UI
     class WorkQueue
-      extend T::Sig
-
       class Future
-        extend T::Sig
-
-        sig { void }
+        #: -> void
         def initialize
-          @mutex = T.let(Mutex.new, Mutex)
-          @condition = T.let(ConditionVariable.new, ConditionVariable)
-          @completed = T.let(false, T::Boolean)
-          @started = T.let(false, T::Boolean)
-          @result = T.let(nil, T.untyped)
-          @error = T.let(nil, T.nilable(Exception))
+          @mutex = Mutex.new #: Mutex
+          @condition = ConditionVariable.new #: ConditionVariable
+          @completed = false #: bool
+          @started = false #: bool
+          @result = nil #: untyped
+          @error = nil #: Exception?
         end
 
-        sig { params(result: T.untyped).void }
+        #: (untyped result) -> void
         def complete(result)
           @mutex.synchronize do
             @completed = true
@@ -28,7 +24,7 @@ module CLI
           end
         end
 
-        sig { params(error: Exception).void }
+        #: (Exception error) -> void
         def fail(error)
           @mutex.synchronize do
             return if @completed
@@ -39,7 +35,7 @@ module CLI
           end
         end
 
-        sig { returns(T.untyped) }
+        #: -> untyped
         def value
           @mutex.synchronize do
             @condition.wait(@mutex) until @completed
@@ -49,17 +45,17 @@ module CLI
           end
         end
 
-        sig { returns(T::Boolean) }
+        #: -> bool
         def completed?
           @mutex.synchronize { @completed }
         end
 
-        sig { returns(T::Boolean) }
+        #: -> bool
         def started?
           @mutex.synchronize { @started }
         end
 
-        sig { void }
+        #: -> void
         def start
           @mutex.synchronize do
             @started = true
@@ -68,16 +64,16 @@ module CLI
         end
       end
 
-      sig { params(max_concurrent: Integer).void }
+      #: (Integer max_concurrent) -> void
       def initialize(max_concurrent)
         @max_concurrent = max_concurrent
-        @queue = T.let(Queue.new, Queue)
-        @mutex = T.let(Mutex.new, Mutex)
-        @condition = T.let(ConditionVariable.new, ConditionVariable)
-        @workers = T.let([], T::Array[Thread])
+        @queue = Queue.new #: Queue
+        @mutex = Mutex.new #: Mutex
+        @condition = ConditionVariable.new #: ConditionVariable
+        @workers = [] #: Array[Thread]
       end
 
-      sig { params(block: T.proc.returns(T.untyped)).returns(Future) }
+      #: { -> untyped } -> Future
       def enqueue(&block)
         future = Future.new
         @mutex.synchronize do
@@ -87,18 +83,18 @@ module CLI
         future
       end
 
-      sig { void }
+      #: -> void
       def close
         @queue.close
       end
 
-      sig { void }
+      #: -> void
       def wait
         @queue.close
         @workers.each(&:join)
       end
 
-      sig { void }
+      #: -> void
       def interrupt
         @mutex.synchronize do
           @queue.close
@@ -116,7 +112,7 @@ module CLI
 
       private
 
-      sig { void }
+      #: -> void
       def start_worker
         @workers << Thread.new do
           loop do

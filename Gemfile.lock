@@ -13,7 +13,7 @@ GEM
     byebug (12.0.0)
     docile (1.4.1)
     erubi (1.13.1)
-    json (2.13.2)
+    json (2.15.1)
     language_server-protocol (3.17.0.5)
     lint_roller (1.1.0)
     logger (1.7.0)
@@ -31,18 +31,18 @@ GEM
     parser (3.3.9.0)
       ast (~> 2.4.1)
       racc
-    prism (1.4.0)
+    prism (1.5.1)
     racc (1.8.1)
     rainbow (3.1.1)
     rake (13.3.0)
     rbi (0.3.6)
       prism (~> 1.0)
       rbs (>= 3.4.4)
-    rbs (3.9.4)
+    rbs (3.9.5)
       logger
-    regexp_parser (2.10.0)
-    rexml (3.4.1)
-    rubocop (1.79.0)
+    regexp_parser (2.11.3)
+    rexml (3.4.4)
+    rubocop (1.81.1)
       json (~> 2.3)
       language_server-protocol (~> 3.17.0.2)
       lint_roller (~> 1.1.0)
@@ -50,11 +50,10 @@ GEM
       parser (>= 3.3.0.2)
       rainbow (>= 2.2.2, < 4.0)
       regexp_parser (>= 2.9.3, < 3.0)
-      rubocop-ast (>= 1.46.0, < 2.0)
+      rubocop-ast (>= 1.47.1, < 2.0)
       ruby-progressbar (~> 1.7)
-      tsort (>= 0.2.0)
       unicode-display_width (>= 2.4.0, < 4.0)
-    rubocop-ast (1.46.0)
+    rubocop-ast (1.47.1)
       parser (>= 3.3.7.2)
       prism (~> 1.4)
     rubocop-rake (0.7.1)
@@ -73,15 +72,15 @@ GEM
       simplecov_json_formatter (~> 0.1)
     simplecov-html (0.13.2)
     simplecov_json_formatter (0.1.4)
-    sorbet (0.5.12358)
-      sorbet-static (= 0.5.12358)
-    sorbet-runtime (0.5.12358)
-    sorbet-static (0.5.12358-aarch64-linux)
-    sorbet-static (0.5.12358-universal-darwin)
-    sorbet-static (0.5.12358-x86_64-linux)
-    sorbet-static-and-runtime (0.5.12358)
-      sorbet (= 0.5.12358)
-      sorbet-runtime (= 0.5.12358)
+    sorbet (0.6.12627)
+      sorbet-static (= 0.6.12627)
+    sorbet-runtime (0.6.12627)
+    sorbet-static (0.6.12627-aarch64-linux)
+    sorbet-static (0.6.12627-universal-darwin)
+    sorbet-static (0.6.12627-x86_64-linux)
+    sorbet-static-and-runtime (0.6.12627)
+      sorbet (= 0.6.12627)
+      sorbet-runtime (= 0.6.12627)
     spoom (1.6.3)
       erubi (>= 1.10.0)
       prism (>= 0.28.0)
@@ -100,10 +99,9 @@ GEM
       thor (>= 1.2.0)
       yard-sorbet
     thor (1.4.0)
-    tsort (0.2.0)
-    unicode-display_width (3.1.4)
-      unicode-emoji (~> 4.0, >= 4.0.4)
-    unicode-emoji (4.0.4)
+    unicode-display_width (3.2.0)
+      unicode-emoji (~> 4.1)
+    unicode-emoji (4.1.0)
     yard (0.9.37)
     yard-sorbet (0.9.0)
       sorbet-runtime
@@ -127,8 +125,7 @@ DEPENDENCIES
   rubocop-shopify
   rubocop-sorbet
   simplecov
-  sorbet
-  sorbet-runtime
+  sorbet-static
   tapioca
 
 BUNDLED WITH

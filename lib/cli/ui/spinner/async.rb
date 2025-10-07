@@ -5,14 +5,10 @@ module CLI
   module UI
     module Spinner
       class Async
-        extend T::Sig
-
         class << self
-          extend T::Sig
-
           # Convenience method for +initialize+
           #
-          sig { params(title: String).returns(Async) }
+          #: (String title) -> Async
           def start(title)
             new(title)
           end
@@ -29,7 +25,7 @@ module CLI
         #
         #   CLI::UI::Spinner::Async.new('Title')
         #
-        sig { params(title: String).void }
+        #: (String title) -> void
         def initialize(title)
           require 'thread'
           sg = CLI::UI::Spinner::SpinGroup.new
@@ -41,7 +37,7 @@ module CLI
 
         # Stops an asynchronous spinner
         #
-        sig { returns(T::Boolean) }
+        #: -> bool
         def stop
           @m.synchronize { @cv.signal }
           @t.value

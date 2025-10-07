@@ -19,17 +19,13 @@ module CLI
     #   CLI::UI::Widgets.register('my-widget') { MyWidget }
     #   puts(CLI::UI.fmt("{{@widget/my-widget:args}}"))
     module Widgets
-      extend T::Sig
-
       MAP = {}
 
       autoload(:Base, 'cli/ui/widgets/base')
       autoload(:Status, 'cli/ui/widgets/status')
 
       class << self
-        extend T::Sig
-
-        sig { params(name: String, cb: T.proc.returns(T.class_of(Widgets::Base))).void }
+        #: (String name) { -> singleton(Widgets::Base) } -> void
         def register(name, &cb)
           MAP[name] = cb
         end
@@ -42,7 +38,7 @@ module CLI
         # ==== Returns
         # A callable widget, to be invoked like `.call(argstring)`
         #
-        sig { params(handle: String).returns(T.class_of(Widgets::Base)) }
+        #: (String handle) -> singleton(Widgets::Base)
         def lookup(handle)
           MAP.fetch(handle).call
         rescue KeyError, NameError
@@ -51,7 +47,7 @@ module CLI
 
         # All available widgets by name
         #
-        sig { returns(T::Array[String]) }
+        #: -> Array[String]
         def available
           MAP.keys
         end
@@ -60,15 +56,13 @@ module CLI
       register('status') { Widgets::Status }
 
       class InvalidWidgetHandle < ArgumentError
-        extend T::Sig
-
-        sig { params(handle: String).void }
+        #: (String handle) -> void
         def initialize(handle)
           super
           @handle = handle
         end
 
-        sig { returns(String) }
+        #: -> String
         def message
           keys = Widgets.available.join(',')
           "invalid widget handle: #{@handle} " \
@@ -77,16 +71,14 @@ module CLI
       end
 
       class InvalidWidgetArguments < ArgumentError
-        extend T::Sig
-
-        sig { params(argstring: String, pattern: Regexp).void }
+        #: (String argstring, Regexp pattern) -> void
         def initialize(argstring, pattern)
           super(nil)
           @argstring = argstring
           @pattern   = pattern
         end
 
-        sig { returns(String) }
+        #: -> String
         def message
           "invalid widget arguments: #{@argstring} " \
             "-- must match pattern: #{@pattern.inspect}"

@@ -15,14 +15,14 @@ module CLI
           BOTTOM_LEFT = '┗'
 
           class << self
-            extend T::Sig
-
-            sig { override.returns(Symbol) }
+            # @override
+            #: -> Symbol
             def style_name
               :bracket
             end
 
-            sig { override.returns(String) }
+            # @override
+            #: -> String
             def prefix
               VERTICAL
             end
@@ -41,7 +41,8 @@ module CLI
             #
             #   ┏━━ Open
             #
-            sig { override.params(text: String, color: CLI::UI::Color).returns(String) }
+            # @override
+            #: (String text, color: CLI::UI::Color) -> String
             def start(text, color:)
               edge(text, color: color, first: TOP_LEFT)
             end
@@ -60,7 +61,8 @@ module CLI
             #
             #   ┣━━ Divider
             #
-            sig { override.params(text: String, color: CLI::UI::Color).returns(String) }
+            # @override
+            #: (String text, color: CLI::UI::Color) -> String
             def divider(text, color:)
               edge(text, color: color, first: DIVIDER)
             end
@@ -80,16 +82,15 @@ module CLI
             #
             #   ┗━━ Close
             #
-            sig { override.params(text: String, color: CLI::UI::Color, right_text: T.nilable(String)).returns(String) }
+            # @override
+            #: (String text, color: CLI::UI::Color, ?right_text: String?) -> String
             def close(text, color:, right_text: nil)
               edge(text, color: color, right_text: right_text, first: BOTTOM_LEFT)
             end
 
             private
 
-            sig do
-              params(text: String, color: CLI::UI::Color, first: String, right_text: T.nilable(String)).returns(String)
-            end
+            #: (String text, color: CLI::UI::Color, first: String, ?right_text: String?) -> String
             def edge(text, color:, first:, right_text: nil)
               color = CLI::UI.resolve_color(color)
 

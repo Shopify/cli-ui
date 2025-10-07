@@ -6,18 +6,14 @@ require 'cli/ui'
 module CLI
   module UI
     class Glyph
-      extend T::Sig
-
       class InvalidGlyphHandle < ArgumentError
-        extend T::Sig
-
-        sig { params(handle: String).void }
+        #: (String handle) -> void
         def initialize(handle)
           super
           @handle = handle
         end
 
-        sig { returns(String) }
+        #: -> String
         def message
           keys = Glyph.available.join(',')
           "invalid glyph handle: #{@handle} " \
@@ -25,13 +21,13 @@ module CLI
         end
       end
 
-      sig { returns(String) }
+      #: String
       attr_reader :handle, :to_s, :fmt, :char
 
-      sig { returns(T.any(Integer, T::Array[Integer])) }
+      #: (Integer | Array[Integer])
       attr_reader :codepoint
 
-      sig { returns(Color) }
+      #: Color
       attr_reader :color
 
       # Creates a new glyph
@@ -43,7 +39,7 @@ module CLI
       # * +plain+ - A fallback plain string to be used in case glyphs are disabled
       # * +color+ - What color to output the glyph. Check +CLI::UI::Color+ for options.
       #
-      sig { params(handle: String, codepoint: T.any(Integer, T::Array[Integer]), plain: String, color: Color).void }
+      #: (String handle, (Integer | Array[Integer]) codepoint, String plain, Color color) -> void
       def initialize(handle, codepoint, plain, color)
         @handle    = handle
         @codepoint = codepoint
@@ -68,8 +64,6 @@ module CLI
       WARNING   = new('!', [0x26a0, 0xfe0f], '!', Color::YELLOW) # WARNING SIGN + VARIATION SELECTOR 16 (⚠️ )
 
       class << self
-        extend T::Sig
-
         # Looks up a glyph by name
         #
         # ==== Raises
@@ -79,7 +73,7 @@ module CLI
         # ==== Returns
         # Returns a terminal output-capable string
         #
-        sig { params(name: String).returns(Glyph) }
+        #: (String name) -> Glyph
         def lookup(name)
           MAP.fetch(name.to_s)
         rescue KeyError
@@ -88,7 +82,7 @@ module CLI
 
         # All available glyphs by name
         #
-        sig { returns(T::Array[String]) }
+        #: -> Array[String]
         def available
           MAP.keys
         end

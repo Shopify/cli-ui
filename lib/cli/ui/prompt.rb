@@ -17,9 +17,7 @@ module CLI
       autoload :OptionsHandler,      'cli/ui/prompt/options_handler'
 
       class << self
-        extend T::Sig
-
-        sig { returns(Color) }
+        #: -> Color
         def instructions_color
           @instructions_color ||= Color::YELLOW
         end
@@ -30,7 +28,7 @@ module CLI
         #
         # * +color+ - the color to use for prompt instructions
         #
-        sig { params(color: Colorable).void }
+        #: (colorable color) -> void
         def instructions_color=(color)
           @instructions_color = CLI::UI.resolve_color(color)
         end
@@ -102,19 +100,7 @@ module CLI
         #     handler.option('python') { |selection| selection }
         #   end
         #
-        sig do
-          params(
-            question: String,
-            options: T.nilable(T::Array[String]),
-            default: T.nilable(T.any(String, T::Array[String])),
-            is_file: T::Boolean,
-            allow_empty: T::Boolean,
-            multiple: T::Boolean,
-            filter_ui: T::Boolean,
-            select_ui: T::Boolean,
-            options_proc: T.nilable(T.proc.params(handler: OptionsHandler).void),
-          ).returns(T.any(String, T::Array[String]))
-        end
+        #: (String question, ?options: Array[String]?, ?default: (String | Array[String])?, ?is_file: bool, ?allow_empty: bool, ?multiple: bool, ?filter_ui: bool, ?select_ui: bool) ?{ (OptionsHandler handler) -> void } -> (String | Array[String])
         def ask(
           question,
           options: nil,
@@ -154,7 +140,12 @@ module CLI
               &options_proc
             )
           else
-            ask_free_form(question, T.cast(default, T.nilable(String)), is_file, allow_empty)
+            ask_free_form(
+              question,
+              default, #: as String?
+              is_file,
+              allow_empty,
+            )
           end
         end
 
@@ -165,7 +156,7 @@ module CLI
         #
         # The password, without a trailing newline.
         # If the user simply presses "Enter" without typing any password, this will return an empty string.
-        sig { params(question: String).returns(String) }
+        #: (String question) -> String
         def ask_password(question)
           require 'io/console'
 
@@ -196,7 +187,7 @@ module CLI
         #
         #   CLI::UI::Prompt.confirm('Do a dangerous thing?', default: false)
         #
-        sig { params(question: String, default: T::Boolean).returns(T::Boolean) }
+        #: (String question, ?default: bool) -> bool
         def confirm(question, default: true)
           ask_interactive(question, default ? ['yes', 'no'] : ['no', 'yes'], filter_ui: false) == 'yes'
         end
@@ -208,7 +199,7 @@ module CLI
         #   CLI::UI::Prompt.any_key # Press any key to continue...
         #
         #   CLI::UI::Prompt.any_key('Press RETURN to continue...') # Then check if that's what they pressed
-        sig { params(prompt: String).returns(T.nilable(String)) }
+        #: (?String prompt) -> String?
         def any_key(prompt = 'Press any key to continue...')
           CLI::UI::StdoutRouter::Capture.in_alternate_screen do
             puts_question(prompt)
@@ -217,7 +208,7 @@ module CLI
         end
 
         # Wait for any key to be pressed, returning the pressed key.
-        sig { returns(T.nilable(String)) }
+        #: -> String?
         def read_char
           CLI::UI::StdoutRouter::Capture.in_alternate_screen do
             if $stdin.tty? && !ENV['TEST']
@@ -233,10 +224,7 @@ module CLI
 
         private
 
-        sig do
-          params(question: String, default: T.nilable(String), is_file: T::Boolean, allow_empty: T::Boolean)
-            .returns(String)
-        end
+        #: (String question, String? default, bool is_file, bool allow_empty) -> String
         def ask_free_form(question, default, is_file, allow_empty)
           if default && !allow_empty
             raise(ArgumentError, 'conflicting arguments: default enabled but allow_empty is false')
@@ -265,16 +253,7 @@ module CLI
           end
         end
 
-        sig do
-          params(
-            question: String,
-            options: T.nilable(T::Array[String]),
-            multiple: T::Boolean,
-            default: T.nilable(T.any(String, T::Array[String])),
-            filter_ui: T::Boolean,
-            select_ui: T::Boolean,
-          ).returns(T.any(String, T::Array[String]))
-        end
+        #: (String question, ?Array[String]? options, ?multiple: bool, ?default: (String | Array[String])?, ?filter_ui: bool, ?select_ui: bool) -> (String | Array[String])
         def ask_interactive(question, options = nil, multiple: false, default: nil, filter_ui: true, select_ui: true)
           raise(ArgumentError, 'conflicting arguments: options and block given') if options && block_given?
 
@@ -296,7 +275,7 @@ module CLI
           instructions += ", filter with 'f'" if filter_ui
           instructions += ", enter option with 'e'" if select_ui && (options.size > 9)
 
-          resp = T.let([], T.any(String, T::Array[String]))
+          resp = [] #: (String | Array[String])
 
           CLI::UI::StdoutRouter::Capture.in_alternate_screen do
             puts_question("#{question} " + instructions_color.code + "(#{instructions})" + Color::RESET.code)
@@ -325,24 +304,22 @@ module CLI
           end
 
           if block_given?
-            T.must(handler).call(resp)
+            h = handler #: as !nil
+            h.call(resp)
           else
             resp
           end
         end
 
         # Useful for stubbing in tests
-        sig do
-          params(options: T::Array[String], multiple: T::Boolean, default: T.nilable(T.any(T::Array[String], String)))
-            .returns(T.any(T::Array[String], String))
-        end
+        #: (Array[String] options, ?multiple: bool, ?default: (Array[String] | String)?) -> (Array[String] | String)
         def interactive_prompt(options, multiple: false, default: nil)
           CLI::UI::StdoutRouter::Capture.in_alternate_screen do
             InteractiveOptions.call(options, multiple: multiple, default: default)
           end
         end
 
-        sig { params(default: String).void }
+        #: (String default) -> void
         def write_default_over_empty_input(default)
           CLI::UI.raw do
             $stderr.puts(
@@ -355,12 +332,12 @@ module CLI
           end
         end
 
-        sig { params(str: String).void }
+        #: (String str) -> void
         def puts_question(str)
           $stdout.puts(CLI::UI.fmt('{{?}} ' + str))
         end
 
-        sig { params(is_file: T::Boolean).returns(String) }
+        #: (?is_file: bool) -> String
         def readline(is_file: false)
           if is_file
             Reline.completion_proc = proc do |input|

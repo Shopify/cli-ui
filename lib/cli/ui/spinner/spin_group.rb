@@ -10,23 +10,17 @@ module CLI
         DEFAULT_FINAL_GLYPH = ->(success) { success ? CLI::UI::Glyph::CHECK : CLI::UI::Glyph::X }
 
         class << self
-          extend T::Sig
-
-          sig { returns(Mutex) }
+          #: Mutex
           attr_reader :pause_mutex
 
-          sig { returns(T::Boolean) }
+          #: -> bool
           def paused?
             @paused
           end
 
-          sig do
-            type_parameters(:T)
-              .params(block: T.proc.returns(T.type_parameter(:T)))
-              .returns(T.type_parameter(:T))
-          end
+          #: [T] { -> T } -> T
           def pause_spinners(&block)
-            previous_paused = T.let(nil, T.nilable(T::Boolean))
+            previous_paused = nil #: bool?
             @pause_mutex.synchronize do
               previous_paused = @paused
               @paused = true
@@ -41,8 +35,6 @@ module CLI
 
         @pause_mutex = Mutex.new
         @paused = false
-
-        extend T::Sig
 
         # Initializes a new spin group
         # This lets you add +Task+ objects to the group to multi-thread work
@@ -67,15 +59,7 @@ module CLI
         #
         # https://user-images.githubusercontent.com/3074765/33798558-c452fa26-dce8-11e7-9e90-b4b34df21a46.gif
         #
-        sig do
-          params(
-            auto_debrief: T::Boolean,
-            interrupt_debrief: T::Boolean,
-            max_concurrent: Integer,
-            work_queue: T.nilable(WorkQueue),
-            to: IOLike,
-          ).void
-        end
+        #: (?auto_debrief: bool, ?interrupt_debrief: bool, ?max_concurrent: Integer, ?work_queue: WorkQueue?, ?to: io_like) -> void
         def initialize(auto_debrief: true, interrupt_debrief: false, max_concurrent: 0, work_queue: nil, to: $stdout)
           @m = Mutex.new
           @tasks = []
@@ -85,10 +69,7 @@ module CLI
           @start = Time.new
           @stopped = false
           @internal_work_queue = work_queue.nil?
-          @work_queue = T.let(
-            work_queue || WorkQueue.new(max_concurrent.zero? ? 1024 : max_concurrent),
-            WorkQueue,
-          )
+          @work_queue = work_queue || WorkQueue.new(max_concurrent.zero? ? 1024 : max_concurrent) #: WorkQueue
           if block_given?
             yield self
             wait(to: to)
@@ -96,21 +77,19 @@ module CLI
         end
 
         class Task
-          extend T::Sig
-
-          sig { returns(String) }
+          #: String
           attr_reader :title, :stdout, :stderr
 
-          sig { returns(T::Boolean) }
+          #: bool
           attr_reader :success
 
-          sig { returns(T::Boolean) }
+          #: bool
           attr_reader :done
 
-          sig { returns(T.nilable(Exception)) }
+          #: Exception?
           attr_reader :exception
 
-          sig { returns(T.nilable(Integer)) }
+          #: Integer?
           attr_reader :progress_percentage
 
           # Initializes a new Task
@@ -121,16 +100,7 @@ module CLI
           # * +title+ - Title of the task
           # * +block+ - Block for the task, will be provided with an instance of the spinner
           #
-          sig do
-            params(
-              title: String,
-              final_glyph: T.proc.params(success: T::Boolean).returns(T.any(Glyph, String)),
-              merged_output: T::Boolean,
-              duplicate_output_to: IO,
-              work_queue: WorkQueue,
-              block: T.proc.params(task: Task).returns(T.untyped),
-            ).void
-          end
+          #: (String title, final_glyph: ^(bool success) -> (Glyph | String), merged_output: bool, duplicate_output_to: IO, work_queue: WorkQueue) { (Task task) -> untyped } -> void
           def initialize(title, final_glyph:, merged_output:, duplicate_output_to:, work_queue:, &block)
             @title = title
             @final_glyph = final_glyph
@@ -156,14 +126,14 @@ module CLI
             @wants_progress_mode = false
           end
 
-          sig { params(block: T.proc.params(task: Task).void).void }
+          #: { (Task task) -> void } -> void
           def on_done(&block)
             @on_done = block
           end
 
           # Checks if a task is finished
           #
-          sig { returns(T::Boolean) }
+          #: -> bool
           def check
             return true if @done
             return false unless @future.completed?
@@ -201,7 +171,7 @@ module CLI
           # * +force+ - force rerender of the task
           # * +width+ - current terminal width to format for
           #
-          sig { params(index: Integer, force: T::Boolean, width: Integer).returns(String) }
+          #: (Integer index, ?bool force, ?width: Integer) -> String
           def render(index, force = true, width: CLI::UI::Terminal.width)
             @m.synchronize do
               if !CLI::UI.enable_cursor? || force || @always_full_render || @force_full_render
@@ -220,7 +190,7 @@ module CLI
           #
           # * +title+ - title to change the spinner to
           #
-          sig { params(new_title: String).void }
+          #: (String new_title) -> void
           def update_title(new_title)
             @m.synchronize do
               @always_full_render = new_title =~ Formatter::SCAN_WIDGET
@@ -230,7 +200,7 @@ module CLI
           end
 
           # Set progress percentage (0-100) and switch to progress mode
-          sig { params(percentage: Integer).void }
+          #: (Integer percentage) -> void
           def set_progress(percentage) # rubocop:disable Naming/AccessorMethodName
             @m.synchronize do
               @progress_percentage = percentage.clamp(0, 100)
@@ -239,7 +209,7 @@ module CLI
           end
 
           # Switch back to indeterminate mode
-          sig { void }
+          #: -> void
           def clear_progress
             @m.synchronize do
               @progress_percentage = nil
@@ -248,20 +218,20 @@ module CLI
           end
 
           # Check if this task wants progress mode
-          sig { returns(T::Boolean) }
+          #: -> bool
           def wants_progress_mode?
             @m.synchronize { @wants_progress_mode }
           end
 
           # Get current progress percentage
-          sig { returns(T.nilable(Integer)) }
+          #: -> Integer?
           def current_progress
             @m.synchronize { @progress_percentage }
           end
 
           private
 
-          sig { params(index: Integer, terminal_width: Integer).returns(String) }
+          #: (Integer index, Integer terminal_width) -> String
           def full_render(index, terminal_width)
             o = +''
 
@@ -277,7 +247,7 @@ module CLI
             o
           end
 
-          sig { params(index: Integer).returns(String) }
+          #: (Integer index) -> String
           def partial_render(index)
             o = +''
 
@@ -287,7 +257,7 @@ module CLI
             o
           end
 
-          sig { params(index: Integer).returns(String) }
+          #: (Integer index) -> String
           def glyph(index)
             if @done
               final_glyph = @final_glyph.call(@success)
@@ -307,12 +277,12 @@ module CLI
             end
           end
 
-          sig { returns(String) }
+          #: -> String
           def inset
             @inset ||= CLI::UI::Frame.prefix
           end
 
-          sig { returns(Integer) }
+          #: -> Integer
           def inset_width
             @inset_width ||= CLI::UI::ANSI.printing_width(inset)
           end
@@ -330,15 +300,7 @@ module CLI
         #   spin_group.add('Title') { |spinner| sleep 1.0 }
         #   spin_group.wait
         #
-        sig do
-          params(
-            title: String,
-            final_glyph: T.proc.params(success: T::Boolean).returns(T.any(Glyph, String)),
-            merged_output: T::Boolean,
-            duplicate_output_to: IO,
-            block: T.proc.params(task: Task).void,
-          ).void
-        end
+        #: (String title, ?final_glyph: ^(bool success) -> (Glyph | String), ?merged_output: bool, ?duplicate_output_to: IO) { (Task task) -> void } -> void
         def add(
           title,
           final_glyph: DEFAULT_FINAL_GLYPH,
@@ -358,7 +320,7 @@ module CLI
           end
         end
 
-        sig { void }
+        #: -> void
         def stop
           # If we already own the mutex (called from within another synchronized block),
           # set stopped directly to avoid deadlock
@@ -377,7 +339,7 @@ module CLI
           @work_queue.interrupt
         end
 
-        sig { returns(T::Boolean) }
+        #: -> bool
         def stopped?
           if @m.owned?
             @stopped
@@ -398,9 +360,9 @@ module CLI
         #   spin_group.add('Title') { |spinner| sleep 1.0 }
         #   spin_group.wait
         #
-        sig { params(to: IOLike).returns(T::Boolean) }
+        #: (?to: io_like) -> bool
         def wait(to: $stdout)
-          result = T.let(false, T::Boolean)
+          result = false #: bool
 
           CLI::UI::ProgressReporter.with_progress(mode: :indeterminate, to: to, delay_start: true) do |reporter|
             idx = 0
@@ -411,8 +373,8 @@ module CLI
             tasks_seen = @tasks.map { false }
             tasks_seen_done = @tasks.map { false }
 
-            current_mode = T.let(:indeterminate, Symbol)
-            first_render = T.let(true, T::Boolean)
+            current_mode = :indeterminate #: Symbol
+            first_render = true #: bool
 
             loop do
               break if stopped?
@@ -479,7 +441,7 @@ module CLI
           stopped? ? false : raise
         end
 
-        sig { params(message: String).void }
+        #: (String message) -> void
         def puts_above(message)
           @m.synchronize do
             @puts_above << message
@@ -487,26 +449,18 @@ module CLI
         end
 
         # Provide an alternative debriefing for failed tasks
-        sig do
-          params(
-            block: T.proc.params(title: String, exception: T.nilable(Exception), out: String, err: String).void,
-          ).void
-        end
+        #: { (String title, Exception? exception, String out, String err) -> void } -> void
         def failure_debrief(&block)
           @failure_debrief = block
         end
 
         # Provide a debriefing for successful tasks
-        sig do
-          params(
-            block: T.proc.params(title: String, out: String, err: String).void,
-          ).void
-        end
+        #: { (String title, String out, String err) -> void } -> void
         def success_debrief(&block)
           @success_debrief = block
         end
 
-        sig { returns(T::Boolean) }
+        #: -> bool
         def all_succeeded?
           @m.synchronize do
             @tasks.all?(&:success)
@@ -516,13 +470,7 @@ module CLI
         private
 
         # Update progress reporter mode based on task progress states
-        sig do
-          params(
-            reporter: CLI::UI::ProgressReporter::Reporter,
-            current_mode: Symbol,
-            first_render: T::Boolean,
-          ).returns(Symbol)
-        end
+        #: (CLI::UI::ProgressReporter::Reporter reporter, Symbol current_mode, bool first_render) -> Symbol
         def update_progress_mode(reporter, current_mode, first_render)
           # Don't emit OSC on first iteration
           return current_mode if first_render
@@ -554,7 +502,7 @@ module CLI
         end
 
         # Render messages that should appear above the spinner
-        sig { params(to: IOLike, consumed_lines: Integer).returns(T::Boolean) }
+        #: (io_like to, Integer consumed_lines) -> bool
         def render_puts_above(to, consumed_lines)
           return false if @puts_above.empty?
 
@@ -574,17 +522,7 @@ module CLI
         end
 
         # Render all tasks
-        sig do
-          params(
-            to: IOLike,
-            tasks_seen: T::Array[T::Boolean],
-            tasks_seen_done: T::Array[T::Boolean],
-            consumed_lines: Integer,
-            idx: Integer,
-            force_full_render: T::Boolean,
-            width: Integer,
-          ).returns([Integer, Integer]) # [done_count, consumed_lines]
-        end
+        #: (to: io_like, tasks_seen: Array[bool], tasks_seen_done: Array[bool], consumed_lines: Integer, idx: Integer, force_full_render: bool, width: Integer) -> [Integer, Integer]
         def render_tasks(to:, tasks_seen:, tasks_seen_done:, consumed_lines:, idx:, force_full_render:, width:)
           done_count = 0
 
@@ -622,7 +560,7 @@ module CLI
         # * +:to+ - Target stream, like $stdout or $stderr. Can be anything with print and puts methods,
         #   or under Sorbet, IO or StringIO. Defaults to $stdout
         #
-        sig { params(to: IOLike).returns(T::Boolean) }
+        #: (?to: io_like) -> bool
         def debrief(to: $stdout)
           @m.synchronize do
             @tasks.each do |task|

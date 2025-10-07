@@ -6,12 +6,10 @@ require 'cli/ui'
 module CLI
   module UI
     class Color
-      extend T::Sig
-
-      sig { returns(String) }
+      #: String
       attr_reader :sgr, :code
 
-      sig { returns(Symbol) }
+      #: Symbol
       attr_reader :name
 
       # Creates a new color mapping
@@ -23,7 +21,7 @@ module CLI
       # * +sgr+ - The color signature
       # * +name+ - The name of the color
       #
-      sig { params(sgr: String, name: Symbol).void }
+      #: (String sgr, Symbol name) -> void
       def initialize(sgr, name)
         @sgr  = sgr
         @code = CLI::UI::ANSI.sgr(sgr)
@@ -60,15 +58,13 @@ module CLI
       }.freeze
 
       class InvalidColorName < ArgumentError
-        extend T::Sig
-
-        sig { params(name: Symbol).void }
+        #: (Symbol name) -> void
         def initialize(name)
           super
           @name = name
         end
 
-        sig { returns(String) }
+        #: -> String
         def message
           keys = Color.available.map(&:inspect).join(',')
           "invalid color: #{@name.inspect} " \
@@ -77,8 +73,6 @@ module CLI
       end
 
       class << self
-        extend T::Sig
-
         # Looks up a color code by name
         #
         # ==== Raises
@@ -88,7 +82,7 @@ module CLI
         # ==== Returns
         # Returns a color code
         #
-        sig { params(name: T.any(Symbol, String)).returns(Color) }
+        #: ((Symbol | String) name) -> Color
         def lookup(name)
           MAP.fetch(name.to_sym)
         rescue KeyError
@@ -97,7 +91,7 @@ module CLI
 
         # All available colors by name
         #
-        sig { returns(T::Array[Symbol]) }
+        #: -> Array[Symbol]
         def available
           MAP.keys
         end

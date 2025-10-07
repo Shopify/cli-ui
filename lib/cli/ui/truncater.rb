@@ -28,15 +28,13 @@ module CLI
       TRUNCATED = "\x1b[0m…"
 
       class << self
-        extend T::Sig
-
-        sig { params(text: String, printing_width: Integer).returns(String) }
+        #: (String text, Integer printing_width) -> String
         def call(text, printing_width)
           return text if text.size <= printing_width
 
           width            = 0
           mode             = PARSE_ROOT
-          truncation_index = T.let(nil, T.nilable(Integer))
+          truncation_index = nil #: Integer?
 
           codepoints = text.codepoints
           codepoints.each.with_index do |cp, index|
@@ -87,12 +85,13 @@ module CLI
           # the end of the string.
           return text if !truncation_index || width <= printing_width
 
-          T.must(codepoints[0...truncation_index]).pack('U*') + TRUNCATED
+          slice = codepoints[0...truncation_index] #: as !nil
+          slice.pack('U*') + TRUNCATED
         end
 
         private
 
-        sig { params(printable_codepoint: Integer).returns(Integer) }
+        #: (Integer printable_codepoint) -> Integer
         def width(printable_codepoint)
           case printable_codepoint
           when EMOJI_RANGE
