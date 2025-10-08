@@ -22,15 +22,15 @@ module CLI
         EMPTY_SET = '∅'
 
         class << self
-          extend T::Sig
-
-          sig { override.returns(Regexp) }
+          # @override
+          #: -> Regexp
           def argparse_pattern
             ARGPARSE_PATTERN
           end
         end
 
-        sig { override.returns(String) }
+        # @override
+        #: -> String
         def render
           if zero?(@succeeded) && zero?(@failed) && zero?(@working) && zero?(@pending)
             Color::RESET.code + Color::BOLD.code + EMPTY_SET + Color::RESET.code
@@ -42,34 +42,34 @@ module CLI
 
         private
 
-        sig { params(num_str: String).returns(T::Boolean) }
+        #: (String num_str) -> bool
         def zero?(num_str)
           num_str == '0'
         end
 
-        sig { params(num_str: String, rune: String, color: Color).returns(String) }
+        #: (String num_str, String rune, Color color) -> String
         def colorize_if_nonzero(num_str, rune, color)
           color = Color::GRAY if zero?(num_str)
           color.code + num_str + rune
         end
 
-        sig { returns(String) }
+        #: -> String
         def succeeded_part
           colorize_if_nonzero(@succeeded, Glyph::CHECK.char, Color::GREEN)
         end
 
-        sig { returns(String) }
+        #: -> String
         def failed_part
           colorize_if_nonzero(@failed, Glyph::X.char, Color::RED)
         end
 
-        sig { returns(String) }
+        #: -> String
         def working_part
           rune = zero?(@working) ? SPINNER_STOPPED : Spinner.current_rune
           colorize_if_nonzero(@working, rune, Color::BLUE)
         end
 
-        sig { returns(String) }
+        #: -> String
         def pending_part
           colorize_if_nonzero(@pending, Glyph::HOURGLASS.char, Color::WHITE)
         end

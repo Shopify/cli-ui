@@ -10,12 +10,8 @@ module CLI
     # - Success/error states
     # - Paused state
     module ProgressReporter
-      extend T::Sig
-
       # Progress reporter instance that manages the lifecycle of progress reporting
       class Reporter
-        extend T::Sig
-
         # OSC (Operating System Command) escape sequences
         OSC = "\e]"
         ST = "\a" # String Terminator (BEL)
@@ -27,7 +23,7 @@ module CLI
         INDETERMINATE = 3
         PAUSED = 4
 
-        sig { params(mode: Symbol, to: IOLike, parent: T.nilable(Reporter), delay_start: T::Boolean).void }
+        #: (Symbol mode, ?io_like to, ?parent: Reporter?, ?delay_start: bool) -> void
         def initialize(mode, to = $stdout, parent: nil, delay_start: false)
           @mode = mode
           @to = to
@@ -51,22 +47,22 @@ module CLI
           end
         end
 
-        sig { params(child: Reporter).void }
+        #: (Reporter child) -> void
         def add_child(child)
           @children << child
         end
 
-        sig { params(child: Reporter).void }
+        #: (Reporter child) -> void
         def remove_child(child)
           @children.delete(child)
         end
 
-        sig { returns(T::Boolean) }
+        #: -> bool
         def has_active_children?
           @children.any?
         end
 
-        sig { params(percentage: Integer).void }
+        #: (Integer percentage) -> void
         def set_progress(percentage) # rubocop:disable Naming/AccessorMethodName
           # Don't emit progress if we have active children (they own the progress)
           return if has_active_children?
@@ -77,7 +73,7 @@ module CLI
           @to.print("#{OSC}9;4;#{SET_PROGRESS};#{percentage}#{ST}")
         end
 
-        sig { void }
+        #: -> void
         def set_indeterminate
           # Don't emit progress if we have active children
           return if has_active_children?
@@ -89,7 +85,7 @@ module CLI
 
         # Force progress mode even if there are children - used by SpinGroup
         # when a task needs to show deterministic progress
-        sig { params(percentage: Integer).void }
+        #: (Integer percentage) -> void
         def force_set_progress(percentage)
           return unless @active
 
@@ -99,7 +95,7 @@ module CLI
         end
 
         # Force indeterminate mode even if there are children
-        sig { void }
+        #: -> void
         def force_set_indeterminate
           return unless @active
 
@@ -107,7 +103,7 @@ module CLI
           @to.print("#{OSC}9;4;#{INDETERMINATE};#{ST}")
         end
 
-        sig { void }
+        #: -> void
         def set_error
           # Error state can be set even with children
           return unless @active
@@ -115,7 +111,7 @@ module CLI
           @to.print("#{OSC}9;4;#{ERROR};#{ST}")
         end
 
-        sig { params(percentage: T.nilable(Integer)).void }
+        #: (?Integer? percentage) -> void
         def set_paused(percentage = nil)
           return if has_active_children?
           return unless @active
@@ -128,7 +124,7 @@ module CLI
           end
         end
 
-        sig { void }
+        #: -> void
         def clear
           # Only clear if we're the root reporter and have no active children
           return unless @active
@@ -137,7 +133,7 @@ module CLI
           @to.print("#{OSC}9;4;#{REMOVE};#{ST}")
         end
 
-        sig { void }
+        #: -> void
         def cleanup
           # Remove self from parent's children list
           @parent&.remove_child(self)
@@ -159,30 +155,19 @@ module CLI
       end
 
       class << self
-        extend T::Sig
-
         # Thread-local storage for the current reporter stack
-        sig { returns(T::Array[Reporter]) }
+        #: -> Array[Reporter]
         def reporter_stack
           Thread.current[:progress_reporter_stack] ||= []
         end
 
-        sig { returns(T.nilable(Reporter)) }
+        #: -> Reporter?
         def current_reporter
           reporter_stack.last
         end
 
         # Block-based API that ensures progress is cleared
-        sig do
-          type_parameters(:T)
-            .params(
-              mode: Symbol,
-              to: IOLike,
-              delay_start: T::Boolean,
-              block: T.proc.params(reporter: Reporter).returns(T.type_parameter(:T)),
-            )
-            .returns(T.type_parameter(:T))
-        end
+        #: [T] (?mode: Symbol, ?to: io_like, ?delay_start: bool) { (Reporter reporter) -> T } -> T
         def with_progress(mode: :indeterminate, to: $stdout, delay_start: false, &block)
           parent = current_reporter
           reporter = Reporter.new(mode, to, parent: parent, delay_start: delay_start)
@@ -194,7 +179,7 @@ module CLI
           reporter&.cleanup
         end
 
-        sig { returns(T::Boolean) }
+        #: -> bool
         def supports_progress?
           # Check if terminal supports ConEmu OSC sequences
           # This is supported by:

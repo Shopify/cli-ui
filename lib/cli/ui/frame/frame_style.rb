@@ -6,11 +6,9 @@ require 'cli/ui/frame'
 module CLI
   module UI
     module Frame
+      # @abstract
       module FrameStyle
         include Kernel
-        extend T::Sig
-        extend T::Helpers
-        abstract!
 
         autoload(:Box, 'cli/ui/frame/frame_style/box')
         autoload(:Bracket, 'cli/ui/frame/frame_style/bracket')
@@ -21,14 +19,12 @@ module CLI
         }
 
         class << self
-          extend T::Sig
-
           # Lookup a frame style via its name
           #
           # ==== Attributes
           #
           # * +symbol+ - frame style name to lookup
-          sig { params(name: T.any(String, Symbol)).returns(FrameStyle) }
+          #: ((String | Symbol) name) -> FrameStyle
           def lookup(name)
             MAP.fetch(name.to_sym).call
           rescue KeyError
@@ -36,16 +32,22 @@ module CLI
           end
         end
 
-        sig { abstract.returns(Symbol) }
-        def style_name; end
+        # @abstract
+        #: -> Symbol
+        def style_name
+          raise(NotImplementedError)
+        end
 
         # Returns the character(s) that should be printed at the beginning
         # of lines inside this frame
-        sig { abstract.returns(String) }
-        def prefix; end
+        # @abstract
+        #: -> String
+        def prefix
+          raise(NotImplementedError)
+        end
 
         # Returns the printing width of the prefix
-        sig { returns(Integer) }
+        #: -> Integer
         def prefix_width
           CLI::UI::ANSI.printing_width(prefix)
         end
@@ -60,8 +62,11 @@ module CLI
         #
         # * +:color+ - (required) The color of the frame.
         #
-        sig { abstract.params(text: String, color: CLI::UI::Color).returns(String) }
-        def start(text, color:); end
+        # @abstract
+        #: (String, color: CLI::UI::Color) -> String
+        def start(text, color:)
+          raise(NotImplementedError)
+        end
 
         # Draws the "Close" line for this frame style
         #
@@ -74,8 +79,11 @@ module CLI
         # * +:color+ - (required) The color of the frame.
         # * +:right_text+ - Text to print at the right of the line. Defaults to nil
         #
-        sig { abstract.params(text: String, color: CLI::UI::Color, right_text: T.nilable(String)).returns(String) }
-        def close(text, color:, right_text: nil); end
+        # @abstract
+        #: (String, color: CLI::UI::Color, ?right_text: String?) -> String
+        def close(text, color:, right_text: nil)
+          raise(NotImplementedError)
+        end
 
         # Draws a "divider" line for the current frame style
         #
@@ -87,24 +95,25 @@ module CLI
         #
         # * +:color+ - (required) The color of the frame.
         #
-        sig { abstract.params(text: String, color: CLI::UI::Color).returns(String) }
-        def divider(text, color:); end
+        # @abstract
+        #: (String, color: CLI::UI::Color) -> String
+        def divider(text, color:)
+          raise(NotImplementedError)
+        end
 
-        sig { params(x: Integer, str: String).returns(String) }
+        #: (Integer x, String str) -> String
         def print_at_x(x, str)
           CLI::UI::ANSI.cursor_horizontal_absolute(1 + x) + str
         end
 
         class InvalidFrameStyleName < ArgumentError
-          extend T::Sig
-
-          sig { params(name: T.any(String, Symbol)).void }
+          #: ((String | Symbol) name) -> void
           def initialize(name)
             super
             @name = name
           end
 
-          sig { returns(String) }
+          #: -> String
           def message
             keys = FrameStyle::MAP.keys.map(&:inspect).join(', ')
             "invalid frame style: #{@name.inspect} " \

@@ -6,21 +6,16 @@ require('cli/ui')
 module CLI
   module UI
     module Widgets
+      # @abstract
       class Base
-        extend T::Sig
-        extend T::Helpers
-        abstract!
-
         class << self
-          extend T::Sig
-
-          sig { params(argstring: String).returns(String) }
+          #: (String argstring) -> String
           def call(argstring)
             new(argstring).render
           end
         end
 
-        sig { params(argstring: String).void }
+        #: (String argstring) -> void
         def initialize(argstring)
           pat = self.class.argparse_pattern
           unless (@match_data = pat.match(argstring))
@@ -33,14 +28,18 @@ module CLI
         end
 
         class << self
-          extend T::Sig
-
-          sig { abstract.returns(Regexp) }
-          def argparse_pattern; end
+          # @abstract
+          #: -> Regexp
+          def argparse_pattern
+            raise(NotImplementedError)
+          end
         end
 
-        sig { abstract.returns(String) }
-        def render; end
+        # @abstract
+        #: -> String
+        def render
+          raise(NotImplementedError)
+        end
       end
     end
   end

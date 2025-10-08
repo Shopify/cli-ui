@@ -12,9 +12,7 @@ module CLI
       DEFAULT_FRAME_COLOR = CLI::UI.resolve_color(:cyan)
 
       class << self
-        extend T::Sig
-
-        sig { returns(FrameStyle) }
+        #: -> FrameStyle
         def frame_style
           @frame_style ||= FrameStyle::Box
         end
@@ -27,7 +25,7 @@ module CLI
         #
         # * +symbol+ or +FrameStyle+ - the default frame style to use for frames
         #
-        sig { params(frame_style: FrameStylable).void }
+        #: (frame_stylable frame_style) -> void
         def frame_style=(frame_style)
           @frame_style = CLI::UI.resolve_style(frame_style)
         end
@@ -75,18 +73,7 @@ module CLI
         #   ┏━━ Open ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         #
         #
-        sig do
-          type_parameters(:T).params(
-            text: String,
-            color: Colorable,
-            failure_text: T.nilable(String),
-            success_text: T.nilable(String),
-            timing: T.any(T::Boolean, Numeric),
-            frame_style: FrameStylable,
-            to: IOLike,
-            block: T.nilable(T.proc.returns(T.type_parameter(:T))),
-          ).returns(T.nilable(T.type_parameter(:T)))
-        end
+        #: [T] (String text, ?color: colorable, ?failure_text: String?, ?success_text: String?, ?timing: (Numeric | bool), ?frame_style: frame_stylable, ?to: io_like) ?{ -> T } -> T?
         def open(
           text,
           color: DEFAULT_FRAME_COLOR,
@@ -121,7 +108,7 @@ module CLI
 
           closed = false
           begin
-            success = false
+            success = false #: untyped
             success = yield
           rescue
             closed = true
@@ -133,7 +120,8 @@ module CLI
           ensure
             unless closed
               t_diff = elapsed(t_start, timing)
-              if T.unsafe(success) != false
+              success_bool = success #: as untyped
+              if success_bool != false
                 close(success_text, color: color, elapsed: t_diff, to: to)
               else
                 close(failure_text, color: :red, elapsed: t_diff, to: to)
@@ -169,14 +157,7 @@ module CLI
         #
         # MUST be inside an open frame or it raises a +UnnestedFrameException+
         #
-        sig do
-          params(
-            text: T.nilable(String),
-            color: T.nilable(Colorable),
-            frame_style: T.nilable(FrameStylable),
-            to: IOLike,
-          ).void
-        end
+        #: (String? text, ?color: colorable?, ?frame_style: frame_stylable?, ?to: io_like) -> void
         def divider(text, color: nil, frame_style: nil, to: $stdout)
           fs_item = FrameStack.pop
           raise UnnestedFrameException, 'No frame nesting to unnest' unless fs_item
@@ -218,15 +199,7 @@ module CLI
         #
         # MUST be inside an open frame or it raises a +UnnestedFrameException+
         #
-        sig do
-          params(
-            text: T.nilable(String),
-            color: T.nilable(Colorable),
-            elapsed: T.nilable(Numeric),
-            frame_style: T.nilable(FrameStylable),
-            to: IOLike,
-          ).void
-        end
+        #: (String? text, ?color: colorable?, ?elapsed: Numeric?, ?frame_style: frame_stylable?, ?to: io_like) -> void
         def close(text, color: nil, elapsed: nil, frame_style: nil, to: $stdout)
           fs_item = FrameStack.pop
           raise UnnestedFrameException, 'No frame nesting to unnest' unless fs_item
@@ -247,7 +220,7 @@ module CLI
         #
         # * +:color+ - The color of the prefix. Defaults to +Thread.current[:cliui_frame_color_override]+
         #
-        sig { params(color: T.nilable(Colorable)).returns(String) }
+        #: (?color: colorable?) -> String
         def prefix(color: Thread.current[:cliui_frame_color_override])
           (+'').tap do |output|
             items = FrameStack.items
@@ -269,7 +242,7 @@ module CLI
         end
 
         # The width of a prefix given the number of Frames in the stack
-        sig { returns(Integer) }
+        #: -> Integer
         def prefix_width
           w = FrameStack.items.reduce(0) do |width, item|
             width + item.frame_style.prefix_width
@@ -284,11 +257,7 @@ module CLI
         #
         # * +color+ - The color to override to
         #
-        sig do
-          type_parameters(:T)
-            .params(color: Colorable, block: T.proc.returns(T.type_parameter(:T)))
-            .returns(T.type_parameter(:T))
-        end
+        #: [T] (colorable color) { -> T } -> T
         def with_frame_color_override(color, &block)
           prev = Thread.current[:cliui_frame_color_override]
           Thread.current[:cliui_frame_color_override] = color
@@ -303,7 +272,7 @@ module CLI
         #   Numeric: return it
         #   false: return nil
         #   true: defaults to Time.new
-        sig { params(start: Time, timing: T.any(Numeric, T::Boolean)).returns(T.nilable(Numeric)) }
+        #: (Time start, (Numeric | bool) timing) -> Numeric?
         def elapsed(start, timing)
           return timing if timing.is_a?(Numeric)
           return if timing.is_a?(FalseClass)

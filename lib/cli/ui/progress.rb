@@ -6,16 +6,12 @@ require 'cli/ui'
 module CLI
   module UI
     class Progress
-      extend T::Sig
-
       # A Cyan filled block
       FILLED_BAR = "\e[46m"
       # A bright white block
       UNFILLED_BAR = "\e[1;47m"
 
       class << self
-        extend T::Sig
-
         # Add a progress bar to the terminal output
         #
         # https://user-images.githubusercontent.com/3074765/33799794-cc4c940e-dd00-11e7-9bdc-90f77ec9167c.gif
@@ -42,17 +38,9 @@ module CLI
         #     bar.tick(percent: 0.05)
         #     bar.update_title('New title')
         #   end
-        sig do
-          type_parameters(:T)
-            .params(
-              title: T.nilable(String),
-              width: Integer,
-              block: T.proc.params(bar: Progress).returns(T.type_parameter(:T)),
-            )
-            .returns(T.type_parameter(:T))
-        end
+        #: [T] (?String? title, ?width: Integer) { (Progress bar) -> T } -> T
         def progress(title = nil, width: Terminal.width, &block)
-          bar = T.let(nil, T.nilable(Progress))
+          bar = nil #: Progress?
           CLI::UI::ProgressReporter.with_progress(mode: :progress) do |reporter|
             bar = Progress.new(title, width: width, reporter: reporter)
             print(CLI::UI::ANSI.hide_cursor)
@@ -75,9 +63,9 @@ module CLI
       # * +:width+ - The width of the terminal
       # * +:reporter+ - The progress reporter instance
       #
-      sig { params(title: T.nilable(String), width: Integer, reporter: T.nilable(ProgressReporter::Reporter)).void }
+      #: (?String? title, ?width: Integer, ?reporter: ProgressReporter::Reporter?) -> void
       def initialize(title = nil, width: Terminal.width, reporter: nil)
-        @percent_done = T.let(0, Numeric)
+        @percent_done = 0 #: Numeric
         @title = title
         @max_width = width
         @reporter = reporter
@@ -93,7 +81,7 @@ module CLI
       #
       # *Note:* The +:percent+ and +:set_percent must be between 0.00 and 1.0
       #
-      sig { params(percent: T.nilable(Numeric), set_percent: T.nilable(Numeric)).void }
+      #: (?percent: Numeric?, ?set_percent: Numeric?) -> void
       def tick(percent: nil, set_percent: nil)
         raise ArgumentError, 'percent and set_percent cannot both be specified' if percent && set_percent
 
@@ -116,14 +104,14 @@ module CLI
       #
       # * +new_title+ - title to change the progress bar to
       #
-      sig { params(new_title: String).void }
+      #: (String new_title) -> void
       def update_title(new_title)
         @title = new_title
       end
 
       # Format the progress bar to be printed to terminal
       #
-      sig { returns(String) }
+      #: -> String
       def to_s
         suffix = " #{(@percent_done * 100).floor}%".ljust(5)
         workable_width = @max_width - Frame.prefix_width - suffix.size

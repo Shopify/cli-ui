@@ -6,7 +6,6 @@ addpath = lambda do |p|
 end
 addpath.call('lib')
 
-require 'sorbet-runtime' unless RUBY_ENGINE.include?('jruby')
 require 'cli/ui'
 
 # Otherwise, results will vary depending on the context in which we run tests.

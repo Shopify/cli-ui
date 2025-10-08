@@ -7,18 +7,14 @@ require 'io/console'
 module CLI
   module UI
     module Terminal
-      extend T::Sig
-
       DEFAULT_WIDTH = 80
       DEFAULT_HEIGHT = 24
 
       class << self
-        extend T::Sig
-
         # Returns the width of the terminal, if possible
         # Otherwise will return DEFAULT_WIDTH
         #
-        sig { returns(Integer) }
+        #: -> Integer
         def width
           winsize[1]
         end
@@ -26,12 +22,12 @@ module CLI
         # Returns the width of the terminal, if possible
         # Otherwise, will return DEFAULT_HEIGHT
         #
-        sig { returns(Integer) }
+        #: -> Integer
         def height
           winsize[0]
         end
 
-        sig { returns([Integer, Integer]) }
+        #: -> [Integer, Integer]
         def winsize
           @winsize ||= begin
             winsize = IO.console.winsize
@@ -47,7 +43,7 @@ module CLI
           end
         end
 
-        sig { void }
+        #: -> void
         def setup_winsize_trap
           @winsize_trap ||= Signal.trap('WINCH') do
             @winsize = nil

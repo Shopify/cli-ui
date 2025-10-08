@@ -3,11 +3,7 @@
 module CLI
   module UI
     module Table
-      extend T::Sig
-
       class << self
-        extend T::Sig
-
         # Prints a formatted table to the specified output
         # Automatically pads columns to align based on the longest cell in each column,
         # ignoring the width of ANSI color codes.
@@ -35,7 +31,7 @@ module CLI
         #   really_long_cell short
         #   row2             row2
         #
-        sig { params(table: T::Array[T::Array[String]], col_spacing: Integer, to: IOLike).void }
+        #: (Array[Array[String]] table, ?col_spacing: Integer, ?to: io_like) -> void
         def puts_table(table, col_spacing: 1, to: $stdout)
           col_sizes = table.transpose.map do |col|
             col.map { |cell| CLI::UI::ANSI.printing_width(CLI::UI.resolve_text(cell)) }.max
@@ -43,7 +39,7 @@ module CLI
 
           table.each do |row|
             padded_row = row.each_with_index.map do |cell, i|
-              col_size = T.must(col_sizes[i]) # guaranteed to be non-nil
+              col_size = col_sizes[i] #: as !nil # guaranteed to be non-nil
               cell_size = CLI::UI::ANSI.printing_width(CLI::UI.resolve_text(cell))
               padded_cell = cell + ' ' * (col_size - cell_size)
               padded_cell
@@ -75,7 +71,7 @@ module CLI
         #     ["row2",              "row2"]
         #   ])
         #
-        sig { params(table: T::Array[T::Array[String]], col_spacing: Integer).returns(T::Array[String]) }
+        #: (Array[Array[String]] table, ?col_spacing: Integer) -> Array[String]
         def capture_table(table, col_spacing: 1)
           strio = StringIO.new
           puts_table(table, col_spacing: col_spacing, to: strio)

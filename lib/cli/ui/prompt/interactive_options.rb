@@ -8,14 +8,10 @@ module CLI
   module UI
     module Prompt
       class InteractiveOptions
-        extend T::Sig
-
         DONE = 'Done'
         CHECKBOX_ICON = { false => '☐', true => '☑' }
 
         class << self
-          extend T::Sig
-
           # Prompts the user with options
           # Uses an interactive session to allow the user to pick an answer
           # Can use arrows, y/n, numbers (1/2), and vim bindings to control
@@ -30,18 +26,17 @@ module CLI
           # Ask an interactive question
           #   CLI::UI::Prompt::InteractiveOptions.call(%w(rails go python))
           #
-          sig do
-            params(options: T::Array[String], multiple: T::Boolean, default: T.nilable(T.any(String, T::Array[String])))
-              .returns(T.any(String, T::Array[String]))
-          end
+          #: (Array[String] options, ?multiple: bool, ?default: (String | Array[String])?) -> (String | Array[String])
           def call(options, multiple: false, default: nil)
             list = new(options, multiple: multiple, default: default)
             selected = list.call
             case selected
             when Array
-              selected.map { |s| T.must(options[s - 1]) }
+              selected.map do |s|
+                options[s - 1] #: as !nil
+              end
             else
-              T.must(options[selected - 1])
+              options[selected - 1] #: as !nil
             end
           end
         end
@@ -53,10 +48,7 @@ module CLI
         #
         #   CLI::UI::Prompt::InteractiveOptions.new(%w(rails go python))
         #
-        sig do
-          params(options: T::Array[String], multiple: T::Boolean, default: T.nilable(T.any(String, T::Array[String])))
-            .void
-        end
+        #: (Array[String] options, ?multiple: bool, ?default: (String | Array[String])?) -> void
         def initialize(options, multiple: false, default: nil)
           @options = options
           @active = if default && (i = options.index(default))
@@ -82,13 +74,13 @@ module CLI
             end
           end
           @redraw = true
-          @presented_options = T.let([], T::Array[[String, T.nilable(Integer)]])
+          @presented_options = [] #: Array[[String, Integer?]]
         end
 
         # Calls the +InteractiveOptions+ and asks the question
         # Usually used from +self.call+
         #
-        sig { returns(T.any(Integer, T::Array[Integer])) }
+        #: -> (Integer | Array[Integer])
         def call
           calculate_option_line_lengths
           CLI::UI.raw { print(ANSI.hide_cursor) }
@@ -108,7 +100,7 @@ module CLI
 
         private
 
-        sig { void }
+        #: -> void
         def calculate_option_line_lengths
           @terminal_width_at_calculation_time = CLI::UI::Terminal.width
           # options will be an array of questions but each option can be multi-line
@@ -138,7 +130,7 @@ module CLI
           end
         end
 
-        sig { params(number_of_lines: Integer).void }
+        #: (?Integer number_of_lines) -> void
         def reset_position(number_of_lines = num_lines)
           # This will put us back at the beginning of the options
           # When we redraw the options, they will be overwritten
@@ -147,7 +139,7 @@ module CLI
           end
         end
 
-        sig { params(number_of_lines: Integer).void }
+        #: (?Integer number_of_lines) -> void
         def clear_output(number_of_lines = num_lines)
           CLI::UI.raw do
             # Write over all lines with whitespace
@@ -163,12 +155,12 @@ module CLI
 
         # Don't use this in place of +@displaying_metadata+, this updates too
         # quickly to be useful when drawing to the screen.
-        sig { returns(T::Boolean) }
+        #: -> bool
         def display_metadata?
           filtering? || selecting? || has_filter?
         end
 
-        sig { returns(Integer) }
+        #: -> Integer
         def num_lines
           calculate_option_line_lengths if terminal_width_changed?
 
@@ -182,7 +174,7 @@ module CLI
           option_length + (@displaying_metadata ? 1 : 0)
         end
 
-        sig { returns(T::Boolean) }
+        #: -> bool
         def terminal_width_changed?
           @terminal_width_at_calculation_time != CLI::UI::Terminal.width
         end
@@ -192,7 +184,7 @@ module CLI
         CTRL_C = "\u0003"
         CTRL_D = "\u0004"
 
-        sig { void }
+        #: -> void
         def up
           active_index = @filtered_options.index { |_, num| num == @active } || 0
 
@@ -203,7 +195,7 @@ module CLI
           @redraw = true
         end
 
-        sig { void }
+        #: -> void
         def down
           active_index = @filtered_options.index { |_, num| num == @active } || 0
 
@@ -214,19 +206,19 @@ module CLI
           @redraw = true
         end
 
-        sig { void }
+        #: -> void
         def first_option
           @active = @filtered_options.first&.last || -1
           @redraw = true
         end
 
-        sig { void }
+        #: -> void
         def last_option
           @active = @filtered_options.last&.last || -1
           @redraw = true
         end
 
-        sig { void }
+        #: -> void
         def next_page
           active_index = @filtered_options.index { |_, num| num == @active } || 0
 
@@ -237,7 +229,7 @@ module CLI
           @redraw = true
         end
 
-        sig { void }
+        #: -> void
         def previous_page
           active_index = @filtered_options.index { |_, num| num == @active } || 0
 
@@ -251,7 +243,7 @@ module CLI
 
         # n is 1-indexed selection
         # n == 0 if "Done" was selected in @multiple mode
-        sig { params(n: Integer, final: T::Boolean).void }
+        #: (Integer n, ?final: bool) -> void
         def select_n(n, final: false)
           if @multiple
             if n == 0
@@ -278,7 +270,7 @@ module CLI
           @redraw = true
         end
 
-        sig { params(n: Integer).returns(T::Boolean) }
+        #: (Integer n) -> bool
         def should_enter_select_mode?(n)
           # If we have less than 10 options, we don't need to enter select mode
           # and we can just select the option directly. This just keeps the code easier
@@ -292,29 +284,29 @@ module CLI
           @options.length >= (n * 10)
         end
 
-        sig { params(char: String).void }
+        #: (String char) -> void
         def select_bool(char)
           return unless (@options - ['yes', 'no']).empty?
 
-          index = T.must(@options.index { |o| o.start_with?(char) })
+          index = @options.index { |o| o.start_with?(char) } #: as !nil
           @active = index + 1
           @answer = index + 1
           @redraw = true
         end
 
-        sig { params(char: String).void }
+        #: (String char) -> void
         def build_selection(char)
           @active = (@active.to_s + char).to_i
           @redraw = true
         end
 
-        sig { void }
+        #: -> void
         def chop_selection
           @active = @active.to_s.chop.to_i
           @redraw = true
         end
 
-        sig { params(char: String).void }
+        #: (String char) -> void
         def update_search(char)
           @redraw = true
 
@@ -332,7 +324,7 @@ module CLI
           end
         end
 
-        sig { void }
+        #: -> void
         def select_current
           # Prevent selection of invisible options
           return unless presented_options.any? { |_, num| num == @active }
@@ -340,14 +332,14 @@ module CLI
           select_n(@active, final: true)
         end
 
-        sig { void }
+        #: -> void
         def process_input_until_redraw_required
           @redraw = false
           wait_for_user_input until @redraw
         end
 
         # rubocop:disable Style/WhenThen,Layout/SpaceBeforeSemicolon,Style/Semicolon
-        sig { void }
+        #: -> void
         def wait_for_user_input
           char = Prompt.read_char
           @last_char = char
@@ -409,42 +401,42 @@ module CLI
         end
         # rubocop:enable Style/WhenThen,Layout/SpaceBeforeSemicolon,Style/Semicolon
 
-        sig { returns(T::Boolean) }
+        #: -> bool
         def selecting?
           @state == :line_select
         end
 
-        sig { returns(T::Boolean) }
+        #: -> bool
         def filtering?
           @state == :filter
         end
 
-        sig { returns(T::Boolean) }
+        #: -> bool
         def has_filter?
           !@filter.empty?
         end
 
-        sig { void }
+        #: -> void
         def start_filter
           @state = :filter
           @redraw = true
         end
 
-        sig { void }
+        #: -> void
         def start_line_select
           @state  = :line_select
           @active = 0
           @redraw = true
         end
 
-        sig { void }
+        #: -> void
         def stop_line_select
           @state = :root
           @active = 1 if @active.zero?
           @redraw = true
         end
 
-        sig { params(recalculate: T::Boolean).returns(T::Array[[String, T.nilable(Integer)]]) }
+        #: (?recalculate: bool) -> Array[[String, Integer?]]
         def presented_options(recalculate: false)
           return @presented_options unless recalculate
 
@@ -487,44 +479,44 @@ module CLI
           @presented_options
         end
 
-        sig { void }
+        #: -> void
         def ensure_visible_is_active
           unless presented_options.any? { |_, num| num == @active }
             @active = presented_options.first&.last.to_i
           end
         end
 
-        sig { returns(Integer) }
+        #: -> Integer
         def distance_from_selection_to_end
           @presented_options.count - index_of_active_option
         end
 
-        sig { returns(Integer) }
+        #: -> Integer
         def distance_from_start_to_selection
           index_of_active_option
         end
 
-        sig { returns(Integer) }
+        #: -> Integer
         def index_of_active_option
           @presented_options.index { |_, num| num == @active }.to_i
         end
 
-        sig { void }
+        #: -> void
         def ensure_last_item_is_continuation_marker
           @presented_options.push(['...', nil]) if @presented_options.last&.last
         end
 
-        sig { void }
+        #: -> void
         def ensure_first_item_is_continuation_marker
           @presented_options.unshift(['...', nil]) if @presented_options.first&.last
         end
 
-        sig { returns(Integer) }
+        #: -> Integer
         def max_lines
           CLI::UI::Terminal.height - (@displaying_metadata ? 3 : 2) # Keeps a one line question visible
         end
 
-        sig { void }
+        #: -> void
         def render_options
           previously_displayed_lines = num_lines
 
@@ -575,7 +567,7 @@ module CLI
           end
         end
 
-        sig { params(format: String, choice: String).returns(String) }
+        #: (String format, String choice) -> String
         def format_choice(format, choice)
           eol = CLI::UI::ANSI.clear_to_end_of_line
           lines = choice.split("\n")

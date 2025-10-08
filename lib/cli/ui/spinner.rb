@@ -6,8 +6,6 @@ require 'cli/ui'
 module CLI
   module UI
     module Spinner
-      extend T::Sig
-
       autoload :Async,      'cli/ui/spinner/async'
       autoload :SpinGroup,  'cli/ui/spinner/spin_group'
 
@@ -25,9 +23,7 @@ module CLI
       GLYPHS = colors.zip(RUNES).map { |c, r| c + r + CLI::UI::Color::RESET.code }.freeze
 
       class << self
-        extend T::Sig
-
-        sig { returns(T.nilable(Integer)) }
+        #: Integer?
         attr_accessor(:index)
 
         # We use this from CLI::UI::Widgets::Status to render an additional
@@ -40,15 +36,13 @@ module CLI
         # While it would be possible to stitch through some connection between
         # the SpinGroup and the Widgets included in its title, this is simpler
         # in practice and seems unlikely to cause issues in practice.
-        sig { returns(String) }
+        #: -> String
         def current_rune
           RUNES[index || 0]
         end
       end
 
       class << self
-        extend T::Sig
-
         # Adds a single spinner
         # Uses an interactive session to allow the user to pick an answer
         # Can use arrows, y/n, numbers (1/2), and vim bindings to control
@@ -73,14 +67,7 @@ module CLI
         #
         #   CLI::UI::Spinner.spin('Title') { sleep 1.0 }
         #
-        sig do
-          params(
-            title: String,
-            auto_debrief: T::Boolean,
-            to: IOLike,
-            block: T.proc.params(task: SpinGroup::Task).void,
-          ).returns(T::Boolean)
-        end
+        #: (String title, ?auto_debrief: bool, ?to: io_like) { (SpinGroup::Task task) -> void } -> bool
         def spin(title, auto_debrief: true, to: $stdout, &block)
           sg = SpinGroup.new(auto_debrief: auto_debrief)
           sg.add(title, &block)

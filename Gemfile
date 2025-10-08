@@ -13,11 +13,10 @@ group :development, :test do
   gem 'byebug', platforms: [:mri]
   gem 'method_source'
   gem 'simplecov'
-  gem 'sorbet-runtime'
 end
 
 group :typecheck do
-  gem 'sorbet'
+  gem 'sorbet-static'
   gem 'tapioca', require: false
 end
 

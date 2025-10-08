@@ -25,6 +25,7 @@ Sorbet/EnforceSigilOrder:
 
 Sorbet/EnforceSignatures:
   Enabled: true
+  Style: rbs
   Exclude:
     - lib/cli/ui/sorbet_runtime_stub.rb
     - "test/**/*"
