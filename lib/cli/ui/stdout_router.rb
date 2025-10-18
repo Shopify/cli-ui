@@ -1,7 +1,6 @@
 # typed: true
 # frozen_string_literal: true
 
-require 'cli/ui'
 require 'stringio'
 require_relative '../../../vendor/reentrant_mutex'
 

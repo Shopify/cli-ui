@@ -1,7 +1,6 @@
 # typed: true
 # frozen_string_literal: true
 
-require 'cli/ui'
 require 'io/console'
 
 module CLI
