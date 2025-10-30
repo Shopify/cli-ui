@@ -42,7 +42,7 @@ module CLI
         #
         #: (String str) -> String
         def strip_codes(str)
-          str.gsub(/\x1b\[[\d;]+[A-Za-z]|\x1b\][\d;]+.*?\x1b\\|\r/, '')
+          str.gsub(/\x1b\[[\d;]+[A-Za-z]|\x1b\][\d;]+[^\x1b\x07]*(\x1b\\|\x07)|\r/, '')
         end
 
         # Returns an ANSI control sequence
