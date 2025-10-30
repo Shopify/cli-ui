@@ -7,6 +7,11 @@ module CLI
   module UI
     module ANSI
       ESC = "\x1b"
+      # https://ghostty.org/docs/vt/concepts/sequences#csi-sequences
+      CSI_SEQUENCE = /\x1b\[[\d;:]+[\x20-\x2f]*?[\x40-\x7e]/
+      # https://ghostty.org/docs/vt/concepts/sequences#osc-sequences
+      # OSC sequences can be terminated with either ST (\x1b\x5c) or BEL (\x07)
+      OSC_SEQUENCE = /\x1b\][^\x07\x1b]*?(?:\x07|\x1b\x5c)/
 
       class << self
         # ANSI escape sequences (like \x1b[31m) have zero width.
@@ -42,7 +47,7 @@ module CLI
         #
         #: (String str) -> String
         def strip_codes(str)
-          str.gsub(/\x1b\[[\d;]+[A-Za-z]|\x1b\][\d;]+.*?\x1b\\|\r/, '')
+          str.gsub(Regexp.union(CSI_SEQUENCE, OSC_SEQUENCE, /\r/), '')
         end
 
         # Returns an ANSI control sequence
