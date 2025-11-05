@@ -19,6 +19,28 @@ module CLI
         assert_equal(4, ANSI.printing_width(UI.link('url', 'text')))
       end
 
+      def test_strip_codes_preserves_text_between_osc8_hyperlinks
+        hyperlink = CLI::UI.link('https://example.com', 'text', format: false)
+        input = "Before #{hyperlink} after"
+
+        result = CLI::UI::ANSI.strip_codes(input)
+
+        assert_equal('Before text after', result)
+      end
+
+      def test_strip_codes_with_osc9_progress_and_osc8_hyperlink
+        # Test OSC 9 progress indicator (BEL-terminated) followed by OSC 8 hyperlink (ST-terminated)
+        # This is the actual bug found in Ghostty terminal
+        progress = "#{CLI::UI::ProgressReporter::Reporter::OSC}9;4;#{CLI::UI::ProgressReporter::Reporter::INDETERMINATE};#{CLI::UI::ProgressReporter::Reporter::ST}"
+        hyperlink = CLI::UI.link('https://example.com/repo/pull/12345', 'PR#12345', format: false)
+        input = "Before #{progress} Created #{hyperlink} After"
+
+        result = CLI::UI::ANSI.strip_codes(input)
+
+        # Should preserve all visible text
+        assert_equal('Before  Created PR#12345 After', result)
+      end
+
       def test_line_skip_with_shift
         next_line_expected = "\e[1B\e[1G"
         previous_line_expected = "\e[1A\e[1G"
