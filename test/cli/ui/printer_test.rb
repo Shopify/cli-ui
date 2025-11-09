@@ -103,6 +103,31 @@ module CLI
         end
         assert_equal(msg + "\n", out)
       end
+
+      def test_write
+        out, _ = capture_io do
+          CLI::UI::StdoutRouter.ensure_activated
+          assert(Printer.write('foo', format: false))
+          assert(Printer.write(' bar', format: false))
+        end
+
+        assert_equal('foo bar', out)
+      end
+
+      def test_write_color_frame
+        out = nil
+        capture_io do
+          Frame.open('test') do
+            out, _ = capture_io do
+              CLI::UI::StdoutRouter.ensure_activated
+              Printer.write('foo', frame_color: :red)
+              Printer.write(' bar')
+            end
+          end
+        end
+
+        assert_equal("\e[31m┃\e[0m \e[0mfoo\e[0m bar", out)
+      end
     end
   end
 end
