@@ -1,7 +1,6 @@
 # typed: true
 # frozen_string_literal: true
 
-require 'cli/ui'
 require 'cli/ui/frame/frame_stack'
 require 'cli/ui/frame/frame_style'
 

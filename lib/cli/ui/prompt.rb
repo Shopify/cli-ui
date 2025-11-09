@@ -2,7 +2,6 @@
 # typed: true
 # frozen_string_literal: true
 
-require 'cli/ui'
 begin
   require 'reline' # For 2.7+
 rescue LoadError
