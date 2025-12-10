@@ -120,8 +120,10 @@ module CLI
             next 1 if text.empty?
 
             # Find the length of all the lines in this string
+            # Use ANSI.printing_width to correctly calculate display width,
+            # stripping invisible escape sequences like OSC 8 hyperlinks
             non_empty_line_lengths = "#{prefix}#{text}".split("\n").reject(&:empty?).map do |line|
-              CLI::UI.fmt(line, enable_color: false).length
+              CLI::UI::ANSI.printing_width(CLI::UI.fmt(line, enable_color: false))
             end
 
             # Finally, we need to calculate how many lines each one will take. We can do that by dividing each one

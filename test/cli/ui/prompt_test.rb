@@ -292,6 +292,57 @@ module CLI
         assert_output_includes('--10--')
       end
 
+      def test_ask_multiple_with_link_options_uses_display_width_for_cursor_positioning
+        # This test verifies that line length calculation uses display width, not string length.
+        # Links have OSC 8 escape sequences (~50 invisible chars) but short display text.
+        # At terminal width 40:
+        #   - Correct (display width): each option ~15 chars → 1 line each → 4 total lines
+        #   - Buggy (string length): each option ~60 chars → 2 lines each → 7 total lines
+        # After navigation, reset_position moves cursor up by num_lines.
+        # We verify the cursor moves up 4 times (correct), not 7 times (buggy).
+        run_in_process(<<~RUBY)
+          # Override terminal width to trigger the bug scenario
+          module CLI::UI::Terminal
+            def self.width; 40; end
+          end
+
+          options = ['a', 'b', 'c'].map do |x|
+            CLI::UI.link("https://example.com/\#{x}", "Link \#{x.upcase}")
+          end
+          CLI::UI::Prompt.ask('q', options: options, multiple: true)
+        RUBY
+
+        # Wait for initial render, then navigate down
+        wait_for_output_to_include('Link A')
+        write('j')
+        # Navigate triggers redraw - wait for cursor movement sequences
+        wait_for_output_to_include("\e[1A")
+
+        # Complete the prompt so the process exits
+        write('0')
+
+        clean_up do
+          # Combine the output we already read with any remaining
+          output = @output.dup.force_encoding('UTF-8') + @stdout.read
+
+          # Count cursor-up sequences (\e[1A\e[1G) from navigation
+          # Each reset_position(n) produces n cursor-up sequences
+          cursor_up_sequences = output.scan("\e[1A\e[1G")
+
+          # Cursor-ups = (num_lines × 3 resets) + 2 from Prompt wrapper
+          # With correct display-width calculation: 4 lines (3 options + Done)
+          #   → (4 × 3) + 2 = 14 cursor-ups
+          # With buggy string-length calculation: 7 lines (each link ~2 lines at width 40)
+          #   → (7 × 3) + 2 = 23 cursor-ups
+          assert_equal(
+            14,
+            cursor_up_sequences.length,
+            'Expected 14 cursor-up sequences for correct display-width line calculation. ' \
+              "Got #{cursor_up_sequences.length}; if significantly higher, string length may have been used instead of display width.",
+          )
+        end
+      end
+
       def test_ask_multiple
         run_in_process('puts CLI::UI::Prompt.ask("q", options: (1..15).map(&:to_s), multiple: true).inspect')
         write('1350')
