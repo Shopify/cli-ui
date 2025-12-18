@@ -190,6 +190,44 @@ module CLI
         )
       end
 
+      # Convenience Method for +CLI::UI::Printer.write+ to write without appending a newline.
+      #
+      # ==== Attributes
+      #
+      # * +msg+ - Message to print
+      # * +kwargs+ - keyword arguments for +Printer.write+
+      #
+      sig do
+        params(
+          msg: String,
+          frame_color: T.nilable(Colorable),
+          to: IOLike,
+          encoding: Encoding,
+          format: T::Boolean,
+          graceful: T::Boolean,
+          wrap: T::Boolean,
+        ).void
+      end
+      def write(
+        msg,
+        frame_color: nil,
+        to: $stdout,
+        encoding: Encoding::UTF_8,
+        format: true,
+        graceful: true,
+        wrap: true
+      )
+        CLI::UI::Printer.write(
+          msg,
+          frame_color: frame_color,
+          to: to,
+          encoding: encoding,
+          format: format,
+          graceful: graceful,
+          wrap: wrap,
+        )
+      end
+
       # Convenience Method for +CLI::UI::Frame.open+
       #
       # ==== Attributes
