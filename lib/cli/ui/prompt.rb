@@ -161,6 +161,20 @@ module CLI
           read_secret(question, mask: false)
         end
 
+        # Asks the user for a single-line answer, masking each character with '*' as they type.
+        # Unlike +ask_password+ which shows no feedback, this method provides visual feedback
+        # by printing a '*' for each character entered.
+        # Supports backspace to delete characters and Ctrl-C to abort.
+        #
+        # ==== Return Value
+        #
+        # The input string.
+        # If the user simply presses "Enter" without typing anything, this will return an empty string.
+        #: (String question) -> String
+        def ask_masked(question)
+          read_secret(question, mask: true)
+        end
+
         # Asks the user a yes/no question.
         # Can use arrows, y/n, numbers (1/2), and vim bindings to control
         #

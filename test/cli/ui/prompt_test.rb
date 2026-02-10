@@ -416,6 +416,8 @@ module CLI
         assert_output_includes('c'.inspect)
       end
 
+      # ask_password tests
+
       def test_ask_password_happy_path
         run_in_process('puts "--#{CLI::UI::Prompt.ask_password("Password: ")}--"')
         write("secret\n")
@@ -471,6 +473,78 @@ module CLI
         write("\u0003")
 
         assert_output_includes('sentinel')
+      end
+
+      # ask_masked tests
+
+      def test_ask_masked_shows_stars
+        run_in_process('puts "--#{CLI::UI::Prompt.ask_masked("Token: ")}--"')
+        write("secret\n")
+        clean_up do
+          output = @stdout.read
+          assert_includes(output, '******')
+          assert_includes(output, '--secret--')
+        end
+      end
+
+      def test_ask_masked_supports_backspace
+        run_in_process('puts "--#{CLI::UI::Prompt.ask_masked("Token: ")}--"')
+        write("abc\u007Fd\n")
+        assert_output_includes('--abd--')
+      end
+
+      def test_ask_masked_supports_backspace_0x08
+        run_in_process('puts "--#{CLI::UI::Prompt.ask_masked("Token: ")}--"')
+        write("abc\bd\n")
+        assert_output_includes('--abd--')
+      end
+
+      def test_ask_masked_backspace_on_empty_input
+        run_in_process('puts "--#{CLI::UI::Prompt.ask_masked("Token: ")}--"')
+        write("\u007Fabc\n")
+        assert_output_includes('--abc--')
+      end
+
+      def test_ask_masked_multiple_backspaces
+        run_in_process('puts "--#{CLI::UI::Prompt.ask_masked("Token: ")}--"')
+        write("abcd\u007F\u007F\u007Fe\n")
+        assert_output_includes('--ae--')
+      end
+
+      def test_ask_masked_empty_input
+        run_in_process('puts "--#{CLI::UI::Prompt.ask_masked("Token: ")}--"')
+        write("\n")
+        assert_output_includes('----')
+      end
+
+      def test_ask_masked_carriage_return
+        run_in_process('puts "--#{CLI::UI::Prompt.ask_masked("Token: ")}--"')
+        write("secret\r")
+        assert_output_includes('--secret--')
+      end
+
+      def test_ask_masked_sigint
+        jruby_skip('SIGINT shuts down the JVM instead of raising Interrupt')
+
+        run_in_process(<<~RUBY)
+          begin
+            CLI::UI::Prompt.ask_masked("Token: ")
+          rescue Interrupt
+            puts 'sentinel'
+          end
+        RUBY
+
+        wait_for_output_to_include('Token:')
+        write("\u0003")
+
+        assert_output_includes('sentinel')
+      end
+
+      def test_ask_masked_eof_returns_input_so_far
+        run_in_process('puts "--#{CLI::UI::Prompt.ask_masked("Token: ")}--"')
+        # Close stdin immediately — EOF with no input
+        @stdin.close
+        assert_output_includes('----')
       end
 
       def test_spinner_inside_prompt
