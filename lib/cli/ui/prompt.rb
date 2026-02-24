@@ -252,8 +252,8 @@ module CLI
           end
         end
 
-        #: (String question, ?Array[String]? options, ?multiple: bool, ?default: (String | Array[String])?, ?filter_ui: bool, ?select_ui: bool) -> (String | Array[String])
-        def ask_interactive(question, options = nil, multiple: false, default: nil, filter_ui: true, select_ui: true)
+        #: (String question, ?Array[String]? options, ?multiple: bool, ?default: (String | Array[String])?, ?filter_ui: bool, ?select_ui: bool) ?{ (OptionsHandler) -> void } -> (String | Array[String])
+        def ask_interactive(question, options = nil, multiple: false, default: nil, filter_ui: true, select_ui: true, &block)
           raise(ArgumentError, 'conflicting arguments: options and block given') if options && block_given?
 
           options ||= if block_given?
