@@ -59,8 +59,8 @@ module CLI
         #
         # https://user-images.githubusercontent.com/3074765/33798558-c452fa26-dce8-11e7-9e90-b4b34df21a46.gif
         #
-        #: (?auto_debrief: bool, ?interrupt_debrief: bool, ?max_concurrent: Integer, ?work_queue: WorkQueue?, ?to: io_like) -> void
-        def initialize(auto_debrief: true, interrupt_debrief: false, max_concurrent: 0, work_queue: nil, to: $stdout)
+        #: (?auto_debrief: bool, ?interrupt_debrief: bool, ?max_concurrent: Integer, ?work_queue: WorkQueue?, ?to: io_like) ?{ (SpinGroup) -> void } -> void
+        def initialize(auto_debrief: true, interrupt_debrief: false, max_concurrent: 0, work_queue: nil, to: $stdout, &block)
           @m = Mutex.new
           @tasks = []
           @puts_above = []
