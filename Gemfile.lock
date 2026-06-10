@@ -6,119 +6,136 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    ansi (1.5.0)
+    ansi (1.6.0)
     ast (2.4.3)
-    benchmark (0.4.1)
+    benchmark (0.5.0)
     builder (3.3.0)
-    byebug (12.0.0)
+    byebug (13.0.0)
+      reline (>= 0.6.0)
     docile (1.4.1)
+    drb (2.2.3)
     erubi (1.13.1)
-    json (2.15.1)
+    io-console (0.8.2)
+    json (2.19.8)
     language_server-protocol (3.17.0.5)
     lint_roller (1.1.0)
     logger (1.7.0)
     method_source (1.1.0)
-    minitest (5.25.5)
-    minitest-reporters (1.7.1)
+    minitest (6.0.6)
+      drb (~> 2.0)
+      prism (~> 1.5)
+    minitest-reporters (1.8.0)
       ansi
       builder
-      minitest (>= 5.0)
+      minitest (>= 5.0, < 7)
       ruby-progressbar
-    mocha (2.7.1)
+    mocha (3.1.0)
       ruby2_keywords (>= 0.0.5)
     netrc (0.11.0)
-    parallel (1.27.0)
-    parser (3.3.9.0)
+    parallel (1.28.0)
+    parser (3.3.11.1)
       ast (~> 2.4.1)
       racc
-    prism (1.5.1)
+    prism (1.9.0)
     racc (1.8.1)
     rainbow (3.1.1)
-    rake (13.3.0)
-    rbi (0.3.6)
+    rake (13.4.2)
+    rbi (0.3.13)
       prism (~> 1.0)
-      rbs (>= 3.4.4)
-    rbs (3.9.5)
+      rbs (>= 4.0.1)
+    rbs (4.0.2)
       logger
-    regexp_parser (2.11.3)
+      prism (>= 1.6.0)
+      tsort
+    regexp_parser (2.12.0)
+    reline (0.6.3)
+      io-console (~> 0.5)
+    require-hooks (0.4.0)
     rexml (3.4.4)
-    rubocop (1.81.1)
+    rubocop (1.87.0)
       json (~> 2.3)
       language_server-protocol (~> 3.17.0.2)
       lint_roller (~> 1.1.0)
-      parallel (~> 1.10)
+      parallel (>= 1.10)
       parser (>= 3.3.0.2)
       rainbow (>= 2.2.2, < 4.0)
       regexp_parser (>= 2.9.3, < 3.0)
-      rubocop-ast (>= 1.47.1, < 2.0)
+      rubocop-ast (>= 1.49.0, < 2.0)
       ruby-progressbar (~> 1.7)
       unicode-display_width (>= 2.4.0, < 4.0)
-    rubocop-ast (1.47.1)
+    rubocop-ast (1.49.1)
       parser (>= 3.3.7.2)
-      prism (~> 1.4)
+      prism (~> 1.7)
     rubocop-rake (0.7.1)
       lint_roller (~> 1.1)
       rubocop (>= 1.72.1)
-    rubocop-shopify (2.17.1)
+    rubocop-shopify (2.18.0)
       rubocop (~> 1.62)
-    rubocop-sorbet (0.10.5)
+    rubocop-sorbet (0.12.0)
       lint_roller
       rubocop (>= 1.75.2)
     ruby-progressbar (1.13.0)
     ruby2_keywords (0.0.5)
+    rubydex (0.2.5-aarch64-linux)
+    rubydex (0.2.5-arm64-darwin)
+    rubydex (0.2.5-x86_64-darwin)
+    rubydex (0.2.5-x86_64-linux)
     simplecov (0.22.0)
       docile (~> 1.1)
       simplecov-html (~> 0.11)
       simplecov_json_formatter (~> 0.1)
     simplecov-html (0.13.2)
     simplecov_json_formatter (0.1.4)
-    sorbet (0.6.12627)
-      sorbet-static (= 0.6.12627)
-    sorbet-runtime (0.6.12627)
-    sorbet-static (0.6.12627-aarch64-linux)
-    sorbet-static (0.6.12627-universal-darwin)
-    sorbet-static (0.6.12627-x86_64-linux)
-    sorbet-static-and-runtime (0.6.12627)
-      sorbet (= 0.6.12627)
-      sorbet-runtime (= 0.6.12627)
-    spoom (1.6.3)
+    sorbet (0.6.13294)
+      sorbet-static (= 0.6.13294)
+    sorbet-runtime (0.6.13294)
+    sorbet-static (0.6.13294-aarch64-linux)
+    sorbet-static (0.6.13294-universal-darwin)
+    sorbet-static (0.6.13294-x86_64-linux)
+    sorbet-static-and-runtime (0.6.13294)
+      sorbet (= 0.6.13294)
+      sorbet-runtime (= 0.6.13294)
+    spoom (1.7.16)
       erubi (>= 1.10.0)
       prism (>= 0.28.0)
       rbi (>= 0.3.3)
+      rbs (>= 4.0.0.dev.5)
       rexml (>= 3.2.6)
       sorbet-static-and-runtime (>= 0.5.10187)
       thor (>= 0.19.2)
-    tapioca (0.16.11)
+    tapioca (0.19.1)
       benchmark
       bundler (>= 2.2.25)
       netrc (>= 0.11.0)
       parallel (>= 1.21.0)
-      rbi (~> 0.2)
-      sorbet-static-and-runtime (>= 0.5.11087)
-      spoom (>= 1.2.0)
+      rbi (>= 0.3.7)
+      require-hooks (>= 0.2.2)
+      rubydex (>= 0.1.0.beta10)
+      sorbet-static-and-runtime (>= 0.6.12698)
+      spoom (>= 1.7.9)
       thor (>= 1.2.0)
-      yard-sorbet
-    thor (1.4.0)
+      tsort
+    thor (1.5.0)
+    tsort (0.2.0)
     unicode-display_width (3.2.0)
       unicode-emoji (~> 4.1)
-    unicode-emoji (4.1.0)
-    yard (0.9.37)
-    yard-sorbet (0.9.0)
-      sorbet-runtime
-      yard
+    unicode-emoji (4.2.0)
 
 PLATFORMS
   aarch64-linux
+  arm64-darwin
   universal-darwin
+  x86_64-darwin
   x86_64-linux
 
 DEPENDENCIES
   byebug
   cli-ui!
   method_source
-  minitest (>= 5.0.0)
+  minitest (>= 5.0, >= 0, < 7)
   minitest-reporters
   mocha
+  parallel (< 2)
   rake (~> 13.0)
   rubocop
   rubocop-rake
@@ -129,4 +146,4 @@ DEPENDENCIES
   tapioca
 
 BUNDLED WITH
-   2.6.7
+   2.7.2
