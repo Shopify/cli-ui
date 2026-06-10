@@ -2,3 +2,5 @@
 .
 --ignore=vendor/bundle
 --enable-experimental-rbs-comments
+--parser=prism
+

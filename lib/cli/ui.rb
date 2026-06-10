@@ -197,17 +197,18 @@ module CLI
       # * +args+ - arguments for +Frame.open+
       # * +block+ - block for +Frame.open+
       #
-      #: [T] (String text, ?color: colorable?, ?failure_text: String?, ?success_text: String?, ?timing: (Numeric | bool), ?frame_style: frame_stylable, ?to: io_like) ?{ -> T } -> T?
+      #: [T] (String text, ?color: colorable?, ?failure_text: String?, ?success_text: String?, ?timing: (Numeric | bool)?, ?frame_style: frame_stylable, ?to: io_like) ?{ -> T } -> T?
       def frame(
         text,
         color: Frame::DEFAULT_FRAME_COLOR,
         failure_text: nil,
         success_text: nil,
-        timing: block_given?,
+        timing: nil,
         frame_style: Frame.frame_style,
         to: $stdout,
         &block
       )
+        timing = block_given? if timing.nil?
         CLI::UI::Frame.open(
           text,
           color: color,

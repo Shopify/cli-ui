@@ -6,6 +6,9 @@ source 'https://rubygems.org'
 gemspec
 
 group :development, :test do
+  # parallel 2.x requires Ruby >= 3.3, but CI runs 3.2. Pin to the last 1.x
+  # release (supports Ruby >= 2.7). Pulled in transitively by rubocop/tapioca.
+  gem 'parallel', '< 2'
   gem 'rubocop'
   gem 'rubocop-rake'
   gem 'rubocop-shopify'
@@ -22,6 +25,6 @@ end
 
 group :test do
   gem 'mocha', require: false
-  gem 'minitest', '>= 5.0.0', require: false
+  gem 'minitest', require: false
   gem 'minitest-reporters', require: false
 end

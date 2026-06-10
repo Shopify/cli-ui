@@ -72,17 +72,18 @@ module CLI
         #   ┏━━ Open ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         #
         #
-        #: [T] (String text, ?color: colorable, ?failure_text: String?, ?success_text: String?, ?timing: (Numeric | bool), ?frame_style: frame_stylable, ?to: io_like) ?{ -> T } -> T?
+        #: [T] (String text, ?color: colorable, ?failure_text: String?, ?success_text: String?, ?timing: (Numeric | bool)?, ?frame_style: frame_stylable, ?to: io_like) ?{ -> T } -> T?
         def open(
           text,
           color: DEFAULT_FRAME_COLOR,
           failure_text: nil,
           success_text: nil,
-          timing: block_given?,
+          timing: nil,
           frame_style: self.frame_style,
           to: $stdout,
           &block
         )
+          timing = block_given? if timing.nil?
           frame_style = CLI::UI.resolve_style(frame_style)
           color = CLI::UI.resolve_color(color)
 
