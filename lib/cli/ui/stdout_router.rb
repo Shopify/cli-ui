@@ -2,6 +2,10 @@
 # frozen_string_literal: true
 
 require 'stringio'
+# Required eagerly because `BlockingInput` snapshots`IO.instance_methods` at
+# class-load; `io/console` must have grafted its terminal-mode methods (noecho,
+# raw, ...) onto IO by then so they get delegated to the wrapped stream.
+require 'io/console'
 require_relative '../../../vendor/reentrant_mutex'
 
 module CLI
