@@ -1,12 +1,12 @@
 # typed: true
 # frozen_string_literal: true
 
-require 'cli/ui/frame/frame_stack'
-require 'cli/ui/frame/frame_style'
-
 module CLI
   module UI
     module Frame
+      autoload :FrameStack, 'cli/ui/frame/frame_stack'
+      autoload :FrameStyle, 'cli/ui/frame/frame_style'
+
       class UnnestedFrameException < StandardError; end
       DEFAULT_FRAME_COLOR = CLI::UI.resolve_color(:cyan)
 
