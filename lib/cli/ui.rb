@@ -121,6 +121,28 @@ module CLI
         )
       end
 
+      # Convenience Method for +CLI::UI::Prompt.ask_password+
+      #
+      # ==== Attributes
+      #
+      # * +question+ - question to ask
+      #
+      #: (String question) -> String
+      def ask_password(question)
+        CLI::UI::Prompt.ask_password(question)
+      end
+
+      # Convenience Method for +CLI::UI::Prompt.ask_masked+
+      #
+      # ==== Attributes
+      #
+      # * +question+ - question to ask
+      #
+      #: (String question) -> String
+      def ask_masked(question)
+        CLI::UI::Prompt.ask_masked(question)
+      end
+
       # Convenience Method to resolve text using +CLI::UI::Formatter.format+
       # Check +CLI::UI::Formatter::SGR_MAP+ for available formatting options
       #

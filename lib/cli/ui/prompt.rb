@@ -149,7 +149,8 @@ module CLI
         end
 
         # Asks the user for a single-line answer, without displaying the characters while typing.
-        # Typically used for password prompts
+        # Supports backspace to delete characters and Ctrl-C to abort.
+        # Typically used for password prompts.
         #
         # ==== Return Value
         #
@@ -157,23 +158,21 @@ module CLI
         # If the user simply presses "Enter" without typing any password, this will return an empty string.
         #: (String question) -> String
         def ask_password(question)
-          require 'io/console'
+          read_secret(question, mask: false)
+        end
 
-          CLI::UI::StdoutRouter::Capture.in_alternate_screen do
-            $stdout.print(CLI::UI.fmt('{{?}} ' + question)) # Do not use puts_question to avoid the new line.
-
-            # noecho interacts poorly with Readline under system Ruby, so do a manual `gets` here.
-            # No fancy Readline integration (like echoing back) is required for a password prompt anyway.
-            password = $stdin.noecho do
-              # Chomp will remove the one new line character added by `gets`, without touching potential extra spaces:
-              # " 123 \n".chomp => " 123 "
-              $stdin.gets.to_s.chomp
-            end
-
-            $stdout.puts # Complete the line
-
-            password
-          end
+        # Asks the user for a single-line answer, masking each character with '*' as they type.
+        # Unlike +ask_password+ which shows no feedback, this method provides visual feedback
+        # by printing a '*' for each character entered.
+        # Supports backspace to delete characters and Ctrl-C to abort.
+        #
+        # ==== Return Value
+        #
+        # The input string.
+        # If the user simply presses "Enter" without typing anything, this will return an empty string.
+        #: (String question) -> String
+        def ask_masked(question)
+          read_secret(question, mask: true)
         end
 
         # Asks the user a yes/no question.
@@ -329,6 +328,52 @@ module CLI
               CLI::UI::Color::RESET.code,
             )
           end
+        end
+
+        #: (String question, mask: bool) -> String
+        def read_secret(question, mask:)
+          require 'io/console'
+
+          CLI::UI::StdoutRouter::Capture.in_alternate_screen do
+            $stdout.print(CLI::UI.fmt('{{?}} ' + question)) # Do not use puts_question to avoid the new line.
+
+            input = +''
+            loop do
+              ch = read_secret_char
+              case ch
+              when nil # EOF
+                $stdout.puts
+                break
+              when "\r", "\n"
+                $stdout.puts
+                break
+              when "\u007F", "\b" # backspace / delete
+                unless input.empty?
+                  input.chop!
+                  $stdout.print("\b \b") if mask
+                end
+              when "\u0003" # Ctrl-C
+                $stdout.puts
+                raise Interrupt
+              else
+                input << ch
+                $stdout.print('*') if mask
+              end
+            end
+
+            input
+          end
+        end
+
+        #: -> String?
+        def read_secret_char
+          if $stdin.tty? && !ENV['TEST']
+            $stdin.getch
+          else
+            $stdin.getc
+          end
+        rescue Errno::EIO, Errno::EPIPE, IOError
+          nil
         end
 
         #: (String str) -> void
