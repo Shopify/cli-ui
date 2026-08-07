@@ -47,6 +47,8 @@ GEM
       logger
       prism (>= 1.6.0)
       tsort
+    readline (0.0.4)
+      reline
     regexp_parser (2.12.0)
     reline (0.6.3)
       io-console (~> 0.5)
@@ -137,6 +139,7 @@ DEPENDENCIES
   mocha
   parallel (< 2)
   rake (~> 13.0)
+  readline
   rubocop
   rubocop-rake
   rubocop-shopify
