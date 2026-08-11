@@ -4,6 +4,9 @@
 module CLI
   module UI
     module ANSI
+      autoload :Replay, 'cli/ui/ansi/replay'
+      private_constant :Replay
+
       ESC = "\x1b"
       # https://ghostty.org/docs/vt/concepts/sequences#csi-sequences
       CSI_SEQUENCE = /\x1b\[[\d;:]+[\x20-\x2f]*?[\x40-\x7e]/
@@ -46,6 +49,33 @@ module CLI
         #: (String str) -> String
         def strip_codes(str)
           str.gsub(Regexp.union(CSI_SEQUENCE, OSC_SEQUENCE, /\r/), '')
+        end
+
+        # Replays the viewport-independent cursor controls in a captured
+        # terminal stream, so repaints (spinners, progress bars) collapse
+        # onto their final state instead of accumulating one frame per tick.
+        #
+        # Where +strip_codes+ deletes control sequences, this applies them.
+        # Operations that assume a viewport -- screen-relative positioning,
+        # display erasure, wrapping -- are ignored: a capture does not
+        # record scrolling, so screen coordinates have no buffer row to map
+        # onto. Alternate-screen content (a full-screen prompt, a pager) is
+        # discarded on exit, as a terminal discards it. Commands a repaint
+        # has no use for, from character editing to charset translation,
+        # are dropped without effect. The stream is decoded as UTF-8
+        # whatever its tagged encoding, replacing bytes that don't decode.
+        # Columns hold one grapheme cluster each, using Unicode terminal
+        # widths so wide glyphs keep their two columns when overwritten.
+        # Trailing whitespace on every line is trimmed: a terminal renders
+        # nothing there.
+        #
+        # ==== Attributes
+        #
+        # - +str+ - The captured terminal stream to replay
+        #
+        #: (String str) -> String
+        def replay(str)
+          Replay.render(str)
         end
 
         # Returns an ANSI control sequence
