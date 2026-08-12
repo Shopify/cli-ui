@@ -51,31 +51,19 @@ module CLI
           str.gsub(Regexp.union(CSI_SEQUENCE, OSC_SEQUENCE, /\r/), '')
         end
 
-        # Replays the viewport-independent cursor controls in a captured
-        # terminal stream, so repaints (spinners, progress bars) collapse
-        # onto their final state instead of accumulating one frame per tick.
-        #
-        # Where +strip_codes+ deletes control sequences, this applies them.
-        # Operations that assume a viewport -- screen-relative positioning,
-        # display erasure, wrapping -- are ignored: a capture does not
-        # record scrolling, so screen coordinates have no buffer row to map
-        # onto. Alternate-screen content (a full-screen prompt, a pager) is
-        # discarded on exit, as a terminal discards it. Commands a repaint
-        # has no use for, from character editing to charset translation,
-        # are dropped without effect. The stream is decoded as UTF-8
-        # whatever its tagged encoding, replacing bytes that don't decode.
-        # Columns hold one grapheme cluster each, using Unicode terminal
-        # widths so wide glyphs keep their two columns when overwritten.
-        # Trailing whitespace on every line is trimmed: a terminal renders
-        # nothing there.
+        # Returns the text left by applying terminal repaint controls in a
+        # captured stream. Presentation controls are dropped and malformed
+        # input is replaced while decoding the result as UTF-8.
         #
         # ==== Attributes
         #
         # - +str+ - The captured terminal stream to replay
+        # - +diagnostics+ - Optional hash populated when replay encounters
+        #   terminal operations it cannot model
         #
-        #: (String str) -> String
-        def replay(str)
-          Replay.render(str)
+        #: (String str, ?diagnostics: Hash[Symbol, bool]?) -> String
+        def replay(str, diagnostics: nil)
+          Replay.render(str, diagnostics: diagnostics)
         end
 
         # Returns an ANSI control sequence

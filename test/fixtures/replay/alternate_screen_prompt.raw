@@ -1,0 +1,8 @@
+[0;32m✓[0m one
+[0;32m✓[0m two
+[?1049h[0;32m✓[0m one
+[0;32m✓[0m two
+? Which environment?  
+[1A[1G[K> production
+[K  staging[1A[1G[K  production
+[K> staging[?1049l[0;32m✓[0m environment: staging

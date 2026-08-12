@@ -134,6 +134,14 @@ module CLI
           assert_equal("x\nred", Replay.render("x\e[3\n1mred"))
         end
 
+        # Controls embedded after an ESC intermediate do not end its sequence:
+        # C0 controls execute, DEL is ignored, and the eventual final is still
+        # consumed.
+        def test_embedded_controls_do_not_end_escape_intermediate_sequences
+          assert_equal('az', Replay.render("ab\e(\bBz"))
+          assert_equal('Az', Replay.render("A\e(\x7fBz"))
+        end
+
         # A parameter byte arriving after an intermediate puts a terminal in
         # its ignore state: the sequence is consumed but not executed.
         def test_out_of_order_csi_bytes_ignore_the_sequence
@@ -150,13 +158,21 @@ module CLI
         # scrollback, so a replay withholds it too, cursor restored to where
         # the main screen left it.
         def test_alternate_screen_content_is_discarded
-          assert_equal('before after', Replay.render("before \e[?1049hfull-screen ui\e[?1049lafter"))
+          ['47', '1047', '1049'].each do |mode|
+            assert_equal(
+              'before after',
+              Replay.render("before \e[?#{mode}hfull-screen ui\e[?#{mode}lafter"),
+              "DEC private mode #{mode}",
+            )
+          end
           # A capture cut off inside the alternate screen never saw the
           # exit, but its content still never reached scrollback.
           assert_equal('kept', Replay.render("kept\e[?1049hlost"))
           # An unmatched exit and a doubled enter change nothing.
           assert_equal('ab', Replay.render("a\e[?1049lb"))
           assert_equal('ab', Replay.render("a\e[?1049h\e[?1049hx\e[?1049lb"))
+          # DECSET and DECRST apply every mode in a semicolon-separated list.
+          assert_equal('ab', Replay.render("a\e[?25;1049hLOST\e[?25;1049lb"))
         end
 
         # StdoutRouter's in_alternate_screen re-prints everything captured
@@ -179,6 +195,37 @@ module CLI
           assert_equal("old\nlinenew", Replay.render("old\nline\e[Hnew"))
           assert_equal("old\nlinenew", Replay.render("old\nline\e[2;3fnew"))
           assert_equal('kept', Replay.render("kept\e[2J"))
+        end
+
+        def test_viewport_dependent_sequences_are_reported
+          sequences = [
+            "\e[H",       # CUP
+            "\e[2;3f",    # HVP
+            "\e[3d",      # VPA
+            "\e[2J",      # ED
+            "\e[2S",      # SU
+            "\e[2T",      # SD
+            "\e[1;20r",   # DECSTBM
+            "\e[10;70s",  # DECSLRM
+            "\e[2 @",     # SL
+            "\e[2 A",     # SR
+          ]
+
+          sequences.each do |sequence|
+            diagnostics = {}
+
+            ANSI.replay("kept#{sequence}", diagnostics: diagnostics)
+
+            assert_equal(true, diagnostics[:viewport_operations_seen], sequence.inspect)
+          end
+        end
+
+        def test_supported_repaint_sequences_do_not_report_viewport_operations
+          diagnostics = {}
+
+          ANSI.replay("one\ntwo\e[1A\e[1G\e[2Kdone", diagnostics: diagnostics)
+
+          assert_empty(diagnostics)
         end
 
         def test_unknown_and_incomplete_escapes_are_dropped
@@ -260,6 +307,26 @@ module CLI
           assert_equal(line.length - 2, replayed.index('X'))
         end
 
+        def test_write_once_rows_stay_compact_until_they_are_edited
+          screen = Replay::Screen.new
+          rows = ['x' * 80, '界' * 40, '👩‍💻' * 40]
+          100.times do |index|
+            screen.write(rows.fetch(index % rows.length))
+            screen.erase_line(0)
+            screen.newline
+          end
+
+          lines = screen.instance_variable_get(:@lines)
+          assert(lines.all?(String))
+
+          screen.move_rows(-1)
+          screen.carriage_return
+          screen.write('y')
+
+          assert_instance_of(Array, lines.fetch(-2))
+          assert(lines.each_with_index.all? { |line, index| index == 99 || line.is_a?(String) })
+        end
+
         def test_control_conjured_rows_are_bounded
           moves = Replay.render(("\e[9999999B" * 1000) + 'x')
           inserts = Replay.render("\e[1024L" * 200)
@@ -298,7 +365,7 @@ module CLI
         # aborts landing mid-collection. Whatever the bytes, a replay must
         # not raise, must return valid UTF-8, and must not leak control
         # bytes into the output.
-        def test_fuzz_arbitrary_streams_replay_safely
+        def test_fuzz_arbitrary_streams_replay_safely_and_both_csi_paths_agree
           rng = Random.new(20260811)
           fragments = [
             "\e[",
@@ -321,69 +388,114 @@ module CLI
             'text',
             'é',
             '⠧',
+            "\e[31m",
+            "\e[2A",
+            "\e[1G",
+            "\e[2K",
+            "\e[1L",
+            "\e[2M",
+            "\e[s",
+            "\e[u",
+            "\e[3G",
+            "\e[2C",
+            "\b",
+            "\e[?47h",
+            "\e[?47l",
+            "\e[?1047h",
+            "\e[?1047l",
             "\e[?1049h",
             "\e[?1049l",
           ]
-          100.times do
-            stream = ''.b
-            rng.rand(40..120).times do
-              stream << (rng.rand(3).zero? ? rng.bytes(rng.rand(1..6)) : fragments.sample(random: rng).b)
-            end
-
-            replayed = Replay.render(stream)
-
-            assert_predicate(replayed, :valid_encoding?)
-            assert_nil(replayed[/[\x00-\x09\x0b-\x1f\x7f]/], "control byte leaked replaying #{stream.inspect}")
-          end
-        end
-
-        # The CSI fast path is an accelerator, not a second grammar: with it
-        # disabled, every sequence takes the character loop, and the output
-        # must not change.
-        def test_csi_fast_path_agrees_with_the_character_loop
-          original = Replay::CSI_BODY
           streams = [
             "hello\r\e[Kbye",
             "a b\e[2Dx\e[1Gy",
             "\e[?25l\e[0;33m* done\e[0m\e[?25h",
-            "kept\e[1G\e[1Lnote\n",
-            "first\nsecond\e[2A\e[1M",
-            "ab\e[sX\e[10;70sY\e[uZ",
             "x\ny\e[1 Az",
             "\e[3\a1mred",
-            "before \e[?1049hui\e[?1049lafter",
             "ok\e[31",
+            "⚠\e[31m️b\e[3GX",
+            "👩\e[31m‍💻b\e[3GX",
+            "界Z\e[2GX",
+            "\u0301Z",
+            "a\e[C\u0301Z",
+            "界\tX",
           ]
-          expected = streams.map { |stream| Replay.render(stream) }
+          3000.times do
+            stream = ''.b
+            rng.rand(40..120).times do
+              stream << (rng.rand(3).zero? ? rng.bytes(rng.rand(1..6)) : fragments.sample(random: rng).b)
+            end
+            streams << stream
+          end
 
+          expected = streams.map do |stream|
+            replayed = Replay.render(stream)
+
+            assert_predicate(replayed, :valid_encoding?)
+            assert_nil(replayed[/[\x00-\x09\x0b-\x1f\x7f]/], "control byte leaked replaying #{stream.inspect}")
+            replayed
+          end
+
+          original = Replay::CSI_BODY
           Replay.send(:remove_const, :CSI_BODY)
           Replay.const_set(:CSI_BODY, /(?!)/) # never matches
 
-          assert_equal(expected, streams.map { |stream| Replay.render(stream) })
-        ensure
+          streams.each_with_index do |stream, index|
+            assert_equal(expected.fetch(index), Replay.render(stream), "CSI paths diverged replaying #{stream.inspect}")
+          end
+
           Replay.send(:remove_const, :CSI_BODY)
           Replay.const_set(:CSI_BODY, original)
+
+          original_screen = Replay::Screen
+          forced_cell_screen = Class.new(original_screen) do
+            def write(text)
+              materialize(@row)
+              promote(@row)
+              super
+            end
+
+            def erase_line(mode)
+              promote(@row) if @row < @lines.length
+              super
+            end
+          end
+          Replay.send(:remove_const, :Screen)
+          Replay.const_set(:Screen, forced_cell_screen)
+
+          streams.each_with_index do |stream, index|
+            assert_equal(expected.fetch(index), Replay.render(stream), "write paths diverged replaying #{stream.inspect}")
+          end
+        ensure
+          if original && Replay::CSI_BODY != original
+            Replay.send(:remove_const, :CSI_BODY)
+            Replay.const_set(:CSI_BODY, original)
+          end
+          if original_screen && Replay::Screen != original_screen
+            Replay.send(:remove_const, :Screen)
+            Replay.const_set(:Screen, original_screen)
+          end
         end
 
         def test_replays_a_spin_group_to_one_line_per_task
-          out, _ = capture_io do
-            sink = $stdout # the StringIO capture_io swapped in
-            CLI::UI::StdoutRouter.ensure_activated
-            group = CLI::UI::SpinGroup.new
-            # Tasks run until the group has repainted, so the capture holds a
-            # cursor-up no matter how the threads are scheduled. The count
-            # only bounds a failure; success exits on the first repaint.
-            until_repaint = -> do
-              500.times do
-                break if sink.string.match?(/\e\[\d*A/)
-
-                sleep(0.01)
+          repaint = Queue.new
+          sink_class = Class.new(StringIO) do
+            define_method(:print) do |*args|
+              super(*args).tap do
+                if !defined?(@repaint_signaled) && string.match?(/\e\[\d*A/)
+                  @repaint_signaled = true
+                  2.times { repaint << true }
+                end
               end
             end
-            group.add('first') { until_repaint.call }
-            group.add('second') { until_repaint.call }
-            group.wait
           end
+          sink = sink_class.new
+          CLI::UI::StdoutRouter.ensure_activated
+          group = CLI::UI::SpinGroup.new(auto_debrief: false)
+          group.add('first') { repaint.pop(timeout: 2) }
+          group.add('second') { repaint.pop(timeout: 2) }
+          assert(group.wait(to: sink))
+          out = sink.string
 
           replayed = ANSI.replay(out).lines.map(&:chomp).reject(&:empty?)
 

@@ -20,12 +20,12 @@ module CLI
       # Operations that assume a viewport -- screen-relative positioning
       # (CUP), display erasure (ED), wrapping -- are ignored: a capture does
       # not record scrolling, so a screen coordinate has no buffer row to
-      # map onto. The alternate screen (?1049) needs no viewport: what a
-      # full-screen UI draws there is discarded on exit, as a terminal
-      # discards it, never reaching scrollback. Commands outside the repaint
-      # vocabulary -- character editing (ICH, DCH, ECH), scroll regions,
-      # tab-stop setting, charset translation (SO/SI) -- are dropped without
-      # effect. Each column holds one grapheme cluster, sized by
+      # map onto. Alternate-screen modes (?47, ?1047, ?1049) need no
+      # viewport: what a full-screen UI draws there is discarded on exit, as
+      # a terminal discards it, never reaching scrollback. Commands outside
+      # the repaint vocabulary -- character editing (ICH, DCH, ECH), scroll
+      # regions, tab-stop setting, charset translation (SO/SI) -- are dropped
+      # without effect. Each column holds one grapheme cluster, sized by
       # TerminalWidth.grapheme_width: a wide glyph owns two columns, and
       # overwriting either half blanks the other, as a terminal does.
       # Trailing whitespace on every line is trimmed from the result: a
@@ -46,8 +46,6 @@ module CLI
         # ones it can't match -- garbled, aborted, cut off, or carrying
         # embedded controls -- take the csi state's character loop, and both
         # paths funnel into the same apply, so neither can drift on dispatch.
-        # The pass earns its keep: a 1.6MB capture holding 91k CSI sequences
-        # replays a third again as slow without it (159ms to 206ms).
         CSI_BODY = /([\x30-\x3f]*)([\x20-\x2f]*)([\x40-\x7e])/
         # An OSC payload runs to its end: BEL or ST terminate it, CAN and SUB
         # abort it, and an aborting ESC starts a sequence of its own.
@@ -66,28 +64,52 @@ module CLI
         # The second column of a wide glyph holds this marker: the glyph
         # owns both cells, but only the first contributes to the output.
         CONTINUATION = ''
+        # DEC's three alternate-buffer modes differ in clearing and cursor
+        # save semantics. Replay only needs their shared property: content
+        # drawn there does not enter the main screen's scrollback.
+        ALTERNATE_SCREEN_MODES = ['47', '1047', '1049'].freeze
+        # These standard CSI commands depend on viewport coordinates, bounds,
+        # or scroll margins that a captured stream does not record.
+        VIEWPORT_FINALS = ['H', 'J', 'S', 'T', 'd', 'f', 'r'].freeze
+        VIEWPORT_SCROLL_FINALS = ['@', 'A'].freeze
 
-        # A grid of lines with no viewport, each line an array of cells: one
-        # grapheme cluster per column, a wide cluster owning its cell and a
-        # CONTINUATION marker in the next, as terminal emulators store wide
-        # glyphs. Height is unbounded because a capture has no scrollback to
-        # lose, width because the writer has already truncated to the
-        # terminal.
+        # A grid of lines with no viewport. Lines stay compact strings while
+        # output only appends to them; moving back to edit one promotes it to
+        # an array with one cell per terminal column. This keeps ordinary logs
+        # proportional to their input while preserving terminal semantics for
+        # repainted rows. Height is unbounded because a capture has no
+        # scrollback to lose, width because the writer has already truncated
+        # to the terminal.
         class Screen
           #: -> void
           def initialize
-            @lines = [[]] #: Array[Array[String]]
+            @lines = [+''] #: Array[String | Array[String]]
+            # Compact strings need their terminal width because String#length
+            # is not a column count for wide graphemes. Promoted rows use the
+            # cell array's length and have a nil entry here.
+            @widths = [0] #: Array[Integer?]
+            # Only the current compact row needs its trailing grapheme cached.
+            # Returning to a nonempty row without a cache promotes it.
+            @trailing_cluster = nil #: String?
             @row = 0 #: Integer
             @col = 0 #: Integer
             @padding = 0 #: Integer
             @saved = [0, 0] #: Array[Integer]
-            @conjured = {}.compare_by_identity #: Hash[Array[String], bool]
-            @alternate = nil #: [Array[Array[String]], Integer, Integer, Array[Integer], Integer]?
+            @conjured = {}.compare_by_identity #: Hash[String | Array[String], bool]
+            @alternate = nil #: [Array[String | Array[String]], Array[Integer?], Integer, Integer, Array[Integer], Integer]?
           end
 
           #: (String text) -> void
           def write(text)
             line = materialize(@row)
+            if line.is_a?(String) && @col == @widths.fetch(@row)
+              if @trailing_cluster || line.empty?
+                append(line, text)
+                return
+              end
+            end
+
+            line = promote(@row)
             if text.ascii_only?
               # Every character in an ASCII printable run is one column
               # wide, so the whole run lands in one splice.
@@ -118,7 +140,7 @@ module CLI
           # terminal; the gap only becomes real if something writes into it.
           #: (Integer rows) -> void
           def move_rows(rows)
-            @row = (@row + rows).clamp(0, @lines.length - 1 + room)
+            change_row((@row + rows).clamp(0, @lines.length - 1 + room))
           end
 
           #: (Integer cols) -> void
@@ -131,7 +153,7 @@ module CLI
           #: (Integer col) -> void
           def column(col)
             limit = MAX_COLUMN
-            limit = [@lines.fetch(@row).length, limit].max if @row < @lines.length
+            limit = [line_width(@row), limit].max if @row < @lines.length
             @col = col.clamp(0, limit)
           end
 
@@ -140,8 +162,11 @@ module CLI
           #: -> void
           def line_feed
             materialize(@row)
-            @row += 1
-            @lines << [] while @lines.length <= @row
+            change_row(@row + 1)
+            while @lines.length <= @row
+              @lines << +''
+              @widths << 0
+            end
           end
 
           # A capture holds the writer's bare \n, but the tty driver's ONLCR
@@ -172,7 +197,7 @@ module CLI
 
           #: -> void
           def restore_cursor
-            @row = @saved.fetch(0)
+            change_row(@saved.fetch(0))
             @col = @saved.fetch(1)
           end
 
@@ -182,6 +207,27 @@ module CLI
 
             # Modes a terminal doesn't define are ignored, not coerced to zero.
             line = @lines.fetch(@row)
+            if line.is_a?(String)
+              width = @widths.fetch(@row).to_i
+              case mode
+              when 0
+                return if @col >= width
+
+                if @col.zero?
+                  line.clear
+                  @widths[@row] = 0
+                  invalidate_trailing_cluster
+                  return
+                end
+              when 2
+                line.clear
+                @widths[@row] = 0
+                invalidate_trailing_cluster
+                return
+              end
+            end
+
+            line = promote(@row)
             case mode
             when 0
               split_wide(line, @col)
@@ -200,6 +246,8 @@ module CLI
             inserted = [count, room].min
             @padding += inserted
             @lines[@row, 0] = Array.new(inserted) { conjure }
+            @widths[@row, 0] = Array.new(inserted, 0)
+            invalidate_trailing_cluster
           end
 
           # Deleting a conjured row hands its charge back: an insert and its
@@ -207,8 +255,13 @@ module CLI
           #: (Integer count) -> void
           def delete_lines(count)
             removed = @lines.slice!(@row, count)
+            @widths.slice!(@row, count)
             removed&.each { |line| @padding -= 1 if @conjured.delete(line) }
-            @lines << [] if @lines.empty?
+            if @lines.empty?
+              @lines << +''
+              @widths << 0
+            end
+            invalidate_trailing_cluster
           end
 
           # The alternate screen holds a full-screen UI -- a prompt, a pager
@@ -219,11 +272,13 @@ module CLI
           def enter_alternate
             return if @alternate
 
-            @alternate = [@lines, @row, @col, @saved, @padding]
-            @lines = [[]]
+            @alternate = [@lines, @widths, @row, @col, @saved, @padding]
+            @lines = [+'']
+            @widths = [0]
             @row = 0
             @col = 0
             @saved = [0, 0]
+            invalidate_trailing_cluster
           end
 
           # Leaving discards the scratch grid and restores the saved one,
@@ -236,8 +291,9 @@ module CLI
             return unless stash
 
             @lines.each { |line| @conjured.delete(line) }
-            @lines, @row, @col, @saved, @padding = stash
+            @lines, @widths, @row, @col, @saved, @padding = stash
             @alternate = nil
+            invalidate_trailing_cluster
           end
 
           # Trailing whitespace is trimmed from every line: a terminal renders
@@ -249,12 +305,56 @@ module CLI
           def to_s
             lines = @lines
             if (stash = @alternate)
-              lines = stash.fetch(0) #: as Array[Array[String]]
+              lines = stash.fetch(0) #: as Array[String | Array[String]]
             end
-            lines.map { |line| line.join.rstrip }.join("\n")
+            lines.map { |line| line.is_a?(String) ? line.rstrip : line.join.rstrip }.join("\n")
           end
 
           private
+
+          # Appending to a compact row avoids retaining one String object per
+          # terminal cell. Re-segment only the cached boundary grapheme because
+          # presentation sequences can split a combining sequence.
+          #: (String line, String text) -> void
+          def append(line, text)
+            if text.ascii_only?
+              mark_content(line)
+              line << text
+              @col += text.length
+              @widths[@row] = @col
+              @trailing_cluster = text[-1]
+              return
+            end
+
+            clusters = text.grapheme_clusters
+            previous = @trailing_cluster
+            if previous
+              combined = "#{previous}#{text}".grapheme_clusters
+              if combined.first != previous
+                old_width = TerminalWidth.grapheme_width(previous)
+                replacement = combined.shift.to_s
+                combined.reject! { |cluster| cluster.match?(LEADING_MARK) }
+                line.delete_suffix!(previous)
+                line << replacement << combined.join
+                @col += TerminalWidth.grapheme_width(replacement) - old_width
+                @col += combined.sum { |cluster| TerminalWidth.grapheme_width(cluster) }
+                @widths[@row] = @col
+                @trailing_cluster = combined.last || replacement
+                return
+              end
+            end
+
+            clusters.reject! { |cluster| cluster.match?(LEADING_MARK) }
+            return if clusters.empty?
+
+            mark_content(line)
+            clusters.each do |cluster|
+              line << cluster
+              @col += TerminalWidth.grapheme_width(cluster)
+            end
+            @widths[@row] = @col
+            @trailing_cluster = clusters.last
+          end
 
           # A presentation sequence can split one grapheme into separate
           # printable runs: "e\e[31m\u0301" is still one displayed cell.
@@ -317,7 +417,7 @@ module CLI
           # A conjured row that receives display content is content after all:
           # hand its charge back. A leading combining mark at column zero is
           # ignored before reaching here, so it cannot spend the padding cap.
-          #: (Array[String] line) -> void
+          #: (String | Array[String] line) -> void
           def mark_content(line)
             @padding -= 1 if @conjured.delete(line)
           end
@@ -342,25 +442,65 @@ module CLI
             [MAX_PADDING - @padding, 0].max
           end
 
-          #: -> Array[String]
+          #: -> String
           def conjure
-            line = [] #: Array[String]
+            line = +''
             @conjured[line] = true
             line
           end
 
-          # Fills in the rows a cursor move skipped, so every entry stays an
-          # Array. The budget can overshoot by one move's worth: move_rows
-          # clamps against the room left when it runs, which insert_lines may
-          # since have spent.
-          #: (Integer row) -> Array[String]
+          # Fills in rows a cursor move skipped. The budget can overshoot by
+          # one move's worth: move_rows clamps against the room left when it
+          # runs, which insert_lines may since have spent.
+          #: (Integer row) -> (String | Array[String])
           def materialize(row)
             gap = row + 1 - @lines.length
             if gap.positive?
               @padding += gap
-              @lines << conjure while @lines.length <= row
+              while @lines.length <= row
+                @lines << conjure
+                @widths << 0
+              end
             end
             @lines.fetch(row)
+          end
+
+          # Converts a compact row to terminal cells the first time an
+          # operation needs to edit it in place.
+          #: (Integer row) -> Array[String]
+          def promote(row)
+            line = @lines.fetch(row)
+            return line unless line.is_a?(String)
+
+            cells = [] #: Array[String]
+            line.grapheme_clusters.each do |cluster|
+              cells << cluster
+              cells << CONTINUATION if TerminalWidth.grapheme_width(cluster) == 2
+            end
+            @conjured[cells] = true if @conjured.delete(line)
+            @lines[row] = cells
+            @widths[row] = nil
+            invalidate_trailing_cluster if row == @row
+            cells
+          end
+
+          #: (Integer row) -> Integer
+          def line_width(row)
+            line = @lines.fetch(row)
+            line.is_a?(String) ? @widths.fetch(row).to_i : line.length
+          end
+
+          #: (Integer row) -> void
+          def change_row(row)
+            return if row == @row
+
+            @row = row
+            invalidate_trailing_cluster
+          end
+
+          #: -> void
+          def invalidate_trailing_cluster
+            @trailing_cluster = nil
           end
         end
 
@@ -369,14 +509,17 @@ module CLI
           # Colors and other presentation sequences are dropped, as they are by
           # +ANSI.strip_codes+. The stream may arrive in any encoding --
           # captures are often read in binary mode -- and is decoded as UTF-8,
-          # replacing bytes that don't decode.
+          # replacing bytes that don't decode. If +diagnostics+ is provided,
+          # +:viewport_operations_seen+ is set when the stream uses an
+          # operation replay deliberately cannot model without viewport state.
           #
           # ==== Attributes
           #
           # - +stream+ - The captured terminal stream to replay
+          # - +diagnostics+ - Optional hash populated with replay limitations
           #
-          #: (String stream) -> String
-          def render(stream)
+          #: (String stream, ?diagnostics: Hash[Symbol, bool]?) -> String
+          def render(stream, diagnostics: nil)
             screen = Screen.new
             scanner = StringScanner.new(normalize(stream))
             state = :ground #: Symbol
@@ -386,7 +529,7 @@ module CLI
                 case state
                 when :ground then ground(screen, scanner)
                 when :escape then escape(screen, scanner)
-                when :csi then csi(screen, scanner)
+                when :csi then csi(screen, scanner, diagnostics)
                 when :osc then string_body(scanner, OSC_PAYLOAD)
                 else string_body(scanner, CONTROL_STRING_PAYLOAD)
                 end
@@ -474,9 +617,26 @@ module CLI
               when "\e" then next
               when "\x18", "\x1a" then return :ground
               when /[\x20-\x2f]/
-                # nF sequences: intermediate bytes, then one final byte.
-                scanner.skip(/[\x20-\x2f]*[\x30-\x7e]?/)
-                return :ground
+                return escape_intermediate(screen, scanner)
+              when SIMPLE_CONTROL then simple_control(screen, char)
+              else return :ground
+              end
+            end
+            :ground
+          end
+
+          # ESC intermediate state: collect through the final byte while
+          # executing embedded C0 controls and ignoring DEL. Bulk-skipping this
+          # tail would end the sequence at an embedded control, exposing its
+          # final byte as printable text.
+          #: (Screen screen, StringScanner scanner) -> Symbol
+          def escape_intermediate(screen, scanner)
+            until scanner.eos?
+              case (char = scanner.getch.to_s)
+              when /[\x30-\x7e]/ then return :ground
+              when /[\x20-\x2f]/ then next
+              when "\e" then return :escape
+              when "\x18", "\x1a" then return :ground
               when SIMPLE_CONTROL then simple_control(screen, char)
               else return :ground
               end
@@ -487,10 +647,10 @@ module CLI
           # CSI state: parameter bytes, then intermediate bytes, then one
           # final byte. A garbled byte poisons the sequence -- it is consumed
           # through its final but not executed, the VT500's ignore state.
-          #: (Screen screen, StringScanner scanner) -> Symbol
-          def csi(screen, scanner)
+          #: (Screen screen, StringScanner scanner, Hash[Symbol, bool]? diagnostics) -> Symbol
+          def csi(screen, scanner, diagnostics)
             if scanner.scan(CSI_BODY)
-              apply(screen, scanner[1].to_s, scanner[2].to_s, scanner[3].to_s)
+              apply(screen, scanner[1].to_s, scanner[2].to_s, scanner[3].to_s, diagnostics)
               return :ground
             end
 
@@ -500,7 +660,7 @@ module CLI
             until scanner.eos?
               case (char = scanner.getch.to_s)
               when /[\x40-\x7e]/
-                apply(screen, params, intermediates, char) unless garbled
+                apply(screen, params, intermediates, char, diagnostics) unless garbled
                 return :ground
               when /[\x30-\x3f]/ then params << char
               when /[\x20-\x2f]/ then intermediates << char
@@ -538,8 +698,12 @@ module CLI
             end
           end
 
-          #: (Screen screen, String params, String intermediates, String final) -> void
-          def apply(screen, params, intermediates, final)
+          #: (Screen screen, String params, String intermediates, String final, Hash[Symbol, bool]? diagnostics) -> void
+          def apply(screen, params, intermediates, final, diagnostics)
+            if diagnostics && viewport_operation?(params, intermediates, final)
+              diagnostics[:viewport_operations_seen] = true
+            end
+
             # An intermediate byte selects a different command than the final
             # byte alone: \e[1 A is scroll-right, not cursor-up.
             return unless intermediates.empty?
@@ -548,7 +712,10 @@ module CLI
             # tracks, except the alternate screen: a full-screen UI draws
             # there and a terminal discards it on exit, so it must not reach
             # the replayed scrollback either.
-            if params == '?1049'
+            if params.match?(/\A\?[\d;]*\z/)
+              modes = params.delete_prefix('?').split(';')
+              return unless modes.any? { |mode| ALTERNATE_SCREEN_MODES.include?(mode) }
+
               case final
               when 'h' then screen.enter_alternate
               when 'l' then screen.exit_alternate
@@ -579,6 +746,21 @@ module CLI
             # viewport operation -- not a save.
             when 's' then screen.save_cursor if params.empty?
             when 'u' then screen.restore_cursor
+            end
+          end
+
+          # CUP/HVP/VPA, ED, scrolling, and scroll-margin commands need a
+          # viewport origin and bounds. CSI SP @ and CSI SP A are the
+          # horizontal scroll commands; their intermediate byte distinguishes
+          # them from insert-character and cursor-up.
+          #: (String params, String intermediates, String final) -> bool
+          def viewport_operation?(params, intermediates, final)
+            return false unless params.match?(/\A[\d;]*\z/)
+
+            if intermediates.empty?
+              VIEWPORT_FINALS.include?(final) || (final == 's' && !params.empty?)
+            else
+              intermediates == ' ' && VIEWPORT_SCROLL_FINALS.include?(final)
             end
           end
 

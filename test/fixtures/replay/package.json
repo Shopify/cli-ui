@@ -1,0 +1,10 @@
+{
+  "name": "cli-ui-replay-oracle",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Pinned xterm.js oracle for ANSI replay fixtures",
+  "dependencies": {
+    "@xterm/addon-unicode-graphemes": "0.4.0",
+    "@xterm/headless": "6.0.0"
+  }
+}
