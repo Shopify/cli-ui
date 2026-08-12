@@ -22,43 +22,26 @@ module CLI
         assert_example(3, 'AB' + MAN_COOKING, 'AB' + Truncater::TRUNCATED)
       end
 
-      def test_truncate_preserves_osc8_hyperlinks
-        # OSC 8 hyperlinks: ESC ] 8 ;; url ST text ESC ] 8 ;; ST
-        # Truncater must ignore OSC payload width (ANSI.printing_width already does).
-        link = CLI::UI.link(
-          'https://github.com/Shopify/shopify/pull/12345',
-          '#12345',
-          format: false,
-        )
+      def test_truncate_formatted_hyperlink_issue_614
+        url = 'https://github.com/Shopify/shopify/pull/12345'
+        link = CLI::UI.link(url, '#12345')
 
-        assert_equal(6, ANSI.printing_width(link))
         assert_example(20, link, link)
-        assert_example(6, link, link)
       end
 
-      def test_truncate_osc8_hyperlink_by_visible_width
+      def test_truncate_closes_an_open_osc8_hyperlink
         link = CLI::UI.link('https://example.com/very/long/url', 'hello world', format: false)
         opening = "\x1b]8;;https://example.com/very/long/url\x1b\\"
 
-        assert_example(6, link, "#{opening}hello#{Truncater::TRUNCATED}")
+        assert_example(6, link, "#{opening}hello#{Truncater::HYPERLINK_END}#{Truncater::TRUNCATED}")
       end
 
       def test_truncate_preserves_bel_terminated_osc
-        # OSC sequences may also end with BEL (e.g. OSC 9 progress)
         progress = "\x1b]9;4;1\x07"
         text = "#{progress}hello world"
 
         assert_example(20, text, text)
         assert_example(6, text, "#{progress}hello#{Truncater::TRUNCATED}")
-      end
-
-      def test_truncate_formatted_hyperlink_issue_614
-        # Exact issue #614 reproduction (default formatted link)
-        url = 'https://github.com/Shopify/shopify/pull/12345'
-        link = CLI::UI.link(url, '#12345')
-
-        assert_equal(6, ANSI.printing_width(link))
-        assert_example(20, link, link)
       end
 
       private

@@ -15,6 +15,7 @@ module CLI
       ESC                  = 0x1b
       LEFT_SQUARE_BRACKET  = 0x5b
       RIGHT_SQUARE_BRACKET = 0x5d # ]
+      BACKSLASH            = 0x5c # \
       BEL                  = 0x07
       ZWJ                  = 0x200d # emojipedia.org/emoji-zwj-sequences
       SEMICOLON            = 0x3b
@@ -28,15 +29,21 @@ module CLI
       UC_ALPHA_RANGE = 0x60..0x71
 
       TRUNCATED = "\x1b[0m…"
+      # OSC 8 close (empty URI). Both BEL and ST terminate OSC; we emit ST here
+      # to match CLI::UI.link / ANSI hyperlink endings.
+      HYPERLINK_END = "\x1b]8;;\x1b\\"
 
       class << self
         #: (String text, Integer printing_width) -> String
         def call(text, printing_width)
           return text if text.size <= printing_width
 
-          width            = 0
-          mode             = PARSE_ROOT
-          truncation_index = nil #: Integer?
+          width                   = 0
+          mode                    = PARSE_ROOT
+          truncation_index        = nil #: Integer?
+          open_hyperlink          = false
+          open_hyperlink_at_cut   = false
+          osc_payload_start       = nil #: Integer?
 
           codepoints = text.codepoints
           codepoints.each.with_index do |cp, index|
@@ -50,7 +57,10 @@ module CLI
               else
                 width += width(cp)
                 if width >= printing_width
-                  truncation_index ||= index
+                  unless truncation_index
+                    truncation_index = index
+                    open_hyperlink_at_cut = open_hyperlink
+                  end
                   # it looks like we could break here but we still want the
                   # width calculation for the rest of the characters.
                 end
@@ -60,7 +70,7 @@ module CLI
               when LEFT_SQUARE_BRACKET
                 PARSE_ANSI
               when RIGHT_SQUARE_BRACKET
-                # OSC sequences: ESC ] ... (BEL | ESC \)
+                osc_payload_start = index + 1
                 PARSE_OSC
               else
                 PARSE_ROOT
@@ -77,18 +87,25 @@ module CLI
                 mode = PARSE_ROOT
               end
             when PARSE_OSC
-              # OSC sequences end with BEL or ST (ESC + backslash), matching
-              # ANSI::OSC_SEQUENCE / ANSI.strip_codes.
+              # BEL and ST (ESC \) both terminate OSC; see ANSI::OSC_SEQUENCE.
               case cp
               when BEL
+                open_hyperlink = osc8_open?(codepoints, osc_payload_start, index)
+                osc_payload_start = nil
                 mode = PARSE_ROOT
               when ESC
                 mode = PARSE_OSC_END
               end
             when PARSE_OSC_END
-              # Completing ST (ESC \). Malformed terminators fall back to root,
-              # consistent with unexpected CSI bytes.
-              mode = PARSE_ROOT
+              if cp == BACKSLASH
+                # ST is ESC \; payload ends before the ESC.
+                open_hyperlink = osc8_open?(codepoints, osc_payload_start, index - 1)
+                osc_payload_start = nil
+                mode = PARSE_ROOT
+              else
+                # Not a String Terminator — keep consuming as OSC payload.
+                mode = PARSE_OSC
+              end
             when PARSE_ZWJ
               # consume any character and consider it as having no width
               # width(x+ZWJ+y) = width(x).
@@ -104,10 +121,24 @@ module CLI
           return text if !truncation_index || width <= printing_width
 
           slice = codepoints[0...truncation_index] #: as !nil
-          slice.pack('U*') + TRUNCATED
+          truncated = slice.pack('U*')
+          truncated += HYPERLINK_END if open_hyperlink_at_cut
+          truncated + TRUNCATED
         end
 
         private
+
+        #: (Array[Integer] codepoints, Integer? start, Integer end_exclusive) -> bool
+        def osc8_open?(codepoints, start, end_exclusive)
+          return false if start.nil? || end_exclusive <= start
+
+          payload = codepoints[start...end_exclusive].pack('U*')
+          return false unless payload.start_with?('8;')
+
+          # OSC 8: 8;params;URI — nonempty URI opens a link; empty closes it.
+          _params, uri = payload.delete_prefix('8;').split(';', 2)
+          !uri.to_s.empty?
+        end
 
         #: (Integer printable_codepoint) -> Integer
         def width(printable_codepoint)
