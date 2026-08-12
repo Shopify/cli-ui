@@ -5,15 +5,19 @@ module CLI
   module UI
     # Truncater truncates a string to a provided printable width.
     module Truncater
-      PARSE_ROOT = :root
-      PARSE_ANSI = :ansi
-      PARSE_ESC  = :esc
-      PARSE_ZWJ  = :zwj
+      PARSE_ROOT    = :root
+      PARSE_ANSI    = :ansi
+      PARSE_ESC     = :esc
+      PARSE_ZWJ     = :zwj
+      PARSE_OSC     = :osc
+      PARSE_OSC_END = :osc_end
 
-      ESC                 = 0x1b
-      LEFT_SQUARE_BRACKET = 0x5b
-      ZWJ                 = 0x200d # emojipedia.org/emoji-zwj-sequences
-      SEMICOLON           = 0x3b
+      ESC                  = 0x1b
+      LEFT_SQUARE_BRACKET  = 0x5b
+      RIGHT_SQUARE_BRACKET = 0x5d # ]
+      BEL                  = 0x07
+      ZWJ                  = 0x200d # emojipedia.org/emoji-zwj-sequences
+      SEMICOLON            = 0x3b
 
       # EMOJI_RANGE in particular is super inaccurate. This is best-effort.
       # If you need this to be more accurate, we'll almost certainly accept a
@@ -55,6 +59,9 @@ module CLI
               mode = case cp
               when LEFT_SQUARE_BRACKET
                 PARSE_ANSI
+              when RIGHT_SQUARE_BRACKET
+                # OSC sequences: ESC ] ... (BEL | ESC \)
+                PARSE_OSC
               else
                 PARSE_ROOT
               end
@@ -69,6 +76,19 @@ module CLI
                 # unexpected. let's just go back to the root state I guess?
                 mode = PARSE_ROOT
               end
+            when PARSE_OSC
+              # OSC sequences end with BEL or ST (ESC + backslash), matching
+              # ANSI::OSC_SEQUENCE / ANSI.strip_codes.
+              case cp
+              when BEL
+                mode = PARSE_ROOT
+              when ESC
+                mode = PARSE_OSC_END
+              end
+            when PARSE_OSC_END
+              # Completing ST (ESC \). Malformed terminators fall back to root,
+              # consistent with unexpected CSI bytes.
+              mode = PARSE_ROOT
             when PARSE_ZWJ
               # consume any character and consider it as having no width
               # width(x+ZWJ+y) = width(x).
