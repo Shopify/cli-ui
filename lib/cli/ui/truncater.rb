@@ -5,74 +5,57 @@ module CLI
   module UI
     # Truncater truncates a string to a provided printable width.
     module Truncater
-      PARSE_ROOT = :root
-      PARSE_ANSI = :ansi
-      PARSE_ESC  = :esc
-      PARSE_ZWJ  = :zwj
-
-      ESC                 = 0x1b
-      LEFT_SQUARE_BRACKET = 0x5b
-      ZWJ                 = 0x200d # emojipedia.org/emoji-zwj-sequences
-      SEMICOLON           = 0x3b
-
-      # EMOJI_RANGE in particular is super inaccurate. This is best-effort.
-      # If you need this to be more accurate, we'll almost certainly accept a
-      # PR improving it.
-      EMOJI_RANGE    = 0x1f300..0x1f5ff
-      NUMERIC_RANGE  = 0x30..0x39
-      LC_ALPHA_RANGE = 0x40..0x5a
-      UC_ALPHA_RANGE = 0x60..0x71
-
       TRUNCATED = "\x1b[0m…"
 
       class << self
         #: (String text, Integer printing_width) -> String
         def call(text, printing_width)
-          return text if text.size <= printing_width
+          # Fast path. Only sound for ASCII, where no character is wider
+          # than a column: an emoji string can occupy up to twice as many
+          # columns as it has characters.
+          return text if text.ascii_only? && text.size <= printing_width
 
-          width            = 0
-          mode             = PARSE_ROOT
-          truncation_index = nil #: Integer?
+          width = 0 #: Integer
+          truncated = false #: bool
+          open_hyperlink = false #: bool
+          # Preserve the caller's encoding. Printer can deliberately pass
+          # ASCII-compatible strings in encodings other than UTF-8, and an
+          # empty UTF-8 buffer becomes incompatible after binary text has
+          # been appended to it.
+          prefix = String.new(encoding: text.encoding)
 
-          codepoints = text.codepoints
-          codepoints.each.with_index do |cp, index|
-            case mode
-            when PARSE_ROOT
-              case cp
-              when ESC # non-printable, followed by some more non-printables.
-                mode = PARSE_ESC
-              when ZWJ # non-printable, followed by another non-printable.
-                mode = PARSE_ZWJ
-              else
-                width += width(cp)
-                if width >= printing_width
-                  truncation_index ||= index
-                  # it looks like we could break here but we still want the
-                  # width calculation for the rest of the characters.
+          ANSI.each_token(text) do |kind, token|
+            case kind
+            when :sequence
+              # Sequences occupy no columns. Any that fall past the cut are
+              # dropped: TRUNCATED resets SGR state itself, and an open
+              # hyperlink gets closed below.
+              next if truncated
+
+              prefix << token
+              if (match = ANSI::HYPERLINK.match(token))
+                open_hyperlink = !match[:uri].to_s.empty?
+              end
+            when :text
+              token.grapheme_clusters.each do |cluster|
+                # A line break is zero columns to printing_width, but a
+                # truncated string must stay one line: count it as a column
+                # so the cut lands before it, never absorbing it silently.
+                # Other zero-width clusters remain zero-width.
+                cluster_width = case cluster
+                when "\n", "\r", "\r\n"
+                  1
+                else
+                  ANSI.grapheme_width(cluster)
                 end
+                width += cluster_width
+                # We cut before the cluster that reaches printing_width,
+                # leaving one column for TRUNCATED's ellipsis, but keep
+                # measuring: if the rest of the string turns out not to
+                # exceed printing_width after all, no cut is needed.
+                truncated ||= width >= printing_width
+                prefix << cluster unless truncated
               end
-            when PARSE_ESC
-              mode = case cp
-              when LEFT_SQUARE_BRACKET
-                PARSE_ANSI
-              else
-                PARSE_ROOT
-              end
-            when PARSE_ANSI
-              # ANSI escape codes preeeetty much have the format of:
-              # \x1b[0-9;]+[A-Za-z]
-              case cp
-              when NUMERIC_RANGE, SEMICOLON
-              when LC_ALPHA_RANGE, UC_ALPHA_RANGE
-                mode = PARSE_ROOT
-              else
-                # unexpected. let's just go back to the root state I guess?
-                mode = PARSE_ROOT
-              end
-            when PARSE_ZWJ
-              # consume any character and consider it as having no width
-              # width(x+ZWJ+y) = width(x).
-              mode = PARSE_ROOT
             end
           end
 
@@ -81,22 +64,21 @@ module CLI
           # It's specifically for the case where we decided "Yes, this is the
           # point at which we'd have to add a truncation!" but it's actually
           # the end of the string.
-          return text if !truncation_index || width <= printing_width
+          return text if !truncated || width <= printing_width
 
-          slice = codepoints[0...truncation_index] #: as !nil
-          slice.pack('U*') + TRUNCATED
+          prefix << ANSI::HYPERLINK_END.encode(text.encoding) if open_hyperlink
+          prefix << truncation_marker(text.encoding)
         end
 
         private
 
-        #: (Integer printable_codepoint) -> Integer
-        def width(printable_codepoint)
-          case printable_codepoint
-          when EMOJI_RANGE
-            2
-          else
-            1
-          end
+        # Keep the reset and marker in the input encoding. Some
+        # ASCII-compatible encodings cannot represent U+2026; a one-column
+        # question mark preserves the width contract in that case.
+        #
+        #: (Encoding encoding) -> String
+        def truncation_marker(encoding)
+          TRUNCATED.encode(encoding, invalid: :replace, undef: :replace, replace: '?')
         end
       end
     end
