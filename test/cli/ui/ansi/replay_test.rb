@@ -134,6 +134,14 @@ module CLI
           assert_equal("x\nred", Replay.render("x\e[3\n1mred"))
         end
 
+        # Controls embedded after an ESC intermediate do not end its sequence:
+        # C0 controls execute, DEL is ignored, and the eventual final is still
+        # consumed.
+        def test_embedded_controls_do_not_end_escape_intermediate_sequences
+          assert_equal('az', Replay.render("ab\e(\bBz"))
+          assert_equal('Az', Replay.render("A\e(\x7fBz"))
+        end
+
         # A parameter byte arriving after an intermediate puts a terminal in
         # its ignore state: the sequence is consumed but not executed.
         def test_out_of_order_csi_bytes_ignore_the_sequence
@@ -157,6 +165,8 @@ module CLI
           # An unmatched exit and a doubled enter change nothing.
           assert_equal('ab', Replay.render("a\e[?1049lb"))
           assert_equal('ab', Replay.render("a\e[?1049h\e[?1049hx\e[?1049lb"))
+          # DECSET and DECRST apply every mode in a semicolon-separated list.
+          assert_equal('ab', Replay.render("a\e[?25;1049hLOST\e[?25;1049lb"))
         end
 
         # StdoutRouter's in_alternate_screen re-prints everything captured

@@ -474,9 +474,26 @@ module CLI
               when "\e" then next
               when "\x18", "\x1a" then return :ground
               when /[\x20-\x2f]/
-                # nF sequences: intermediate bytes, then one final byte.
-                scanner.skip(/[\x20-\x2f]*[\x30-\x7e]?/)
-                return :ground
+                return escape_intermediate(screen, scanner)
+              when SIMPLE_CONTROL then simple_control(screen, char)
+              else return :ground
+              end
+            end
+            :ground
+          end
+
+          # ESC intermediate state: collect through the final byte while
+          # executing embedded C0 controls and ignoring DEL. Bulk-skipping this
+          # tail would end the sequence at an embedded control, exposing its
+          # final byte as printable text.
+          #: (Screen screen, StringScanner scanner) -> Symbol
+          def escape_intermediate(screen, scanner)
+            until scanner.eos?
+              case (char = scanner.getch.to_s)
+              when /[\x30-\x7e]/ then return :ground
+              when /[\x20-\x2f]/ then next
+              when "\e" then return :escape
+              when "\x18", "\x1a" then return :ground
               when SIMPLE_CONTROL then simple_control(screen, char)
               else return :ground
               end
@@ -548,7 +565,10 @@ module CLI
             # tracks, except the alternate screen: a full-screen UI draws
             # there and a terminal discards it on exit, so it must not reach
             # the replayed scrollback either.
-            if params == '?1049'
+            if params.match?(/\A\?[\d;]*\z/)
+              modes = params.delete_prefix('?').split(';')
+              return unless modes.include?('1049')
+
               case final
               when 'h' then screen.enter_alternate
               when 'l' then screen.exit_alternate
