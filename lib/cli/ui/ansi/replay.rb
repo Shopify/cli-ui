@@ -46,8 +46,6 @@ module CLI
         # ones it can't match -- garbled, aborted, cut off, or carrying
         # embedded controls -- take the csi state's character loop, and both
         # paths funnel into the same apply, so neither can drift on dispatch.
-        # The pass earns its keep: a 1.6MB capture holding 91k CSI sequences
-        # replays a third again as slow without it (159ms to 206ms).
         CSI_BODY = /([\x30-\x3f]*)([\x20-\x2f]*)([\x40-\x7e])/
         # An OSC payload runs to its end: BEL or ST terminate it, CAN and SUB
         # abort it, and an aborting ESC starts a sequence of its own.
@@ -67,27 +65,38 @@ module CLI
         # owns both cells, but only the first contributes to the output.
         CONTINUATION = ''
 
-        # A grid of lines with no viewport, each line an array of cells: one
-        # grapheme cluster per column, a wide cluster owning its cell and a
-        # CONTINUATION marker in the next, as terminal emulators store wide
-        # glyphs. Height is unbounded because a capture has no scrollback to
-        # lose, width because the writer has already truncated to the
-        # terminal.
+        # A grid of lines with no viewport. Lines stay compact strings while
+        # output only appends to them; moving back to edit one promotes it to
+        # an array with one cell per terminal column. This keeps ordinary logs
+        # proportional to their input while preserving terminal semantics for
+        # repainted rows. Height is unbounded because a capture has no
+        # scrollback to lose, width because the writer has already truncated
+        # to the terminal.
         class Screen
           #: -> void
           def initialize
-            @lines = [[]] #: Array[Array[String]]
+            @lines = [+''] #: Array[String | Array[String]]
+            # Compact strings need their terminal width because String#length
+            # is not a column count for wide graphemes. Promoted rows use the
+            # cell array's length and have a nil entry here.
+            @widths = [0] #: Array[Integer?]
             @row = 0 #: Integer
             @col = 0 #: Integer
             @padding = 0 #: Integer
             @saved = [0, 0] #: Array[Integer]
-            @conjured = {}.compare_by_identity #: Hash[Array[String], bool]
-            @alternate = nil #: [Array[Array[String]], Integer, Integer, Array[Integer], Integer]?
+            @conjured = {}.compare_by_identity #: Hash[String | Array[String], bool]
+            @alternate = nil #: [Array[String | Array[String]], Array[Integer?], Integer, Integer, Array[Integer], Integer]?
           end
 
           #: (String text) -> void
           def write(text)
             line = materialize(@row)
+            if line.is_a?(String) && @col == @widths.fetch(@row)
+              append(line, text)
+              return
+            end
+
+            line = promote(@row)
             if text.ascii_only?
               # Every character in an ASCII printable run is one column
               # wide, so the whole run lands in one splice.
@@ -131,7 +140,7 @@ module CLI
           #: (Integer col) -> void
           def column(col)
             limit = MAX_COLUMN
-            limit = [@lines.fetch(@row).length, limit].max if @row < @lines.length
+            limit = [line_width(@row), limit].max if @row < @lines.length
             @col = col.clamp(0, limit)
           end
 
@@ -141,7 +150,10 @@ module CLI
           def line_feed
             materialize(@row)
             @row += 1
-            @lines << [] while @lines.length <= @row
+            while @lines.length <= @row
+              @lines << +''
+              @widths << 0
+            end
           end
 
           # A capture holds the writer's bare \n, but the tty driver's ONLCR
@@ -182,6 +194,24 @@ module CLI
 
             # Modes a terminal doesn't define are ignored, not coerced to zero.
             line = @lines.fetch(@row)
+            if line.is_a?(String)
+              width = @widths.fetch(@row).to_i
+              case mode
+              when 0
+                return if @col >= width
+                if @col.zero?
+                  line.clear
+                  @widths[@row] = 0
+                  return
+                end
+              when 2
+                line.clear
+                @widths[@row] = 0
+                return
+              end
+            end
+
+            line = promote(@row)
             case mode
             when 0
               split_wide(line, @col)
@@ -200,6 +230,7 @@ module CLI
             inserted = [count, room].min
             @padding += inserted
             @lines[@row, 0] = Array.new(inserted) { conjure }
+            @widths[@row, 0] = Array.new(inserted, 0)
           end
 
           # Deleting a conjured row hands its charge back: an insert and its
@@ -207,8 +238,12 @@ module CLI
           #: (Integer count) -> void
           def delete_lines(count)
             removed = @lines.slice!(@row, count)
+            @widths.slice!(@row, count)
             removed&.each { |line| @padding -= 1 if @conjured.delete(line) }
-            @lines << [] if @lines.empty?
+            if @lines.empty?
+              @lines << +''
+              @widths << 0
+            end
           end
 
           # The alternate screen holds a full-screen UI -- a prompt, a pager
@@ -219,8 +254,9 @@ module CLI
           def enter_alternate
             return if @alternate
 
-            @alternate = [@lines, @row, @col, @saved, @padding]
-            @lines = [[]]
+            @alternate = [@lines, @widths, @row, @col, @saved, @padding]
+            @lines = [+'']
+            @widths = [0]
             @row = 0
             @col = 0
             @saved = [0, 0]
@@ -236,7 +272,7 @@ module CLI
             return unless stash
 
             @lines.each { |line| @conjured.delete(line) }
-            @lines, @row, @col, @saved, @padding = stash
+            @lines, @widths, @row, @col, @saved, @padding = stash
             @alternate = nil
           end
 
@@ -249,12 +285,53 @@ module CLI
           def to_s
             lines = @lines
             if (stash = @alternate)
-              lines = stash.fetch(0) #: as Array[Array[String]]
+              lines = stash.fetch(0) #: as Array[String | Array[String]]
             end
-            lines.map { |line| line.join.rstrip }.join("\n")
+            lines.map { |line| line.is_a?(String) ? line.rstrip : line.join.rstrip }.join("\n")
           end
 
           private
+
+          # Appending to a compact row avoids retaining one String object per
+          # terminal cell. Re-segment the boundary with the previous grapheme
+          # because presentation sequences can split a combining sequence.
+          #: (String line, String text) -> void
+          def append(line, text)
+            if text.ascii_only?
+              mark_content(line)
+              line << text
+              @col += text.length
+              @widths[@row] = @col
+              return
+            end
+
+            clusters = text.grapheme_clusters
+            previous = line.grapheme_clusters.last
+            if previous
+              combined = "#{previous}#{text}".grapheme_clusters
+              if combined.first != previous
+                old_width = TerminalWidth.grapheme_width(previous)
+                replacement = combined.shift.to_s
+                combined.reject! { |cluster| cluster.match?(LEADING_MARK) }
+                line.delete_suffix!(previous)
+                line << replacement << combined.join
+                @col += TerminalWidth.grapheme_width(replacement) - old_width
+                @col += combined.sum { |cluster| TerminalWidth.grapheme_width(cluster) }
+                @widths[@row] = @col
+                return
+              end
+            end
+
+            clusters.reject! { |cluster| cluster.match?(LEADING_MARK) }
+            return if clusters.empty?
+
+            mark_content(line)
+            clusters.each do |cluster|
+              line << cluster
+              @col += TerminalWidth.grapheme_width(cluster)
+            end
+            @widths[@row] = @col
+          end
 
           # A presentation sequence can split one grapheme into separate
           # printable runs: "e\e[31m\u0301" is still one displayed cell.
@@ -317,7 +394,7 @@ module CLI
           # A conjured row that receives display content is content after all:
           # hand its charge back. A leading combining mark at column zero is
           # ignored before reaching here, so it cannot spend the padding cap.
-          #: (Array[String] line) -> void
+          #: (String | Array[String] line) -> void
           def mark_content(line)
             @padding -= 1 if @conjured.delete(line)
           end
@@ -342,25 +419,51 @@ module CLI
             [MAX_PADDING - @padding, 0].max
           end
 
-          #: -> Array[String]
+          #: -> String
           def conjure
-            line = [] #: Array[String]
+            line = +''
             @conjured[line] = true
             line
           end
 
-          # Fills in the rows a cursor move skipped, so every entry stays an
-          # Array. The budget can overshoot by one move's worth: move_rows
-          # clamps against the room left when it runs, which insert_lines may
-          # since have spent.
-          #: (Integer row) -> Array[String]
+          # Fills in rows a cursor move skipped. The budget can overshoot by
+          # one move's worth: move_rows clamps against the room left when it
+          # runs, which insert_lines may since have spent.
+          #: (Integer row) -> (String | Array[String])
           def materialize(row)
             gap = row + 1 - @lines.length
             if gap.positive?
               @padding += gap
-              @lines << conjure while @lines.length <= row
+              while @lines.length <= row
+                @lines << conjure
+                @widths << 0
+              end
             end
             @lines.fetch(row)
+          end
+
+          # Converts a compact row to terminal cells the first time an
+          # operation needs to edit it in place.
+          #: (Integer row) -> Array[String]
+          def promote(row)
+            line = @lines.fetch(row)
+            return line unless line.is_a?(String)
+
+            cells = [] #: Array[String]
+            line.grapheme_clusters.each do |cluster|
+              cells << cluster
+              cells << CONTINUATION if TerminalWidth.grapheme_width(cluster) == 2
+            end
+            @conjured[cells] = true if @conjured.delete(line)
+            @lines[row] = cells
+            @widths[row] = nil
+            cells
+          end
+
+          #: (Integer row) -> Integer
+          def line_width(row)
+            line = @lines.fetch(row)
+            line.is_a?(String) ? @widths.fetch(row).to_i : line.length
           end
         end
 
@@ -474,9 +577,26 @@ module CLI
               when "\e" then next
               when "\x18", "\x1a" then return :ground
               when /[\x20-\x2f]/
-                # nF sequences: intermediate bytes, then one final byte.
-                scanner.skip(/[\x20-\x2f]*[\x30-\x7e]?/)
-                return :ground
+                return escape_intermediate(screen, scanner)
+              when SIMPLE_CONTROL then simple_control(screen, char)
+              else return :ground
+              end
+            end
+            :ground
+          end
+
+          # ESC intermediate state: collect through the final byte while
+          # executing embedded C0 controls and ignoring DEL. Bulk-skipping this
+          # tail would end the sequence at an embedded control, exposing its
+          # final byte as printable text.
+          #: (Screen screen, StringScanner scanner) -> Symbol
+          def escape_intermediate(screen, scanner)
+            until scanner.eos?
+              case (char = scanner.getch.to_s)
+              when /[\x30-\x7e]/ then return :ground
+              when /[\x20-\x2f]/ then next
+              when "\e" then return :escape
+              when "\x18", "\x1a" then return :ground
               when SIMPLE_CONTROL then simple_control(screen, char)
               else return :ground
               end
@@ -548,7 +668,10 @@ module CLI
             # tracks, except the alternate screen: a full-screen UI draws
             # there and a terminal discards it on exit, so it must not reach
             # the replayed scrollback either.
-            if params == '?1049'
+            if params.match?(/\A\?[\d;]*\z/)
+              modes = params.delete_prefix('?').split(';')
+              return unless modes.include?('1049')
+
               case final
               when 'h' then screen.enter_alternate
               when 'l' then screen.exit_alternate

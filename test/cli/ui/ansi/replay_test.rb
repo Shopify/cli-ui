@@ -134,6 +134,14 @@ module CLI
           assert_equal("x\nred", Replay.render("x\e[3\n1mred"))
         end
 
+        # Controls embedded after an ESC intermediate do not end its sequence:
+        # C0 controls execute, DEL is ignored, and the eventual final is still
+        # consumed.
+        def test_embedded_controls_do_not_end_escape_intermediate_sequences
+          assert_equal('az', Replay.render("ab\e(\bBz"))
+          assert_equal('Az', Replay.render("A\e(\x7fBz"))
+        end
+
         # A parameter byte arriving after an intermediate puts a terminal in
         # its ignore state: the sequence is consumed but not executed.
         def test_out_of_order_csi_bytes_ignore_the_sequence
@@ -157,6 +165,8 @@ module CLI
           # An unmatched exit and a doubled enter change nothing.
           assert_equal('ab', Replay.render("a\e[?1049lb"))
           assert_equal('ab', Replay.render("a\e[?1049h\e[?1049hx\e[?1049lb"))
+          # DECSET and DECRST apply every mode in a semicolon-separated list.
+          assert_equal('ab', Replay.render("a\e[?25;1049hLOST\e[?25;1049lb"))
         end
 
         # StdoutRouter's in_alternate_screen re-prints everything captured
@@ -260,6 +270,26 @@ module CLI
           assert_equal(line.length - 2, replayed.index('X'))
         end
 
+        def test_write_once_rows_stay_compact_until_they_are_edited
+          screen = Replay::Screen.new
+          rows = ['x' * 80, '界' * 40, '👩‍💻' * 40]
+          100.times do |index|
+            screen.write(rows.fetch(index % rows.length))
+            screen.erase_line(0)
+            screen.newline
+          end
+
+          lines = screen.instance_variable_get(:@lines)
+          assert(lines.all?(String))
+
+          screen.move_rows(-1)
+          screen.carriage_return
+          screen.write('y')
+
+          assert_instance_of(Array, lines.fetch(-2))
+          assert(lines.each_with_index.all? { |line, index| index == 99 || line.is_a?(String) })
+        end
+
         def test_control_conjured_rows_are_bounded
           moves = Replay.render(("\e[9999999B" * 1000) + 'x')
           inserts = Replay.render("\e[1024L" * 200)
@@ -298,7 +328,7 @@ module CLI
         # aborts landing mid-collection. Whatever the bytes, a replay must
         # not raise, must return valid UTF-8, and must not leak control
         # bytes into the output.
-        def test_fuzz_arbitrary_streams_replay_safely
+        def test_fuzz_arbitrary_streams_replay_safely_and_both_csi_paths_agree
           rng = Random.new(20260811)
           fragments = [
             "\e[",
@@ -321,69 +351,70 @@ module CLI
             'text',
             'é',
             '⠧',
+            "\e[31m",
+            "\e[2A",
+            "\e[1G",
+            "\e[2K",
             "\e[?1049h",
             "\e[?1049l",
+          ]
+          streams = [
+            "hello\r\e[Kbye",
+            "a b\e[2Dx\e[1Gy",
+            "\e[?25l\e[0;33m* done\e[0m\e[?25h",
+            "x\ny\e[1 Az",
+            "\e[3\a1mred",
+            "ok\e[31",
           ]
           100.times do
             stream = ''.b
             rng.rand(40..120).times do
               stream << (rng.rand(3).zero? ? rng.bytes(rng.rand(1..6)) : fragments.sample(random: rng).b)
             end
+            streams << stream
+          end
 
+          expected = streams.map do |stream|
             replayed = Replay.render(stream)
 
             assert_predicate(replayed, :valid_encoding?)
             assert_nil(replayed[/[\x00-\x09\x0b-\x1f\x7f]/], "control byte leaked replaying #{stream.inspect}")
+            replayed
           end
-        end
 
-        # The CSI fast path is an accelerator, not a second grammar: with it
-        # disabled, every sequence takes the character loop, and the output
-        # must not change.
-        def test_csi_fast_path_agrees_with_the_character_loop
           original = Replay::CSI_BODY
-          streams = [
-            "hello\r\e[Kbye",
-            "a b\e[2Dx\e[1Gy",
-            "\e[?25l\e[0;33m* done\e[0m\e[?25h",
-            "kept\e[1G\e[1Lnote\n",
-            "first\nsecond\e[2A\e[1M",
-            "ab\e[sX\e[10;70sY\e[uZ",
-            "x\ny\e[1 Az",
-            "\e[3\a1mred",
-            "before \e[?1049hui\e[?1049lafter",
-            "ok\e[31",
-          ]
-          expected = streams.map { |stream| Replay.render(stream) }
-
           Replay.send(:remove_const, :CSI_BODY)
           Replay.const_set(:CSI_BODY, /(?!)/) # never matches
 
-          assert_equal(expected, streams.map { |stream| Replay.render(stream) })
+          streams.each_with_index do |stream, index|
+            assert_equal(expected.fetch(index), Replay.render(stream), "CSI paths diverged replaying #{stream.inspect}")
+          end
         ensure
-          Replay.send(:remove_const, :CSI_BODY)
-          Replay.const_set(:CSI_BODY, original)
+          if original
+            Replay.send(:remove_const, :CSI_BODY)
+            Replay.const_set(:CSI_BODY, original)
+          end
         end
 
         def test_replays_a_spin_group_to_one_line_per_task
-          out, _ = capture_io do
-            sink = $stdout # the StringIO capture_io swapped in
-            CLI::UI::StdoutRouter.ensure_activated
-            group = CLI::UI::SpinGroup.new
-            # Tasks run until the group has repainted, so the capture holds a
-            # cursor-up no matter how the threads are scheduled. The count
-            # only bounds a failure; success exits on the first repaint.
-            until_repaint = -> do
-              500.times do
-                break if sink.string.match?(/\e\[\d*A/)
-
-                sleep(0.01)
+          repaint = Queue.new
+          sink_class = Class.new(StringIO) do
+            define_method(:print) do |*args|
+              super(*args).tap do
+                if !defined?(@repaint_signaled) && string.match?(/\e\[\d*A/)
+                  @repaint_signaled = true
+                  2.times { repaint << true }
+                end
               end
             end
-            group.add('first') { until_repaint.call }
-            group.add('second') { until_repaint.call }
-            group.wait
           end
+          sink = sink_class.new
+          CLI::UI::StdoutRouter.ensure_activated
+          group = CLI::UI::SpinGroup.new(auto_debrief: false)
+          group.add('first') { repaint.pop(timeout: 2) }
+          group.add('second') { repaint.pop(timeout: 2) }
+          assert(group.wait(to: sink))
+          out = sink.string
 
           replayed = ANSI.replay(out).lines.map(&:chomp).reject(&:empty?)
 
