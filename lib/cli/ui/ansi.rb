@@ -4,6 +4,9 @@
 module CLI
   module UI
     module ANSI
+      autoload :Replay, 'cli/ui/ansi/replay'
+      private_constant :Replay
+
       ESC = "\x1b"
       # https://ghostty.org/docs/vt/concepts/sequences#csi-sequences
       CSI_SEQUENCE = /\x1b\[[\d;:]+[\x20-\x2f]*?[\x40-\x7e]/
@@ -46,6 +49,21 @@ module CLI
         #: (String str) -> String
         def strip_codes(str)
           str.gsub(Regexp.union(CSI_SEQUENCE, OSC_SEQUENCE, /\r/), '')
+        end
+
+        # Returns the text left by applying terminal repaint controls in a
+        # captured stream. Presentation controls are dropped and malformed
+        # input is replaced while decoding the result as UTF-8.
+        #
+        # ==== Attributes
+        #
+        # - +str+ - The captured terminal stream to replay
+        # - +diagnostics+ - Optional hash populated when replay encounters
+        #   terminal operations it cannot model
+        #
+        #: (String str, ?diagnostics: Hash[Symbol, bool]?) -> String
+        def replay(str, diagnostics: nil)
+          Replay.render(str, diagnostics: diagnostics)
         end
 
         # Returns an ANSI control sequence

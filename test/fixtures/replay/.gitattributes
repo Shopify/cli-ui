@@ -1,0 +1,4 @@
+# Captures and expectations are byte-exact: keep git out of their line endings
+# and whitespace rules.
+*.raw -text -whitespace
+*.expected -text -whitespace
