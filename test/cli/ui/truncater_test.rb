@@ -44,6 +44,19 @@ module CLI
         assert_example(6, text, "#{progress}hello#{Truncater::TRUNCATED}")
       end
 
+      def test_truncate_keeps_osc8_open_across_unrelated_osc
+        opening = "\x1b]8;;https://example.com/very/long/url\x1b\\"
+        progress = "\x1b]9;4;1\x07"
+        closing = "\x1b]8;;\x1b\\"
+        text = "#{opening}hello#{progress} world#{closing}"
+
+        assert_example(
+          6,
+          text,
+          "#{opening}hello#{progress}#{Truncater::HYPERLINK_END}#{Truncater::TRUNCATED}",
+        )
+      end
+
       private
 
       def assert_example(width, from, to)

@@ -90,7 +90,8 @@ module CLI
               # BEL and ST (ESC \) both terminate OSC; see ANSI::OSC_SEQUENCE.
               case cp
               when BEL
-                open_hyperlink = osc8_open?(codepoints, osc_payload_start, index)
+                state = osc8_link_state(codepoints, osc_payload_start, index)
+                open_hyperlink = state unless state.nil?
                 osc_payload_start = nil
                 mode = PARSE_ROOT
               when ESC
@@ -99,7 +100,8 @@ module CLI
             when PARSE_OSC_END
               if cp == BACKSLASH
                 # ST is ESC \; payload ends before the ESC.
-                open_hyperlink = osc8_open?(codepoints, osc_payload_start, index - 1)
+                state = osc8_link_state(codepoints, osc_payload_start, index - 1)
+                open_hyperlink = state unless state.nil?
                 osc_payload_start = nil
                 mode = PARSE_ROOT
               else
@@ -128,14 +130,15 @@ module CLI
 
         private
 
-        #: (Array[Integer] codepoints, Integer? start, Integer end_exclusive) -> bool
-        def osc8_open?(codepoints, start, end_exclusive)
-          return false if start.nil? || end_exclusive <= start
+        #: (Array[Integer] codepoints, Integer? start, Integer end_exclusive) -> bool?
+        def osc8_link_state(codepoints, start, end_exclusive)
+          return nil if start.nil? || end_exclusive <= start
 
           payload = codepoints[start...end_exclusive].pack('U*')
-          return false unless payload.start_with?('8;')
+          return nil unless payload.start_with?('8;')
 
           # OSC 8: 8;params;URI — nonempty URI opens a link; empty closes it.
+          # Non-OSC8 sequences return nil so Truncater does not clear open-link state.
           _params, uri = payload.delete_prefix('8;').split(';', 2)
           !uri.to_s.empty?
         end
