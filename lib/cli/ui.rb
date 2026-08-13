@@ -346,7 +346,7 @@ module CLI
 
         text = "{{blue:{{underline:#{text}}}}}" if blue_underline
         text = CLI::UI.fmt(text) if format
-        "\x1b]8;;#{url}\x1b\\#{text}\x1b]8;;\x1b\\"
+        ANSI.hyperlink(url, text)
       end
     end
 

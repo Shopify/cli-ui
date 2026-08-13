@@ -1,6 +1,9 @@
 # typed: true
 # frozen_string_literal: true
 
+require 'strscan'
+require_relative 'ansi/terminal_width'
+
 module CLI
   module UI
     module ANSI
@@ -9,35 +12,82 @@ module CLI
 
       ESC = "\x1b"
       # https://ghostty.org/docs/vt/concepts/sequences#csi-sequences
-      CSI_SEQUENCE = /\x1b\[[\d;:]+[\x20-\x2f]*?[\x40-\x7e]/
+      CSI_SEQUENCE = /\x1b\[[\x30-\x3f]*[\x20-\x2f]*[\x40-\x7e]/
       # https://ghostty.org/docs/vt/concepts/sequences#osc-sequences
       # OSC sequences can be terminated with either ST (\x1b\x5c) or BEL (\x07)
       OSC_SEQUENCE = /\x1b\][^\x07\x1b]*?(?:\x07|\x1b\x5c)/
-
+      # An OSC 8 hyperlink: \x1b]8;params;URI, terminated like any OSC
+      # sequence. One with a URI opens a link, one without closes it.
+      # Anchored, to classify a whole sequence as yielded by each_token.
+      HYPERLINK = /\A\x1b\]8;[^;]*;(?<uri>.*)(?:\x07|\x1b\x5c)\z/m
+      HYPERLINK_END = "\x1b]8;;\x1b\x5c"
+      # Any whole control sequence, for walking a string as alternating
+      # sequence and text runs.
+      SEQUENCE = Regexp.union(CSI_SEQUENCE, OSC_SEQUENCE)
+      # A CSI or OSC introducer whose sequence runs to the end of the
+      # string without a terminator — usually one sliced open by an
+      # upstream cut. Treating it as a sequence keeps its bytes out of
+      # width measurements and truncation windows.
+      UNTERMINATED_SEQUENCE = /\x1b[\[\]][^\x1b]*\z/
+      TEXT_RUN = /[^\x1b]+/
       class << self
-        # ANSI escape sequences (like \x1b[31m) have zero width.
-        # when calculating the padding width, we must exclude them.
-        # This also implements a basic version of utf8 character width calculation like
-        # we could get for real from something like utf8proc.
+        # Yields str as alternating runs of :sequence (one whole CSI or OSC
+        # sequence) and :text (everything between them). Sequences never
+        # straddle tokens, so a consumer that measures or cuts only at
+        # token boundaries cannot slice one open. A CSI or OSC sequence
+        # left unterminated at the end of the string is yielded as one
+        # :sequence token; any other stray ESC is yielded as text.
+        #
+        #: (String str) ?{ (Symbol kind, String token) -> void } -> Enumerator[[Symbol, String]]?
+        def each_token(str, &block)
+          return to_enum(:each_token, str) unless block_given?
+
+          scanner = StringScanner.new(str)
+          until scanner.eos?
+            if (sequence = scanner.scan(SEQUENCE) || scanner.scan(UNTERMINATED_SEQUENCE))
+              yield(:sequence, sequence)
+            elsif (text = scanner.scan(TEXT_RUN))
+              yield(:text, text)
+            else
+              yield(:text, scanner.getch.to_s)
+            end
+          end
+        end
+
+        # The number of terminal columns str occupies when printed: control
+        # sequences take none, and each grapheme cluster (not codepoint:
+        # 👩‍💻 is one cluster) is measured by grapheme_width.
         #
         #: (String str) -> Integer
         def printing_width(str)
-          zwj = false #: bool
-          strip_codes(str).codepoints.reduce(0) do |acc, cp|
-            if zwj
-              zwj = false
-              next acc
-            end
-            case cp
-            when 0x200d # zero-width joiner
-              zwj = true
-              acc
-            when "\n"
-              acc
+          # ASCII fast paths. Every ASCII grapheme cluster is one character
+          # wide except \n and \r, which are zero, so counting stands in for
+          # the cluster walk; with no ESC there are no sequences to skip and
+          # the whole string can be counted without tokenizing.
+          if str.ascii_only? && !str.include?(ESC)
+            return str.length - str.count("\n\r")
+          end
+
+          width = 0 #: Integer
+          each_token(str) do |kind, token|
+            next unless kind == :text
+
+            if token.ascii_only?
+              width += token.length - token.count("\n\r")
             else
-              acc + 1
+              token.grapheme_clusters.each do |cluster|
+                width += grapheme_width(cluster)
+              end
             end
           end
+          width
+        end
+
+        # The number of terminal columns one grapheme cluster occupies.
+        #
+        #: (String cluster) -> Integer
+        def grapheme_width(cluster)
+          TerminalWidth.grapheme_width(cluster)
         end
 
         # Strips ANSI codes from a str
@@ -80,6 +130,13 @@ module CLI
         #: (String params) -> String
         def sgr(params)
           control(params, 'm')
+        end
+
+        # Renders text as an OSC 8 hyperlink to url
+        #
+        #: (String url, String text) -> String
+        def hyperlink(url, text)
+          "\x1b]8;;#{url}\x1b\x5c#{text}#{HYPERLINK_END}"
         end
 
         # Cursor Movement
