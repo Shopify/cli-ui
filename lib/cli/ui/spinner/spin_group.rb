@@ -439,6 +439,12 @@ module CLI
           @work_queue.interrupt
           debrief(to: to) if @interrupt_debrief
           stopped? ? false : raise
+        rescue Exception # rubocop:disable Lint/RescueException
+          # A task failure outside StandardError is not ours to debrief, but it
+          # leaves wait mid-render. Stop the group and its workers before the
+          # exception escapes so sibling tasks do not continue unattended.
+          stop
+          raise
         end
 
         #: (String message) -> void

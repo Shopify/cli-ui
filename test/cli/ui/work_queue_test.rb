@@ -1,6 +1,7 @@
 # typed: false
 
 require 'test_helper'
+require 'timeout'
 require 'cli/ui/work_queue'
 
 module CLI
@@ -63,6 +64,56 @@ module CLI
 
         assert(future.completed?)
         assert_raises(StandardError, 'Test error') { future.value }
+      end
+
+      def test_future_non_standard_error_completes_and_worker_continues
+        @work_queue = WorkQueue.new(1)
+        failed = @work_queue.enqueue { raise NotImplementedError, 'not implemented' }
+        replacement = @work_queue.enqueue { :ran }
+
+        @work_queue.wait
+
+        assert(failed.completed?)
+        error = assert_raises(NotImplementedError) { failed.value }
+        assert_equal('not implemented', error.message)
+        assert_equal(:ran, replacement.value)
+      end
+
+      def test_killed_worker_fails_its_future_and_runs_already_queued_work
+        @work_queue = WorkQueue.new(1)
+        started = Queue.new
+        abandoned = @work_queue.enqueue do
+          started.push(:started)
+          sleep(30)
+        end
+        replacement = @work_queue.enqueue { :ran }
+
+        started.pop
+        @work_queue.instance_variable_get(:@workers).first.kill
+        Timeout.timeout(5) { @work_queue.wait }
+
+        error = assert_raises(WorkQueue::WorkerDied) { abandoned.value }
+        assert_match(/died before its task completed/, error.message)
+        assert_equal(:ran, replacement.value)
+      end
+
+      def test_task_interrupt_replaces_worker_for_already_queued_work
+        @work_queue = WorkQueue.new(1)
+        started = Queue.new
+        release = Queue.new
+        interrupted = @work_queue.enqueue do
+          started.push(:started)
+          release.pop
+          raise Interrupt
+        end
+
+        started.pop
+        replacement = @work_queue.enqueue { :ran }
+        release.push(:continue)
+        Timeout.timeout(5) { @work_queue.wait }
+
+        assert_raises(Interrupt) { interrupted.value }
+        assert_equal(:ran, replacement.value)
       end
 
       def test_max_concurrent

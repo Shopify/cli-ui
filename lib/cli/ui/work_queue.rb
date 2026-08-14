@@ -4,6 +4,10 @@
 module CLI
   module UI
     class WorkQueue
+      # Settled into a future whose worker left without settling it itself.
+      class WorkerDied < StandardError
+      end
+
       class Future
         #: -> void
         def initialize
@@ -69,17 +73,19 @@ module CLI
         @max_concurrent = max_concurrent
         @queue = Queue.new #: Queue
         @mutex = Mutex.new #: Mutex
+        @interrupt_mutex = Mutex.new #: Mutex
         @condition = ConditionVariable.new #: ConditionVariable
         @workers = [] #: Array[Thread]
+        @stopping = false #: bool
       end
 
       #: { -> untyped } -> Future
       def enqueue(&block)
         future = Future.new
         @mutex.synchronize do
+          @queue.push([future, block])
           start_worker if @workers.size < @max_concurrent
         end
-        @queue.push([future, block])
         future
       end
 
@@ -91,22 +97,49 @@ module CLI
       #: -> void
       def wait
         @queue.close
-        @workers.each(&:join)
+        loop do
+          workers = @mutex.synchronize { @workers.dup }
+          break if workers.empty?
+
+          workers.each(&:join)
+        end
       end
 
       #: -> void
       def interrupt
-        @mutex.synchronize do
-          @queue.close
-          # Fail any remaining tasks in the queue
-          until @queue.empty?
-            future, _block = @queue.pop(true)
-            future&.fail(Interrupt.new)
+        @interrupt_mutex.synchronize do
+          workers = @mutex.synchronize do
+            @stopping = true
+            @queue.close
+
+            # Fail any remaining tasks in the queue. Workers can consume from
+            # the queue concurrently, so an empty? check followed by pop is racy.
+            loop do
+              future, _block = @queue.pop(true)
+              future&.fail(Interrupt.new)
+            rescue ThreadError
+              break
+            end
+
+            @workers.dup
           end
-          # Interrupt all worker threads
-          @workers.each { |worker| worker.raise(Interrupt) if worker.alive? }
-          @workers.each(&:join)
-          @workers.clear
+
+          # These are WorkQueue-owned threads being deliberately torn down, so
+          # neither their thread-death report nor their Interrupt belongs to the
+          # caller performing the teardown.
+          workers.each do |worker|
+            next unless worker.alive?
+
+            worker.report_on_exception = false
+            worker.raise(Interrupt)
+          end
+          workers.each do |worker|
+            worker.join
+          rescue Interrupt
+            nil
+          end
+        ensure
+          @mutex.synchronize { @workers.clear }
         end
       end
 
@@ -115,26 +148,59 @@ module CLI
       #: -> void
       def start_worker
         @workers << Thread.new do
-          loop do
-            work = @queue.pop
-            break if work.nil?
-
-            future, block = work
-
-            begin
-              future.start
-              result = block.call
-              future.complete(result)
-            rescue Interrupt => e
-              future.fail(e)
-              raise # Always re-raise interrupts to terminate the worker
-            rescue StandardError => e
-              future.fail(e)
-              # Don't re-raise standard errors - allow worker to continue
-            end
-          end
+          run_worker
         rescue Interrupt
           # Clean exit on interrupt
+        ensure
+          worker_finished(Thread.current)
+        end
+      end
+
+      #: -> void
+      def run_worker
+        loop do
+          future = nil #: Future?
+          begin
+            # Do not let an asynchronous exception land after Queue#pop has
+            # removed work but before its future is assigned. Interrupts remain
+            # enabled while pop is blocked and while the task itself is running.
+            Thread.handle_interrupt(Exception => :never) do
+              work = Thread.handle_interrupt(Exception => :on_blocking) { @queue.pop }
+              return if work.nil?
+
+              future, block = work
+              future.start
+              result = Thread.handle_interrupt(Exception => :immediate) { block.call }
+              future.complete(result)
+            end
+          rescue Interrupt => e
+            future&.fail(e)
+            raise # Always re-raise interrupts to terminate the worker
+          rescue Exception => e # rubocop:disable Lint/RescueException
+            # The future carries the error to callers. Keep the worker: tasks
+            # already queued may have no later enqueue to replace it.
+            future&.fail(e)
+          ensure
+            if future
+              Thread.handle_interrupt(Exception => :never) do
+                unless future.completed?
+                  future.fail(WorkerDied.new('worker died before its task completed'))
+                end
+              end
+            end
+          end
+        end
+      end
+
+      #: (Thread worker) -> void
+      def worker_finished(worker)
+        Thread.handle_interrupt(Exception => :never) do
+          @mutex.synchronize do
+            @workers.delete(worker)
+            if !@stopping && !@queue.empty? && @workers.size < @max_concurrent
+              start_worker
+            end
+          end
         end
       end
     end
