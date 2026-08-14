@@ -56,6 +56,16 @@ ensure
   reset.call
 end
 
+# The file descriptors this process currently holds open. Both macOS and Linux expose
+# them as /dev/fd; returns nil elsewhere so callers can skip. Compare sets and assert
+# only on additions: unrelated handles left by earlier tests get finalized at arbitrary
+# points, which changes the count without anything having leaked.
+def open_fds
+  Dir.children('/dev/fd')
+rescue SystemCallError
+  nil
+end
+
 require 'fileutils'
 require 'tmpdir'
 require 'tempfile'

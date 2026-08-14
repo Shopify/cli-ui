@@ -184,11 +184,11 @@ module CLI
           end
         end
 
-        #: (?with_frame_inset: bool, ?merged_output: bool, ?duplicate_output_to: IO) { -> void } -> void
+        #: (?with_frame_inset: bool, ?merged_output: bool, ?duplicate_output_to: io_like?) { -> void } -> void
         def initialize(
           with_frame_inset: true,
           merged_output: false,
-          duplicate_output_to: File.open(File::NULL, 'w'),
+          duplicate_output_to: nil,
           &block
         )
           @with_frame_inset = with_frame_inset
@@ -225,7 +225,11 @@ module CLI
               case stream
               when :stdout
                 @out.write(data)
-                @duplicate_output_to.write(data)
+                begin
+                  @duplicate_output_to&.write(data)
+                rescue IOError
+                  # Ignore
+                end
               when :stderr
                 @err.write(data)
               else raise
