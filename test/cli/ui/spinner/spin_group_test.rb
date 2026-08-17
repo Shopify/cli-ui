@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'test_helper'
+require 'timeout'
 
 module CLI
   module UI
@@ -31,6 +32,45 @@ module CLI
             end
 
             assert(sg.wait)
+          end
+
+          assert_equal('', err)
+        end
+
+        def test_spin_group_non_standard_error_does_not_hang_or_report_thread_death
+          _out, err = capture_io do
+            CLI::UI::StdoutRouter.ensure_activated
+
+            sg = SpinGroup.new(auto_debrief: false)
+            sg.add('s') { raise NotImplementedError, 'not implemented' }
+
+            error = Timeout.timeout(10) do
+              assert_raises(NotImplementedError) { sg.wait }
+            end
+            assert_equal('not implemented', error.message)
+          end
+
+          assert_equal('', err)
+        end
+
+        def test_spin_group_non_standard_error_stops_the_group_and_its_siblings
+          _out, err = capture_io do
+            CLI::UI::StdoutRouter.ensure_activated
+
+            sg = SpinGroup.new(auto_debrief: false)
+            sibling_finished = false
+            sg.add('boom') { raise NotImplementedError, 'not implemented' }
+            sg.add('sibling') do
+              sleep(30)
+              sibling_finished = true
+            end
+
+            Timeout.timeout(10) do
+              assert_raises(NotImplementedError) { sg.wait }
+            end
+
+            assert(sg.stopped?)
+            refute(sibling_finished)
           end
 
           assert_equal('', err)

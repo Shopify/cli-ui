@@ -209,36 +209,35 @@ module CLI
 
           StdoutRouter.assert_enabled!
 
-          Thread.current[:cliui_current_capture] = self
-
-          prev_frame_inset = Thread.current[:no_cliui_frame_inset]
-          prev_hook = Thread.current[:cliui_output_hook]
-
-          if Thread.current.respond_to?(:report_on_exception)
-            Thread.current.report_on_exception = false
-          end
-
-          self.class.with_stdin_masked do
-            Thread.current[:no_cliui_frame_inset] = !@with_frame_inset
-            Thread.current[:cliui_output_hook] = ->(data, stream) do
-              stream = :stdout if @merged_output
-              case stream
-              when :stdout
-                @out.write(data)
-                @duplicate_output_to.write(data)
-              when :stderr
-                @err.write(data)
-              else raise
+          previous_capture = Thread.current[:cliui_current_capture]
+          begin
+            Thread.current[:cliui_current_capture] = self
+            self.class.with_stdin_masked do
+              previous_frame_inset = Thread.current[:no_cliui_frame_inset]
+              previous_hook = Thread.current[:cliui_output_hook]
+              begin
+                Thread.current[:no_cliui_frame_inset] = !@with_frame_inset
+                Thread.current[:cliui_output_hook] = ->(data, stream) do
+                  stream = :stdout if @merged_output
+                  case stream
+                  when :stdout
+                    @out.write(data)
+                    @duplicate_output_to.write(data)
+                  when :stderr
+                    @err.write(data)
+                  else raise
+                  end
+                  print_captured_output # suppress writing to terminal by default
+                end
+                @block.call
+              ensure
+                Thread.current[:cliui_output_hook] = previous_hook
+                Thread.current[:no_cliui_frame_inset] = previous_frame_inset
               end
-              print_captured_output # suppress writing to terminal by default
             end
-
-            @block.call
+          ensure
+            Thread.current[:cliui_current_capture] = previous_capture
           end
-        ensure
-          Thread.current[:cliui_output_hook] = prev_hook
-          Thread.current[:no_cliui_frame_inset] = prev_frame_inset
-          Thread.current[:cliui_current_capture] = nil
         end
 
         #: -> String
@@ -318,15 +317,17 @@ module CLI
         def with_id(on_streams:, &block)
           require 'securerandom'
           id = format('%05d', rand(10**5))
-          Thread.current[:cliui_output_id] = {
-            id: id,
-            streams: on_streams.map do |stream|
-              stream #: as io_like
-            end,
-          }
-          yield(id)
-        ensure
-          Thread.current[:cliui_output_id] = nil
+          streams = on_streams.map do |stream|
+            stream #: as io_like
+          end
+
+          previous_id = Thread.current[:cliui_output_id]
+          begin
+            Thread.current[:cliui_output_id] = { id: id, streams: streams }
+            yield(id)
+          ensure
+            Thread.current[:cliui_output_id] = previous_id
+          end
         end
 
         #: -> Hash[Symbol, (String | io_like)]?
