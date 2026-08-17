@@ -24,6 +24,59 @@ module CLI
         end
       end
 
+      def test_capture_opens_no_descriptors
+        skip('/dev/fd unavailable') unless open_fds
+
+        StdoutRouter::Capture.new {} # warm up any lazily-required files
+        before = open_fds
+        captures = Array.new(10) { StdoutRouter::Capture.new {} }
+
+        assert_empty(open_fds - before)
+        refute_empty(captures) # keep them reachable so nothing is finalized early
+      end
+
+      def test_capture_duplicate_output_to
+        capture_io do
+          StdoutRouter.with_enabled do
+            dup = StringIO.new
+            cap = StdoutRouter::Capture.new(duplicate_output_to: dup) { print('hello') }
+            cap.run
+            assert_equal('hello', cap.stdout)
+            assert_equal('hello', dup.string)
+            refute_predicate(dup, :closed?) # the capture doesn't own the handle
+          end
+        end
+      end
+
+      def test_capture_duplicate_output_to_receives_merged_stderr
+        capture_io do
+          StdoutRouter.with_enabled do
+            dup = StringIO.new
+            cap = StdoutRouter::Capture.new(merged_output: true, duplicate_output_to: dup) do
+              $stderr.print('oops')
+            end
+            cap.run
+            assert_equal('oops', dup.string)
+          end
+        end
+      end
+
+      def test_capture_ignores_closed_duplicate_output
+        capture_io do
+          StdoutRouter.with_enabled do
+            dup = StringIO.new
+            cap = StdoutRouter::Capture.new(duplicate_output_to: dup) do
+              dup.close
+              print('hello')
+            end
+
+            cap.run
+
+            assert_equal('hello', cap.stdout)
+          end
+        end
+      end
+
       def test_frame_can_autoload_after_router_is_enabled
         script = <<~RUBY
           require 'stringio'

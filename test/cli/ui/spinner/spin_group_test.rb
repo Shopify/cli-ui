@@ -36,6 +36,50 @@ module CLI
           assert_equal('', err)
         end
 
+        def test_spin_group_tasks_open_no_descriptors
+          skip('/dev/fd unavailable') unless open_fds
+
+          capture_io do
+            CLI::UI::StdoutRouter.ensure_activated
+
+            warmup = SpinGroup.new(auto_debrief: false)
+            warmup.add('warmup') { true }
+            assert(warmup.wait)
+
+            before = open_fds
+            release = Queue.new
+            sg = SpinGroup.new(auto_debrief: false, max_concurrent: 1)
+            20.times { |i| sg.add("task #{i}") { release.pop } }
+
+            while_running = open_fds
+            20.times { release.push(true) }
+            assert(sg.wait)
+            after = open_fds
+
+            assert_empty(while_running - before) # pending tasks hold no handles
+            assert_empty(after - before)
+          end
+        end
+
+        def test_spin_group_task_duplicates_output_to_stream
+          dup = StringIO.new
+
+          capture_io do
+            CLI::UI::StdoutRouter.ensure_activated
+
+            sg = SpinGroup.new(auto_debrief: false)
+            sg.add('task', duplicate_output_to: dup) do
+              print('task output')
+              true
+            end
+
+            assert(sg.wait)
+          end
+
+          assert_equal('task output', dup.string)
+          refute_predicate(dup, :closed?) # the task doesn't own the handle
+        end
+
         def test_spin_group_success_debrief
           capture_io do
             CLI::UI::StdoutRouter.ensure_activated

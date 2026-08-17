@@ -100,7 +100,7 @@ module CLI
           # * +title+ - Title of the task
           # * +block+ - Block for the task, will be provided with an instance of the spinner
           #
-          #: (String title, final_glyph: ^(bool success) -> (Glyph | String), merged_output: bool, duplicate_output_to: IO, work_queue: WorkQueue) { (Task task) -> untyped } -> void
+          #: (String title, final_glyph: ^(bool success) -> (Glyph | String), merged_output: bool, duplicate_output_to: io_like?, work_queue: WorkQueue) { (Task task) -> untyped } -> void
           def initialize(title, final_glyph:, merged_output:, duplicate_output_to:, work_queue:, &block)
             @title = title
             @final_glyph = final_glyph
@@ -300,12 +300,12 @@ module CLI
         #   spin_group.add('Title') { |spinner| sleep 1.0 }
         #   spin_group.wait
         #
-        #: (String title, ?final_glyph: ^(bool success) -> (Glyph | String), ?merged_output: bool, ?duplicate_output_to: IO) { (Task task) -> void } -> void
+        #: (String title, ?final_glyph: ^(bool success) -> (Glyph | String), ?merged_output: bool, ?duplicate_output_to: io_like?) { (Task task) -> void } -> void
         def add(
           title,
           final_glyph: DEFAULT_FINAL_GLYPH,
           merged_output: false,
-          duplicate_output_to: File.new(File::NULL, 'w'),
+          duplicate_output_to: nil,
           &block
         )
           @m.synchronize do
