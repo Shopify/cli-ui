@@ -44,7 +44,8 @@ module CLI
         # * +:auto_debrief+ - Automatically debrief exceptions or through success_debrief? Default to true
         # * +:interrupt_debrief+ - Automatically debrief on interrupt. Default to false
         # * +:max_concurrent+ - Maximum number of concurrent tasks. Default is 0 (effectively unlimited)
-        # * +:work_queue+ - Custom WorkQueue instance. If not provided, a new one will be created
+        # * +:work_queue+ - Custom WorkQueue instance. If not provided, a new one will be created.
+        #   Stopping this group cancels only this group's futures on a shared queue.
         # * +:to+ - Target stream, like $stdout or $stderr. Can be anything with print and puts methods,
         #   or under Sorbet, IO or StringIO. Defaults to $stdout
         #
@@ -69,7 +70,7 @@ module CLI
           @start = Time.new
           @stopped = false
           @internal_work_queue = work_queue.nil?
-          @work_queue = work_queue || WorkQueue.new(max_concurrent.zero? ? 1024 : max_concurrent) #: WorkQueue
+          @work_queue = work_queue || WorkQueue.new(max_concurrent) #: WorkQueue
           if block_given?
             yield self
             wait(to: to)
@@ -91,6 +92,11 @@ module CLI
 
           #: Integer?
           attr_reader :progress_percentage
+
+          # Internal: SpinGroup#stop cancels these on a shared queue.
+          # Not part of the public API.
+          #: WorkQueue::Future
+          attr_reader :future # :nodoc:
 
           # Initializes a new Task
           # This is managed entirely internally by +SpinGroup+
@@ -143,14 +149,26 @@ module CLI
               result = @future.value
               @success = true
               @success = false if result == TASK_FAILED
-            rescue => exc
+            rescue Interrupt, SystemExit
+              raise
+            rescue Exception => exc # rubocop:disable Lint/RescueException
+              # Any other exception (including ScriptError and friends) is a task
+              # failure, reported through the normal debrief rather than raised
+              # out of the middle of SpinGroup#wait's render loop.
               @exception = exc
               @success = false
             end
 
-            @on_done&.call(self)
-
             @done
+          end
+
+          # Runs the on_done callback at most once. SpinGroup calls this outside
+          # its render and pause mutexes so callbacks may safely reenter it.
+          #: -> void
+          def notify_done # :nodoc:
+            callback = @on_done
+            @on_done = nil
+            callback&.call(self)
           end
 
           # Re-renders the task if required:
@@ -322,9 +340,11 @@ module CLI
 
         #: -> void
         def stop
-          # If we already own the mutex (called from within another synchronized block),
-          # set stopped directly to avoid deadlock
-          if @m.owned?
+          # A render-time callback may already own @m. Mark the one-way state
+          # without relocking in that case, but otherwise preserve synchronized
+          # visibility and ordering with task additions.
+          mutex_owned = @m.owned?
+          if mutex_owned
             return if @stopped
 
             @stopped = true
@@ -335,8 +355,13 @@ module CLI
               @stopped = true
             end
           end
-          # Interrupt is thread-safe on its own, so we can call it outside the mutex
-          @work_queue.interrupt
+
+          # Closing plus scoped cancellation lets render-time callers return
+          # without joining under @m. Ordinary callers retain the historical
+          # synchronous stop behavior.
+          @work_queue.close if @internal_work_queue
+          @work_queue.cancel(task_futures)
+          @work_queue.wait if @internal_work_queue && !mutex_owned
         end
 
         #: -> bool
@@ -385,6 +410,8 @@ module CLI
               # Update progress mode based on task states
               current_mode = update_progress_mode(reporter, current_mode, first_render)
 
+              newly_done = [] #: Array[Task]
+
               self.class.pause_mutex.synchronize do
                 next if self.class.paused?
 
@@ -394,7 +421,7 @@ module CLI
                     force_full_render = render_puts_above(to, consumed_lines)
 
                     # Render all tasks
-                    done_count, consumed_lines = render_tasks(
+                    done_count, consumed_lines, newly_done = render_tasks(
                       to: to,
                       tasks_seen: tasks_seen,
                       tasks_seen_done: tasks_seen_done,
@@ -406,6 +433,8 @@ module CLI
                   end
                 end
               end
+
+              newly_done.each(&:notify_done)
 
               break if done_count == @tasks.size
 
@@ -434,11 +463,15 @@ module CLI
             end
           end
 
+          @work_queue.wait if @internal_work_queue
           result
         rescue Interrupt
-          @work_queue.interrupt
+          interrupt_work_queue
           debrief(to: to) if @interrupt_debrief
           stopped? ? false : raise
+        rescue SystemExit
+          interrupt_work_queue
+          raise
         end
 
         #: (String message) -> void
@@ -468,6 +501,22 @@ module CLI
         end
 
         private
+
+        #: -> void
+        def interrupt_work_queue
+          if @internal_work_queue
+            @work_queue.interrupt
+          else
+            @work_queue.cancel(task_futures)
+          end
+        end
+
+        # @tasks needs @m unless a render-time callback already owns it.
+        #: -> Array[WorkQueue::Future]
+        def task_futures
+          tasks = @m.owned? ? @tasks.dup : @m.synchronize { @tasks.dup }
+          tasks.map(&:future)
+        end
 
         # Update progress reporter mode based on task progress states
         #: (CLI::UI::ProgressReporter::Reporter reporter, Symbol current_mode, bool first_render) -> Symbol
@@ -522,14 +571,16 @@ module CLI
         end
 
         # Render all tasks
-        #: (to: io_like, tasks_seen: Array[bool], tasks_seen_done: Array[bool], consumed_lines: Integer, idx: Integer, force_full_render: bool, width: Integer) -> [Integer, Integer]
+        #: (to: io_like, tasks_seen: Array[bool], tasks_seen_done: Array[bool], consumed_lines: Integer, idx: Integer, force_full_render: bool, width: Integer) -> [Integer, Integer, Array[Task]]
         def render_tasks(to:, tasks_seen:, tasks_seen_done:, consumed_lines:, idx:, force_full_render:, width:)
           done_count = 0
+          newly_done = [] #: Array[Task]
 
           @tasks.each.with_index do |task, int_index|
             nat_index = int_index + 1
             task_done = task.check
             done_count += 1 if task_done
+            newly_done << task if task_done && !tasks_seen_done[int_index]
 
             if CLI::UI.enable_cursor?
               if nat_index > consumed_lines
@@ -550,7 +601,7 @@ module CLI
             tasks_seen_done[int_index] ||= task_done
           end
 
-          [done_count, consumed_lines]
+          [done_count, consumed_lines, newly_done]
         end
 
         # Debriefs failed tasks is +auto_debrief+ is true
@@ -562,39 +613,41 @@ module CLI
         #
         #: (?to: io_like) -> bool
         def debrief(to: $stdout)
-          @m.synchronize do
-            @tasks.each do |task|
-              next unless task.done
+          # Debrief callbacks are caller code and may reenter the group.
+          tasks = @m.synchronize { @tasks.dup }
 
-              title = task.title
-              out = task.stdout
-              err = task.stderr
+          tasks.each do |task|
+            next unless task.done
 
-              if task.success
-                next @success_debrief&.call(title, out, err)
-              end
+            title = task.title
+            out = task.stdout
+            err = task.stderr
 
-              # exception will not be set if the wait loop is stopped before the task is checked
-              e = task.exception
-              next @failure_debrief.call(title, e, out, err) if @failure_debrief
-
-              CLI::UI::Frame.open('Task Failed: ' + title, color: :red, timing: Time.new - @start) do
-                if e
-                  to.puts("#{e.class}: #{e.message}")
-                  to.puts("\tfrom #{e.backtrace.join("\n\tfrom ")}")
-                end
-
-                CLI::UI::Frame.divider('STDOUT')
-                out = '(empty)' if out.nil? || out.strip.empty?
-                to.puts(out)
-
-                CLI::UI::Frame.divider('STDERR')
-                err = '(empty)' if err.nil? || err.strip.empty?
-                to.puts(err)
-              end
+            if task.success
+              next @success_debrief&.call(title, out, err)
             end
-            @tasks.all?(&:success)
+
+            # exception will not be set if the wait loop is stopped before the task is checked
+            e = task.exception
+            next @failure_debrief.call(title, e, out, err) if @failure_debrief
+
+            CLI::UI::Frame.open('Task Failed: ' + title, color: :red, timing: Time.new - @start) do
+              if e
+                to.puts("#{e.class}: #{e.message}")
+                to.puts("\tfrom #{e.backtrace.join("\n\tfrom ")}")
+              end
+
+              CLI::UI::Frame.divider('STDOUT')
+              out = '(empty)' if out.nil? || out.strip.empty?
+              to.puts(out)
+
+              CLI::UI::Frame.divider('STDERR')
+              err = '(empty)' if err.nil? || err.strip.empty?
+              to.puts(err)
+            end
           end
+
+          tasks.all?(&:success)
         end
       end
     end
