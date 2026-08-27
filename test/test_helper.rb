@@ -69,3 +69,9 @@ end
 
 require 'minitest/autorun'
 require 'mocha/minitest'
+
+def capture_io_with_router(&block)
+  capture_io do
+    CLI::UI::StdoutRouter.with_enabled(&block)
+  end
+end

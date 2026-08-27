@@ -7,9 +7,7 @@ module CLI
     module Spinner
       class SpinGroupTest < Minitest::Test
         def test_spin_group
-          _out, err = capture_io do
-            CLI::UI::StdoutRouter.ensure_activated
-
+          _out, err = capture_io_with_router do
             sg = SpinGroup.new
             sg.add('s') do
               true
@@ -22,9 +20,7 @@ module CLI
         end
 
         def test_spin_group_auto_debrief_false
-          _out, err = capture_io do
-            CLI::UI::StdoutRouter.ensure_activated
-
+          _out, err = capture_io_with_router do
             sg = SpinGroup.new(auto_debrief: false)
             sg.add('s') do
               true
@@ -37,9 +33,7 @@ module CLI
         end
 
         def test_spin_group_success_debrief
-          capture_io do
-            CLI::UI::StdoutRouter.ensure_activated
-
+          capture_io_with_router do
             debriefer = ->(title, out, err) {}
             sg = SpinGroup.new
             sg.success_debrief(&debriefer)
@@ -54,8 +48,7 @@ module CLI
         end
 
         def test_spin_group_with_custom_work_queue
-          capture_io do
-            CLI::UI::StdoutRouter.ensure_activated
+          capture_io_with_router do
             work_queue = CLI::UI::WorkQueue.new(2)
             sg = SpinGroup.new(work_queue: work_queue)
 
@@ -88,8 +81,7 @@ module CLI
         end
 
         def test_spin_group_with_max_concurrent
-          capture_io do
-            CLI::UI::StdoutRouter.ensure_activated
+          capture_io_with_router do
             sg = SpinGroup.new(max_concurrent: 2)
 
             startup_queue = Queue.new
@@ -124,8 +116,7 @@ module CLI
         end
 
         def test_spin_group_interrupt
-          capture_io do
-            CLI::UI::StdoutRouter.ensure_activated
+          capture_io_with_router do
             sg = SpinGroup.new
             task_completed = false
             task_interrupted = false
@@ -158,8 +149,7 @@ module CLI
         end
 
         def test_spin_group_stop
-          capture_io do
-            CLI::UI::StdoutRouter.ensure_activated
+          capture_io_with_router do
             sg = SpinGroup.new
 
             task_started = false
@@ -188,8 +178,7 @@ module CLI
         end
 
         def test_spin_group_nested_stop
-          capture_io do
-            CLI::UI::StdoutRouter.ensure_activated
+          capture_io_with_router do
             sg = SpinGroup.new
 
             sg.add('Outer task') do
@@ -203,8 +192,7 @@ module CLI
         end
 
         def test_spin_group_interrupt_with_debrief
-          capture_io do
-            CLI::UI::StdoutRouter.ensure_activated
+          capture_io_with_router do
             sg = SpinGroup.new(interrupt_debrief: true)
             task_interrupted = false
             debrief_called = false
@@ -245,8 +233,7 @@ module CLI
         end
 
         def test_spin_group_interrupt_without_debrief
-          capture_io do
-            CLI::UI::StdoutRouter.ensure_activated
+          capture_io_with_router do
             sg = SpinGroup.new(interrupt_debrief: false)
 
             # Use Queue for thread-safe signaling
@@ -282,8 +269,7 @@ module CLI
         end
 
         def test_task_on_done_callback
-          capture_io do
-            CLI::UI::StdoutRouter.ensure_activated
+          capture_io_with_router do
             sg = SpinGroup.new
 
             callback_executed = false
