@@ -1,0 +1,52 @@
+name: Release gem on RubyGems.org and create GitHub release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  release_gem:
+    name: Release gem on RubyGems.org
+    if: github.repository == 'Shopify/cli-ui'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      id-token: write
+
+    environment: release
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
+        with:
+          bundler-cache: true
+
+      - name: Release gem on RubyGems.org
+        uses: rubygems/release-gem@7f9650160c1a4e7989fdc9855807bdbd421d8b6b # v1.4.1
+
+  release_github:
+    name: Create GitHub release
+    if: github.repository == 'Shopify/cli-ui'
+    needs: release_gem
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Create GitHub release
+        run: |
+          tag_name="$(git describe --tags --abbrev=0)"
+          gh release create "${tag_name}" --verify-tag --generate-notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
