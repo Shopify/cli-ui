@@ -339,10 +339,15 @@ module CLI
         Frame.frame_style = frame_style
       end
 
-      # Create a terminal link
+      # Create a terminal link. URLs containing terminal control characters
+      # raise ArgumentError so they cannot escape the OSC 8 sequence.
       #: (String url, String text, ?format: bool, ?blue_underline: bool) -> String
       def link(url, text, format: true, blue_underline: format)
         raise 'cannot use blue_underline without format' if blue_underline && !format
+
+        if url.each_codepoint.any? { |codepoint| codepoint < 0x20 || (0x7f..0x9f).cover?(codepoint) }
+          raise ArgumentError, 'URL must not contain terminal control characters'
+        end
 
         text = "{{blue:{{underline:#{text}}}}}" if blue_underline
         text = CLI::UI.fmt(text) if format
