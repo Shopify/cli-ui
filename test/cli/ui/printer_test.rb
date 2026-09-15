@@ -6,8 +6,7 @@ module CLI
   module UI
     class PrinterTest < Minitest::Test
       def test_puts_color
-        out, _ = capture_io do
-          CLI::UI::StdoutRouter.ensure_activated
+        out, _ = capture_io_with_router do
           assert(Printer.puts('foo', frame_color: :red))
         end
 
@@ -20,8 +19,7 @@ module CLI
         out = nil
         capture_io do
           Frame.open('test') do
-            out, _ = capture_io do
-              CLI::UI::StdoutRouter.ensure_activated
+            out, _ = capture_io_with_router do
               Printer.puts('foo', frame_color: :red)
             end
           end
@@ -37,8 +35,7 @@ module CLI
         out = nil
         capture_io do
           Frame.open(overlong_preamble, success_text: overlong_suffix) do
-            out, _ = capture_io do
-              CLI::UI::StdoutRouter.ensure_activated
+            out, _ = capture_io_with_router do
               Printer.puts('foo', frame_color: :red)
             end
           end

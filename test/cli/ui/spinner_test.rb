@@ -6,8 +6,7 @@ module CLI
   module UI
     class SpinnerTest < Minitest::Test
       def test_spinner
-        out, err = capture_io do
-          CLI::UI::StdoutRouter.ensure_activated
+        out, err = capture_io_with_router do
           CLI::UI::Spinner.spin('sleeping') do
           end
         end
@@ -17,8 +16,7 @@ module CLI
       end
 
       def test_async
-        out, err = capture_io do
-          CLI::UI::StdoutRouter.ensure_activated
+        out, err = capture_io_with_router do
           spinner = CLI::UI::Spinner::Async.start('sleeping')
           sleep(CLI::UI::Spinner::PERIOD * 2.5)
           spinner.stop
@@ -29,8 +27,7 @@ module CLI
       end
 
       def test_updating_title
-        out, err = capture_io do
-          CLI::UI::StdoutRouter.ensure_activated
+        out, err = capture_io_with_router do
           CLI::UI::Spinner.spin('私') do |task|
             assert(task)
             assert_respond_to(task, :update_title)
@@ -50,8 +47,7 @@ module CLI
 
       def test_spinner_without_emojis
         with_os_mock_test do
-          out, err = capture_io do
-            CLI::UI::StdoutRouter.ensure_activated
+          out, err = capture_io_with_router do
             spinner = CLI::UI::Spinner::Async.start('sleeping')
             sleep(CLI::UI::Spinner::PERIOD * 2.5)
             spinner.stop
@@ -66,8 +62,7 @@ module CLI
 
       def test_updating_title_without_emojis
         with_os_mock_test do
-          out, err = capture_io do
-            CLI::UI::StdoutRouter.ensure_activated
+          out, err = capture_io_with_router do
             CLI::UI::Spinner.spin('私') do |task|
               assert(task)
               assert_respond_to(task, :update_title)
@@ -89,8 +84,7 @@ module CLI
       end
 
       def test_spinner_task_error_through_raising_exception
-        out, err = capture_io do
-          CLI::UI::StdoutRouter.ensure_activated
+        out, err = capture_io_with_router do
           CLI::UI::Spinner.spin('broken') do
             sleep(CLI::UI::Spinner::PERIOD * 0.5)
             $stderr.puts 'not empty'
@@ -106,8 +100,7 @@ module CLI
       end
 
       def test_spinner_task_error_through_returning_error
-        out, _ = capture_io do
-          CLI::UI::StdoutRouter.ensure_activated
+        out, _ = capture_io_with_router do
           CLI::UI::Spinner.spin('broken') do
             $stderr.puts 'not empty'
             sleep(CLI::UI::Spinner::PERIOD * 0.5)

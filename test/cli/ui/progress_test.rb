@@ -33,8 +33,7 @@ module CLI
       end
 
       def test_updating_title
-        out, err = capture_io do
-          CLI::UI::StdoutRouter.ensure_activated
+        out, err = capture_io_with_router do
           Progress.progress do |bar|
             3.times do |i|
               bar.update_title("Title #{i}")
